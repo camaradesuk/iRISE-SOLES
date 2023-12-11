@@ -156,6 +156,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                     use_theme(mytheme),
                     
                     useShinyjs(),
+                    
 
                     tabItems(
                       tabItem(tabName = "home",
@@ -172,7 +173,9 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                 tags$br(),
                                 #'Montserrat', 'Gotham', Arial, Helvetica, sans-serif, 
                                   div(
-                                    style = "text-align: center;font-family: 'Kohinoor Bangla' ; font-size: 20px;",
+                                    
+                                    style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
+                                    #style = "text-align: center;font-family: 'Kohinoor Bangla' ; font-size: 20px;",
                                     "Taking an integrated approach to understanding, investigating and guiding strategies to address irreproducibility"
                                   ),
                                 
@@ -845,7 +848,7 @@ server <- function(input, output, session) {
       bubble_react_new <- bubble_react_new %>% 
         mutate(col = case_when(
           selected_colour == FALSE ~ "#266080",
-          selected_colour == TRUE ~ "#64C296"
+          selected_colour == TRUE ~ "#47B1A3"
         ))
 
     }
@@ -854,14 +857,13 @@ server <- function(input, output, session) {
 
      }
     
-
     p <- plot_ly(bubble_react_new,
             x = ~intervention, y = ~outcome, size = ~n, 
             colors = ~sort(unique(col)), color = ~col, customdata = ~key,
             type = 'scatter', 
             # mode = 'markers',
-            marker = list(symbol = 'circle', sizemode = 'diameter',
-                          line = list(color = '#FFFFFF')),
+            marker = list(symbol = 'circle', sizemode = 'diameter', opacity = 0.8,
+                          line = list(color = '#FFFFFF', width = 2)),
             hoverinfo = 'text',
             textposition = "none",
             text = ~paste("Intevention:", intervention,

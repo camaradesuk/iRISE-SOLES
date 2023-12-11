@@ -38,7 +38,7 @@ library(glue)
 library(parallel)
 library(curl)
 
-setwd("/home/scsmith/projects/iRISE_SOLES_DUMMY/")
+setwd("/home/scsmith/projects/iRISE_new/")
 
 # Connect to db ----
 con <- dbConnect(RPostgres::Postgres(),
