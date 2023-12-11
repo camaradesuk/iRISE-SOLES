@@ -137,17 +137,17 @@ ui <- bs4DashPage(freshTheme = mytheme,
                   ),
                   dashboardSidebar(skin = "dark",
                     sidebarMenu(
-                      bs4SidebarMenuItem(tags$p("Homepage", style = "font-family: Kohinoor Bangla;"), tabName = "home", icon = icon("home")),
-                      bs4SidebarMenuItem(tags$p("Data Collection", style = "font-family: Kohinoor Bangla;"), tabName = "dc-main", icon = icon("database", verify_fa = FALSE), startExpanded = FALSE,
-                                         bs4SidebarMenuSubItem(tags$p("Included Studies", style = "font-family: Kohinoor Bangla;"), tabName = "studies-included-summary-dc"),
-                                         bs4SidebarMenuSubItem(tags$p("Tag Status", style = "font-family: Kohinoor Bangla;"), tabName = "status-summary-dc"),
-                                         bs4SidebarMenuSubItem(tags$p("Workflow", style = "font-family: Kohinoor Bangla;"), tabName = "workflow-accordion-dc")),
-                      bs4SidebarMenuItem(tags$p("Transparency Metrics", style = "font-family: Kohinoor Bangla;"), tabName = "data-summary-transparency", icon = icon("chart-pie", verify_fa = FALSE)),
-                      bs4SidebarMenuItem(tags$p("Intervention / Outcome", style = "font-family: Kohinoor Bangla;"), tabName = "data-int-out", icon = icon("chart-column", verify_fa = FALSE)),
-                      bs4SidebarMenuItem(tags$p("Evidence Map", style = "font-family: Kohinoor Bangla;"), tabName = "pico-bubble", icon = icon("users-gear", verify_fa = FALSE)),
-                      bs4SidebarMenuItem(tags$p("Author Location", style = "font-family: Kohinoor Bangla;"), tabName = "author_location", icon = icon("earth-americas")),
-                      bs4SidebarMenuItem(tags$p("iRISE Database", style = "font-family: Kohinoor Bangla;"), tabName = "module_search_database", icon = icon("search")),
-                      bs4SidebarMenuItem(tags$p("About", style = "font-family: Kohinoor Bangla;"), tabName = "about", icon = icon("info"))
+                      bs4SidebarMenuItem(tags$p("Homepage", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "home", icon = icon("home")),
+                      bs4SidebarMenuItem(tags$p("Data Collection", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "dc-main", icon = icon("database", verify_fa = FALSE), startExpanded = FALSE,
+                                         bs4SidebarMenuSubItem(tags$p("Included Studies", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "studies-included-summary-dc"),
+                                         bs4SidebarMenuSubItem(tags$p("Tag Status", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "status-summary-dc"),
+                                         bs4SidebarMenuSubItem(tags$p("Workflow", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "workflow-accordion-dc")),
+                      bs4SidebarMenuItem(tags$p("Transparency Metrics", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "data-summary-transparency", icon = icon("chart-pie", verify_fa = FALSE)),
+                      bs4SidebarMenuItem(tags$p("Intervention / Outcome", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "data-int-out", icon = icon("chart-column", verify_fa = FALSE)),
+                      bs4SidebarMenuItem(tags$p("Evidence Map", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "pico-bubble", icon = icon("users-gear", verify_fa = FALSE)),
+                      bs4SidebarMenuItem(tags$p("Author Location", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "author_location", icon = icon("earth-americas")),
+                      bs4SidebarMenuItem(tags$p("iRISE Database", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "module_search_database", icon = icon("search")),
+                      bs4SidebarMenuItem(tags$p("About", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "about", icon = icon("info"))
                     )
                   ),
                   
@@ -190,7 +190,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                 title = "",
                                                 theme = "danger",
                                                 div(
-                                                  style = "text-align: center;font-family: 'Kohinoor Bangla'; font-size: 20px;",
+                                                  style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
                                                   "The overall aim of WP2 is to systematically identify, synthesise and evaluate information on existing candidate interventions and tools to improve reproducibility through the following objectives:", 
                                                   tags$br(),
                                                   "Obj. 2.1 Generate a complete overview of existing interventions considered to improve reproducibility.",
@@ -212,34 +212,34 @@ ui <- bs4DashPage(freshTheme = mytheme,
                               fluidRow(
                                 valueBox(
                                   width=3,
-                                  subtitle = tags$p("new citations this week", style = "font-size: 120%; color: white;font-family: Kohinoor Bangla;"),
+                                  subtitle = tags$p("new citations this week", style = "font-size: 120%; color: white;font-family: KohinoorBangla, sans-serif !important"),
                                   color = "success",
                                   value = tags$p(sum(as.numeric(include_by_date$n)[which(include_by_date$date >= Sys.Date()-7)]),
-                                                 style = "font-size: 300%; color: white;"),
+                                                 style = "font-size: 300%; color: white; font-family: KohinoorBangla, sans-serif !important"),
                                   icon = icon("clock", verify_fa = FALSE)),
                                 
                                 valueBox(
                                   width=3,
-                                  subtitle = tags$p("new citations this month", style = "font-size: 120%; color: white;font-family: Kohinoor Bangla;"),
+                                  subtitle = tags$p("new citations this month", style = "font-size: 120%; color: white;font-family: KohinoorBangla, sans-serif !important"),
                                   color = "warning",
                                   value = tags$p(sum(as.numeric(include_by_date$n)[which(include_by_date$date >= Sys.Date()-30)]),
-                                                 style = "font-size: 300%; color: white;"),
+                                                 style = "font-size: 300%; color: white;font-family: KohinoorBangla, sans-serif !important"),
                                   icon = icon("calendar")),
                                 
                                 valueBox(
                                   width=3,
-                                  subtitle = tags$p("new citations in the last year", style = "font-size: 120%; color: white;font-family: Kohinoor Bangla;"),
+                                  subtitle = tags$p("new citations in the last year", style = "font-size: 120%; color: white;font-family: KohinoorBangla, sans-serif !important"),
                                   color = "info",
                                   value = tags$p(sum(as.numeric(include_by_date$n)[which(include_by_date$date >= Sys.Date()-365)]),
-                                                 style = "font-size: 300%; color: white;"),
+                                                 style = "font-size: 300%; color: white;font-family: KohinoorBangla, sans-serif !important"),
                                   icon = icon("calendar", verify_fa = FALSE)),
                                 
                                 valueBox(
                                   width=3,
-                                  subtitle = tags$p("citations in database", style = "font-size: 120%; color: white;font-family: Kohinoor Bangla;"),
+                                  subtitle = tags$p("citations in database", style = "font-size: 120%; color: white;font-family: KohinoorBangla, sans-serif !important"),
                                   color = "secondary",
                                   value = tags$p(sum(as.numeric(include_by_date$n)),
-                                                 style = "font-size: 300%; color: white;"),
+                                                 style = "font-size: 300%; color: white;font-family: KohinoorBangla, sans-serif !important"),
                                   icon = icon("database"))
                               ),
                               
@@ -254,7 +254,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                   type = "tabs",
                                   
                                   yearBarUI_included_only("included_studies_over_time_bar",
-                                                          title = tags$p("Included Studies Over Time", style = " color: #1A465F;font-family: Kohinoor Bangla;"),
+                                                          title = tags$p("Included Studies Over Time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
                                                           theme = "danger",
                                                           spinner_colour = "#89CB93",
                                                           table = n_included_per_year_plot_data)
@@ -267,7 +267,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                               
                               
                               div(
-                                style = "color: #1A465F; font-family: Kohinoor Bangla;",
+                                style = "color: #1A465F; font-family: KohinoorBangla, sans-serif !important;",
                               fluidRow(
                                 
                                 tags$head(
@@ -334,7 +334,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                       tabItem(tabName = "data-summary-transparency",
                               
                               bs4Jumbotron(
-                                title = tags$h1("Transparency Metrics", style = ";font-family: Kohinoor Bangla;"),
+                                title = tags$h1("Transparency Metrics", style = "font-family: KohinoorBangla, sans-serif !important;"),
                                 lead = tags$p("This summary shows the overall percentages of publications
                 across different transparency measures, including open access publication, open data, and open code. You can
                 also benchmark improvements by viewing the number of publications in each category over time.", style = ";font-family: Kohinoor Bangla;"),
@@ -346,7 +346,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                 
                                 valueBox(
                                   width=4,
-                                  subtitle = tags$h2("Open Access", style = ";font-family: Kohinoor Bangla;color: white;"),
+                                  subtitle = tags$h2("Open Access", style = "color: white;font-family: KohinoorBangla, sans-serif !important;"),
                                   color = "success",
                                   value = tags$p(round(length(oa_tag$uid[which(oa_tag$is_oa==TRUE)])/length(oa_tag$uid)*100,1), "%",
                                                  style = "font-size: 300%; color: white;"),
@@ -355,7 +355,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                 
                                 valueBox(
                                   width=4,
-                                  subtitle = tags$h2("Open Data", style = ";font-family: Kohinoor Bangla;color: white;"),
+                                  subtitle = tags$h2("Open Data", style = "color: white;font-family: KohinoorBangla, sans-serif !important;"),
                                   color = "info",
                                   value = tags$p(round(length(transparency$uid[which(transparency$is_open_data==TRUE)])/length(transparency$uid)*100,1), "%",
                                                  style = "font-size: 300%; color: white;"),
@@ -364,7 +364,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                 
                                 valueBox(
                                   width=4,
-                                  subtitle = tags$h2("Open Code", style = ";font-family: Kohinoor Bangla;color: white;"),
+                                  subtitle = tags$h2("Open Code", style = "color: white;font-family: KohinoorBangla, sans-serif !important;"),
                                   color = "secondary",
                                   value = tags$p(round(length(transparency$uid[which(transparency$is_open_code==TRUE)])/length(transparency$uid)*100,1), "%",
                                                  style = "font-size: 300%; color: white;"),
@@ -383,25 +383,25 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                 type = "tabs",
                                 
                                 yearBarUI("oa_pubs_per_year",
-                                          title = tags$p("Open access over time", style = " color: #1A465F;font-family: Kohinoor Bangla;"),
+                                          title = tags$p("Open access over time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
                                           theme = "secondary",
                                           spinner_colour = "#89CB93",
                                           table = oa_tag),
                                 
                                 yearBarUI("oa_pub_type_per_year",
-                                          title = tags$p("Open access type over time", style = " color: #1A465F;font-family: Kohinoor Bangla;"),
+                                          title = tags$p("Open access type over time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
                                           theme = "danger",
                                           spinner_colour = "#89CB93",
                                           table = oa_tag),
                                 
                                 yearBarUI("open_data_pubs_per_year",
-                                          title = tags$p("Open data availability over time", style = " color: #1A465F;font-family: Kohinoor Bangla;"),
+                                          title = tags$p("Open data availability over time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
                                           theme = "danger",
                                           spinner_colour = "#89CB93",
                                           table = transparency),
                                 
                                 yearBarUI("open_code_pubs_per_year",
-                                          title = tags$p("Open code availability over time", style = " color: #1A465F;font-family: Kohinoor Bangla;"),
+                                          title = tags$p("Open code availability over time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
                                           theme = "danger",
                                           spinner_colour = "#89CB93",
                                           table = transparency)
@@ -410,7 +410,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                               ),
                               
                               plot_interpret_UI("transparency_intepret",
-                                                title = tags$p("How To Interpret This Plot", style = ";font-family: Kohinoor Bangla;"),
+                                                title = tags$p("How To Interpret This Plot", style = "font-family: KohinoorBangla, sans-serif !important;"),
                                                 
                                                 div(
                                                   tags$p("Each bar plot shows the number of papers in each category over time.
@@ -419,74 +419,17 @@ ui <- bs4DashPage(freshTheme = mytheme,
                     To see only a specific category, double click on the relevant coloured square in the
                     legend on the top right. To remove any category, click once on any coloured square in the legend.
                     The tools and resources used to obtain the data are shown under the x-axis. Note that many publications are
-                    still missing a transparency status for one or more measures due to processing time or lack of available data.", style = ";font-family: Kohinoor Bangla;"),
+                    still missing a transparency status for one or more measures due to processing time or lack of available data.", style = "font-family: KohinoorBangla, sans-serif !important;"),
                                                 tags$br(),
                                                 tags$br(),
                                                 
                                                 tags$a(
                                                   href = 'https://research.library.gsu.edu/c.php?g=115588&p=754380',
-                                                  tags$button("Open Access Type Info", class = "btn btn-primary", style = "background-color: #1A465F; border-color: #1A465F;font-family: Kohinoor Bangla;")
+                                                  tags$button("Open Access Type Info", class = "btn btn-primary", style = "background-color: #1A465F; border-color: #1A465F;font-family: KohinoorBangla, sans-serif !important;")
                                                 )),
                                                 theme = "primary")
                                                 
                               
-                      ),
-                      
-                      tabItem(
-                        tabName = "data-summary-pop",
-                        
-                        plot_interpret_UI("sunburst_population_interpret",
-                                          title = "Population Sunburst Plot",
-                                          p("This plot visualises the literature which mentions the use of different therapeutics.
-                  The inner circle represents drug targets, the second level represents the type of therapeutic,
-                  and the outer level represents individual drugs/compounds. Hover over each section to see the number
-                  of citations tagged in this category. You can also click the drug target (centre layer) to expand the sunburst
-                  and show every therapeutic type and individual drug/compound within this larger category."),
-                                          theme = "danger"
-                        ),
-                        
-                        tabBox(
-                          width = 12,
-                          id = "tabcard_sunburst_pop",
-                          title = "",
-                          status = "danger",
-                          solidHeader = FALSE,
-                          type = "tabs",
-                          height = "800px",
-                          
-                          sunburstUI("sunburst_pop",
-                                     title = "Population Summary",
-                                     theme = "danger",
-                                     spinner_colour = "#96c296") 
-                          
-                        )
-                        
-                        
-                      ),
-                      
-                      tabItem(tabName = "data-pop",
-                              
-                              tabBox(
-                                
-                                width = 12,
-                                id = "tabcard_population",
-                                title = "",
-                                status = "primary",
-                                solidHeader = FALSE,
-                                type = "tabs",
-                                
-                                pico_multi_select_UI(id = "population",
-                                                     multi_select = TRUE,
-                                                     table = population_df,
-                                                     column = population_df$main_category,
-                                                     column2 = population_df$name,
-                                                     label1 = "Select a Population:",
-                                                     label2 = "Select a Specific Population: (10 selections max)",
-                                                     title = "Population",
-                                                     theme = "danger",
-                                                     spinner_colour = "#96c296")
-                                
-                              )
                       ),
                       
                       tabItem(tabName = "data-int-out",
@@ -505,9 +448,9 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                      table = int_out_df,
                                                      column = int_out_df$outcome,
                                                      column2 = int_out_df$intervention,
-                                                     label1 = tags$p("Select a Target Outcome", style = "color: #47B1A3;font-family: Kohinoor Bangla;"),
-                                                     label2 = tags$p("Select an Intervention", style = "color: #47B1A3;font-family: Kohinoor Bangla;"),
-                                                     title = tags$p("Interventions and Outcomes", style = "color: #1A465F;font-family: Kohinoor Bangla;"),
+                                                     label1 = tags$p("Select a Target Outcome", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
+                                                     label2 = tags$p("Select an Intervention", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
+                                                     title = tags$p("Interventions and Outcomes", style = "color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
                                                      theme = "danger",
                                                      spinner_colour = "#96c296")
                                 
@@ -527,7 +470,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                        fluidRow(column(width = 6,
                                        pickerInput(
                                          inputId = "select_pop_inter",
-                                         label = tags$p("Select an Intervention Provider", style = "color: #47B1A3;font-family: Kohinoor Bangla;"),
+                                         label = tags$p("Select an Intervention Provider", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
                                          choices = sort(unique(data_for_bubble$pop_inter)),
                                          selected = sort(unique(data_for_bubble$pop_inter)),
                                          multiple = TRUE,
@@ -540,7 +483,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                        column(width = 6,
                                               pickerInput(
                                                 inputId = "select_pop_target",
-                                                label = tags$p("Select a Target Population", style = "color: #47B1A3;font-family: Kohinoor Bangla;"),
+                                                label = tags$p("Select a Target Population", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
                                                 choices = sort(unique(data_for_bubble$pop_target)),
                                                 selected = sort(unique(data_for_bubble$pop_target)),
                                                 multiple = TRUE,
@@ -557,7 +500,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                        fluidRow(column(width = 4, 
                                                        pickerInput(
                                                          inputId = "select_discipline",
-                                                         label = tags$p("Select a Discipline", style = "color: #47B1A3;font-family: Kohinoor Bangla;"),
+                                                         label = tags$p("Select a Discipline", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
                                                          choices = sort(unique(data_for_bubble$discipline)),
                                                          selected = sort(unique(data_for_bubble$discipline)),
                                                          multiple = TRUE,
@@ -572,7 +515,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                 column(width = 4,
                                                        pickerInput(
                                                          inputId = "select_funder",
-                                                         label = tags$p("Select a Funder", style = "color: #47B1A3;font-family: Kohinoor Bangla;"),
+                                                         label = tags$p("Select a Funder", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
                                                          choices = sort(unique(data_for_bubble$funder)),
                                                          selected = sort(unique(data_for_bubble$funder)),
                                                          multiple = TRUE,
@@ -586,7 +529,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                 column(width = 4,
                                                        pickerInput(
                                                          inputId = "select_continent",
-                                                         label = tags$p("Select First Author Continent", style = "color: #47B1A3;font-family: Kohinoor Bangla;"),
+                                                         label = tags$p("Select First Author Continent", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
                                                          choices = sort(unique(data_for_bubble$author_aff_continent)),
                                                          selected = sort(unique(data_for_bubble$author_aff_continent)),
                                                          multiple = TRUE,
