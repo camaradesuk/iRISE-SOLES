@@ -159,6 +159,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                     
 
                     tabItems(
+                      
                       tabItem(tabName = "home",
         
                               box(
@@ -191,22 +192,80 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                 theme = "danger",
                                                 div(
                                                   style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
-                                                  "The overall aim of WP2 is to systematically identify, synthesise and evaluate information on existing candidate interventions and tools to improve reproducibility through the following objectives:", 
-                                                  tags$br(),
-                                                  "Obj. 2.1 Generate a complete overview of existing interventions considered to improve reproducibility.",
-                                                  tags$br(),
-                                                  "Obj. 2.2 Evaluate intervention effectiveness and develop evidence-based guidance to inform the future design and testing of interventions.",
-                                                  tags$br(),
-                                                  "Obj. 2.3 Develop a framework to be used in the context of systematic reviews to evaluate the overall evidence supporting individual interventions to improve reproducibility.",
-                                                  tags$br(),
-                                                  tags$a(
-                                                    href = 'https://osf.io/9hzcv/?view_only=d74ff8089864468cb43daa06733e0be6',
-                                                    tags$img(src = "osf_logo.png", height = "100px")
-                                                  )
-                                                )
-                              )
-                              
-                      ),
+                                                  "The overall aim for iRISE-SOLES is to systematically identify, synthesise and evaluate information on existing candidate interventions and tools to improve reproducibility. To do this, we have 
+                                                  developed an integrated workflow of automated tools to collect and tag published research articles and visualise the evidence in this interactive web application. 
+                                                  We tag studies by discipline, study type, author country, intervention type, and reproducibility relevant outcomes. We also assess the transparency metrics of studies witin iRISE-SOLES e.g. their open access status and presence of data/code sharing.")),
+                      
+                              fluidRow(
+                                
+                        column(4,
+                                       
+                      box(
+                        div(
+                          style = "text-align: center;",
+                          tags$a(
+                            href = 'https://osf.io/9hzcv/?view_only=d74ff8089864468cb43daa06733e0be6',
+                            tags$img(src = "osf_logo.png", height = "300px")
+                          )
+                        ),
+                        
+                        tags$br(),
+                        #'Montserrat', 'Gotham', Arial, Helvetica, sans-serif, 
+                        div(
+                          style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
+                          #style = "text-align: center;font-family: 'Kohinoor Bangla' ; font-size: 20px;",
+                          "Read our iRISE-SOLES protocol on the Open Science Framework"),
+                        background = "warning",
+                        width = NULL,
+                        solidHeader = TRUE,
+                        title = "",
+                        status = "warning")),
+                      
+                      column(4, 
+                      box(
+                        div(
+                          style = "text-align: center;",
+                          tags$a(
+                            href = 'https://portlandpress.com/clinsci/article/137/10/773/233083/Systematic-online-living-evidence-summaries',
+                            tags$img(src = "paper_screenshot.PNG", height = "300px")
+                          )
+                        ),
+                        
+                        tags$br(),
+                        #'Montserrat', 'Gotham', Arial, Helvetica, sans-serif, 
+                        div(
+                          style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
+                          #style = "text-align: center;font-family: 'Kohinoor Bangla' ; font-size: 20px;",
+                          "Read our SOLES paper to learn more about our workflow"),
+                        background = "secondary",
+                        width = NULL,
+                        solidHeader = TRUE,
+                        title = "",
+                        status = "secondary")), 
+                      
+                      column(4,
+                      box(
+                        div(
+                          style = "text-align: center;",
+                          tags$a(
+                            href = 'https://irise-project.eu/',
+                            tags$img(src = "irise_website.png", height = "300px")
+                          )
+                        ),
+                        
+                        tags$br(),
+                        #'Montserrat', 'Gotham', Arial, Helvetica, sans-serif, 
+                        div(
+                          style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
+                          #style = "text-align: center;font-family: 'Kohinoor Bangla' ; font-size: 20px;",
+                          "Go to the iRISE website to learn more about the other work packages and wider project"),
+                        background = "info",
+                        width = NULL,
+                        solidHeader = TRUE,
+                        title = "",
+                        status = "info")
+                      
+                    ))),
                       
                       tabItem(tabName = "studies-included-summary-dc",
                               fluidRow(
@@ -606,13 +665,61 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                         table = included_with_metadata)
                               
                               
-                      )
-    
-                      )
-                    
-                  )
+                      ),
+                      
+                      tabItem(tabName = "about",
+                              
+                              
+                              fluidRow(
+                                
+                                box(width = 5,
+                                    title = "Funding",
+                                    background="danger",
+                                    solidHeader = T,
+                                    status="danger",
+                                    p("iRISE receives funding from the European Union's Horizon Europe research and innovation programme under grant agreement No 101094853. 
+                                      Views and opinions expressed are however those of the author(s) only and do not necessarily reflect those of the European Union or the 
+                                      European Research Executive Agency (ERA). Neither the European Union nor the ERA can be held responsible for them."),
+                                    tags$img(class = "img-responsive img-rounded center-block",
+                                             src="european_union_logo.jpg", height=100, width=470, align="center")),
+                                
+                                box(width = 7,
+                                    title = "Using iRISE-SOLES data",
+                                    background="warning",
+                                    solidHeader = T,
+                                    status = "warning",
+                                    p("We license all data and information provided under a
+                      Creative Commons Attribution 4.0 International license (CC BY 4.0)"),
+                                    p("If you have used the iRISE-SOLES data for a research project or review, please cite our protocol: 
+                      Kaitlyn Hair, Sean Smith, Ivan Buljan, Carlijn R. Hooijmans, Malcolm R. Macleod, Ana Marušić, Dora Pejdo, Torsten Rackoll, Kimberley E. Wever, Sarah Wendt,
+                      Sarah McCann, and Emily S. Sena on behalf of the iRISE consortium (2023), A protocol for a systematic online living evidence summary of the interventions to improve reproducibility (iRISE-SOLES),
+                                      Open Science Framework. https://doi.org/10.31222/osf.io/nbe5q"))
+                                ),
+                              
+                              fluidRow(
+                                
+                                box(width = 12,
+                                    title = "Development",
+                                    status="info",
+                                    solidHeader = T,
+                                    background="info",
+                                    p("iRISE-SOLES was developed as part of Work Package 2 in the iRISE project. The main developer behind the platform
+                                      is Sean Smith."),
+                                    p("If you have any questions about the iRISE-SOLES project, please contact:",
+                                      strong(tags$a(href="mailto:kaitlyn.hair@ed.ac.uk", "kaitlyn.hair@ed.ac.uk")))))
+                              )
+                    ))
 )
+                      
+
+                  
+
+
 server <- function(input, output, session) {
+  
+  shinyalert("Welcome", "Welcome to the draft iRISE-SOLES Dashboard!
+             Please note this app is still under development. The data presented are not representative and should not be used for any research purposes yet.", type = "info")
+  
   
   yearBarServer_included_only("included_studies_over_time_bar", 
                               table=n_included_per_year_plot_data, 
