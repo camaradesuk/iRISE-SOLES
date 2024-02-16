@@ -1,0 +1,326 @@
+---
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+fig_width: 12 
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r include=FALSE}
+library(dplyr)
+library(janitor)
+library(soles)
+library(readxl)
+library(tidyr)
+library(stringr)
+library(lubridate)
+library(DBI)
+library(plotly)
+library(knitr)
+library(kableExtra)
+library(icons)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#data export csv
+source("get_syrf_data.R")
+```
+
+```{r include=FALSE}
+screening_data <- data %>%
+  clean_names() %>% 
+  select(study_id, investigator_name, screening_date = date_time_of_screening, screening_decision, screening_status) %>% 
+  mutate(screening_date = str_sub(screening_date, 1, 10)) %>% 
+  mutate(screening_date = ymd(screening_date)) %>% 
+  mutate(investigator_name = ifelse(investigator_name == "Sean Smith", "OSIRIS/TIER2", investigator_name)) 
+```
+
+```{r include=FALSE}
+options(scipen = 999)
+
+to_screen <- 5000
+disagreement_rate <- 0.07
+
+screening_decisions <- 10000 + (disagreement_rate*10000)
+
+total_screened <- screening_data %>%
+  filter(!investigator_name == "OSIRIS/TIER2") %>% 
+  nrow() 
+  
+screened_by_OST2 <- screening_data %>% 
+  filter(investigator_name == "OSIRIS/TIER2") %>% 
+  select(study_id) %>%
+  unique() %>%
+  nrow() 
+
+percent_complete <- ((total_screened + screened_by_OST2)/screening_decisions) * 100
+
+```
+
+### 
+
+::: {style="text-align: center;"}
+![](iRISE-lightlogo.png){width="50%"}
+:::
+
+```{=html}
+<style>
+  .center {
+    text-align: center;
+    font-size: 36px; 
+    font-weight: bold; 
+  }
+</style>
+```
+```{=html}
+<style>
+  .date {
+    text-align: center;
+    font-size: 24px; 
+    font-weight: bold; 
+  }
+</style>
+```
+::: center
+Screening Progress Report
+:::
+
+<div style="text-align: center; font-size: medium;">
+  `r format(Sys.Date(), "%B %d, %Y")`
+</div>
+
+```{=html}
+<style>
+  .custom-background {
+    background-color: #266080; /* Add the background color */
+    color: white; /* Set the text color to white for better visibility */
+    padding: 10px; /* Add padding for better appearance */
+    font-size: 16px; /* Adjust the font size as needed */
+    border-radius: 10px; /* Add rounded edges */
+
+  }
+</style>
+```
+```{=html}
+<style>
+  .star {
+    text-align: center;
+    background-color: #89CB93; /* Add the background color */
+    color: white; /* Set the text color to white for better visibility */
+    padding: 15px; /* Add padding for better appearance */
+    font-size: 16px; /* Adjust the font size as needed */
+    border-radius: 10px; /* Add rounded edges */
+
+  }
+</style>
+```
+::: custom-background
+There are **`r to_screen`** papers to be screened. Many of these papers
+have already been screened once by **OSIRIS/TIER2**. Each paper must be
+screened twice, unless there is a **disagreement**, in which case, it
+will be reconciled by a third person. With a current disagreement rate
+of 7%, there are an estimated **`r screening_decisions`** screening
+decisions to make.
+
+We have currently completed **`r total_screened`** screening decisions,
+plus the **`r screened_by_OST2`** decisions by **OSIRIS/TIER2**, meaning
+we are around **\~`r round(percent_complete,1)`%** complete.
+:::
+
+```{r echo=FALSE,out.width="100%"}
+counts_over_time <- screening_data %>%
+  #filter(!investigator_name == "OSIRIS/TIER2") %>% 
+  group_by(screening_date) %>% 
+  count() %>%
+  ungroup() %>% 
+  mutate(cumulative_count = cumsum(n))
+
+plot_ly(counts_over_time,
+    x = ~screening_date,
+    y = ~cumulative_count,
+    type = 'scatter',
+    mode = 'line',
+
+    hoverinfo = 'text',
+    textposition = "none",
+    text = ~paste("<b>Month:</b> ", screening_date,
+                  "<br><b>Number Screened:</b>", cumulative_count)
+    
+  ) %>%
+   layout(showlegend = FALSE,
+                   yaxis = list(title = 'Number of Screening Decisions', range = c(0, 11000)),
+                   xaxis = list(title = "Date",
+                                #tickangle = -45,
+                                ticklen = 5),
+                   hoverlabel = list(bgcolor = "white",
+                                     font = list(size = 14)),
+          shapes = list(
+      list(
+        type = "line",
+        x0 = min(counts_over_time$screening_date),
+        x1 = max(counts_over_time$screening_date),
+        y0 = 10000,
+        y1 = 10000,
+        line = list(dash = "dot", color = "red")
+      )
+    ),
+        annotations = list(
+      list(
+        x = max(counts_over_time$screening_date),
+        y = 9700,
+        xref = "x",
+        yref = "y",
+        text = "Minimum Screening Decisions",
+        showarrow = FALSE,
+        #arrowhead = 10,
+        ax = -30,
+        ay = -40
+      )
+    )
+  )
+
+```
+
+::: center
+**Decisions So Far**
+:::
+
+::: custom-background
+To reach a final decision of **included** or **excluded**, at least two
+reviewers have made the same screening decision. For papers in the
+**disagreement** segment, this indicates that two reviewers have
+disagreed on the screening decision. For papers in the **incomplete**
+segment, this indicates that no screening decisions exist yet or that
+only one decision has been made.
+:::
+
+```{r echo=FALSE, out.width="100%"}
+progress <- screening_data %>% 
+  group_by(study_id) %>% 
+  mutate(no_screened = n()) %>% 
+  ungroup() %>% 
+  mutate(final_decision = case_when(
+    (screening_status == "InsufficientlyScreened" & no_screened == 1)  ~ "Incomplete",
+    (screening_status == "InsufficientlyScreened" & no_screened >1)  ~ "Disagreement",
+    (screening_status == "Included")  ~ "Included",
+    (screening_status == "Excluded")  ~ "Excluded",
+    TRUE ~ screening_status
+  )) %>% 
+  distinct(study_id, final_decision) %>% 
+  group_by(final_decision) %>% 
+  count()
+
+colors <- c("#B1E0CB", "#47B1A3", "#89CB93", "#266080")
+plot_ly(type='pie', 
+        labels = progress$final_decision, 
+        values = progress$n,
+        textinfo = 'label+percent',
+        hoverinfo = 'text',
+    #textposition = "none",
+    text = ~paste("<b>Status:</b> ", progress$final_decision,
+                  "<br><b>Number of Papers:</b>", progress$n),
+        marker = list(colors = colors,
+                      line = list(color = '#FFFFFF', width = 2)),
+            ) %>% 
+          layout(showlegend = FALSE,
+                 hoverlabel = list(bgcolor = "white", 
+                                     font = list(size = 14))
+                 )
+
+```
+
+```{r include=FALSE}
+end_date <- Sys.Date()  # Assuming today is the end date
+start_date <- end_date - 7 
+
+ind_screening_counts <- screening_data %>%
+  group_by(investigator_name) %>%
+  filter(!investigator_name == "OSIRIS/TIER2") %>% 
+  count()
+
+top_screener <- ind_screening_counts %>%
+  ungroup() %>% 
+  arrange(desc(n)) %>% 
+  slice_head(n = 1)
+
+ind_screening_counts_week <- screening_data %>%
+  filter(screening_date >= start_date) %>% 
+  group_by(investigator_name) %>%
+  filter(!investigator_name == "OSIRIS/TIER2") %>% 
+  count()
+
+top_screener_week <- ind_screening_counts_week %>%
+  ungroup() %>% 
+  arrange(desc(n)) %>% 
+  slice_head(n = 1)
+
+```
+
+<br> <br>
+
+::: center
+**Weekly Leaderboard**
+:::
+
+::: star
+**`r fontawesome("star", style = "solid")`** Our star of the week is
+**`r top_screener_week$investigator_name`** who screened
+**`r top_screener_week$n`** papers in the last 7 days. Amazing work!
+**`r fontawesome("star", style = "solid")`**
+:::
+
+```{r echo=FALSE, out.width="100%"}
+plot_ly(ind_screening_counts_week,
+    y = ~reorder(investigator_name, n),
+    x = ind_screening_counts_week$n,
+    type = "bar",
+    hoverinfo = 'text',
+    textposition = "none",
+    text = ~paste("<b>Name:</b> ", ind_screening_counts_week$investigator_name,
+                  "<br><b>Number Screened:</b>", n),
+      marker = list(color = "#89CB93")  # Set the fill color of the bars
+
+    
+  ) %>% 
+   layout(showlegend = FALSE,
+                   xaxis = list(title = 'Publications Screened This Week'),
+                   yaxis = list(title = "", 
+                                #tickangle = -45, 
+                                ticklen = 5), 
+                   barmode = 'dodge',
+                   hoverlabel = list(bgcolor = "white", 
+                                     font = list(size = 14)))
+
+
+
+```
+
+<br>
+
+::: center
+**Overall Leaderboard**
+:::
+
+::: star
+**`r fontawesome("star", style = "solid")`** The overall leader is
+**`r top_screener$investigator_name`** who has screened
+**`r top_screener$n`** papers!
+**`r fontawesome("star", style = "solid")`**
+:::
+
+<br>
+
+```{r echo=FALSE, warning=FALSE}
+
+ind_screening_counts %>%
+  ungroup() %>% 
+  arrange(desc(n)) %>%
+  rename(Name = investigator_name, Screened = n) %>% 
+    kable(align = "c", format = "html") %>%
+    kable_styling(bootstrap_options = "bordered", full_width = T)%>% 
+    column_spec(2, color = "white",
+              background = spec_color(1:length(ind_screening_counts$investigator_name), end = 1, direction = -1 ))
+
+```
