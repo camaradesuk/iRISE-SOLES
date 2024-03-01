@@ -66,6 +66,14 @@ unique_citations_doi <- unique_citations %>%
 unique_citations_for_dl <- tbl(con, "unique_citations") %>%
   collect()
 
+# unique_citations_for_db <- unique_citations_for_dl %>% 
+#   mutate(year = as.numeric(year)) %>% 
+#   filter(!(is.na(year) | year == ""))
+# 
+# glimpse(unique_citations_for_dl)
+# 
+# dataframes_for_app[["unique_citations_for_db"]] <- unique_citations_for_db
+
 dataframes_for_app[["unique_citations_for_dl"]] <- unique_citations_for_dl
 
 
@@ -373,21 +381,21 @@ dataframes_for_app[["pico"]] <- pico
 
 # Create folder for fst_files if it does not exist
 fst_files_written <- 0
-if (!file.exists("deploy_app/fst_files")) {
-  dir.create("deploy_app/fst_files")
+if (!file.exists("deploy_app_dummy/fst_files")) {
+  dir.create("deploy_app_dummy/fst_files")
 }
 
 # Write all of the dataframes required to fst files
 for (name in names(dataframes_for_app)) {
   dataframe <- dataframes_for_app[[name]]
-  write_fst(dataframe, paste0("deploy_app/fst_files/", name, ".fst"))
+  write_fst(dataframe, paste0("deploy_app_dummy/fst_files/", name, ".fst"))
   fst_files_written <- fst_files_written + 1
 }
 
 # Redeploy the app
 app_deploy <- try({
   rsconnect::deployApp(
-    appDir = "deploy_app",
+    appDir = "deploy_app_dummy",
     appFiles = c("app.R",
                  "irise_dummy_modules.R",
                  "sunburst.R",
