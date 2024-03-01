@@ -381,21 +381,21 @@ dataframes_for_app[["pico"]] <- pico
 
 # Create folder for fst_files if it does not exist
 fst_files_written <- 0
-if (!file.exists("deploy_app_dummy/fst_files")) {
-  dir.create("deploy_app_dummy/fst_files")
+if (!file.exists("deploy_app/fst_files")) {
+  dir.create("deploy_app/fst_files")
 }
 
 # Write all of the dataframes required to fst files
 for (name in names(dataframes_for_app)) {
   dataframe <- dataframes_for_app[[name]]
-  write_fst(dataframe, paste0("deploy_app_dummy/fst_files/", name, ".fst"))
+  write_fst(dataframe, paste0("deploy_app/fst_files/", name, ".fst"))
   fst_files_written <- fst_files_written + 1
 }
 
 # Redeploy the app
 app_deploy <- try({
   rsconnect::deployApp(
-    appDir = "deploy_app_dummy",
+    appDir = "deploy_app",
     appFiles = c("app.R",
                  "irise_dummy_modules.R",
                  "sunburst.R",
