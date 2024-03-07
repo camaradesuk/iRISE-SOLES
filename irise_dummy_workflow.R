@@ -66,6 +66,14 @@ unique_citations_doi <- unique_citations %>%
 unique_citations_for_dl <- tbl(con, "unique_citations") %>%
   collect()
 
+# unique_citations_for_db <- unique_citations_for_dl %>% 
+#   mutate(year = as.numeric(year)) %>% 
+#   filter(!(is.na(year) | year == ""))
+# 
+# glimpse(unique_citations_for_dl)
+# 
+# dataframes_for_app[["unique_citations_for_db"]] <- unique_citations_for_db
+
 dataframes_for_app[["unique_citations_for_dl"]] <- unique_citations_for_dl
 
 
