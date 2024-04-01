@@ -760,7 +760,7 @@ server <- function(input, output, session) {
                 pico_data = pico_elements_list,
                 table = unique_citations_for_db,
                 combined_pico_table = pico,
-                citations_for_download = unique_citations_for_db,
+                citations_for_download = unique_citations_for_dl,
                 project_name = "iRISE-SOLES")
   
   
