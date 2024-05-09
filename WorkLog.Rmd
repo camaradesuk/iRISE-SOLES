@@ -1,0 +1,55 @@
+---
+title: "Worklog"
+output: html_document
+date: "2024-05-09"
+---
+
+### **Update**
+
+### **01-04-24**
+
+ML tested on ~3000 studies
+Specificity: 0.69
+Sensitivity: 0.95
+
+### **09-05-24**
+
+- Screening Complete
+
+- ML performance on 5000 studies
+Specificity: 0.72
+Sensitivity: 0.95
+
+- K-fold performance
+
+Fold: 1
+0.9578947
+0.7583799
+
+Fold: 2
+0.9507042
+0.7905028
+
+Fold: 3
+0.9507042
+0.7541899
+
+Fold: 4
+0.9507042
+0.5474860
+
+Fold: 5
+0.9542254
+0.6111888
+
+- Slight improvement in ML on entire corpus. Very low specificity on folds 4 & 5 is concerning.
+
+### Error Correction
+
+- 1168 disagreements found between human and machine
+- 67 included by human, excluded by machine
+- 1101 excluded by human, included by machine
+
+- Initial Error Correction started with 250 most extreme discrepancies.
+- 67 included, 183 excluded by humans
+- Hoping to improve specificity
