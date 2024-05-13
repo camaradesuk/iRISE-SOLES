@@ -1,0 +1,10 @@
+name: dev-irise-soles
+title:
+username: camarades
+account: camarades
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 10712401
+bundleId: 8041022
+url: https://camarades.shinyapps.io/dev-irise-soles/
+version: 1
