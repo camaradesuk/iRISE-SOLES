@@ -45,6 +45,8 @@ con <- dbConnect(RPostgres::Postgres(),
                  user = Sys.getenv("irise_soles_user"),
                  password = Sys.getenv("irise_soles_password"))
 
+source("dummy_data_create.R")
+
 # Create tables for app and write to fst -----
 dataframes_for_app <- list()
 
@@ -140,6 +142,63 @@ transparency <- included_small %>%
 #transparency[is.na(transparency)] <- "unknown"
 
 dataframes_for_app[["transparency"]] <- transparency
+
+funder <- dbReadTable(con, "funder_grant_tag") %>% 
+  filter(!str_starts(funder_name, "https")) %>% 
+  filter(!funder_name == "Unknown") %>% 
+  distinct(doi) %>% 
+  mutate(status = "found")
+
+dataframes_for_app[["funder"]] <- funder
+
+  
+  citations_small <- citations_for_dl %>% 
+  select(doi, year)
+  
+  funder_overall_count <- dbReadTable(con, "funder_grant_tag") %>% 
+    filter(!str_starts(funder_name, "https")) %>% 
+    filter(!funder_name == "Unknown") %>% 
+    distinct(doi, funder_name) %>% 
+    count(funder_name, sort = T) %>% 
+    slice_head(n = 100)
+  
+  dataframes_for_app[["funder_overall_count"]] <- funder_overall_count
+  
+  funder_transparency <- dbReadTable(con, "funder_grant_tag") %>% 
+    filter(!str_starts(funder_name, "https")) %>% 
+    filter(!funder_name == "Unknown") %>% 
+    distinct(doi, funder_name) %>% 
+    left_join(oa_tag %>% select(doi, is_oa), by = "doi") %>% 
+    left_join(transparency %>% select(doi, is_open_data, is_open_code), by = "doi") %>% 
+    filter(!is.na(is_oa))
+  
+  dataframes_for_app[["funder_transparency"]] <- funder_transparency
+  
+  funder_year <- dbReadTable(con, "funder_grant_tag") %>% 
+    filter(!str_starts(funder_name, "https")) %>% 
+    filter(!funder_name == "Unknown") %>%
+    left_join(citations_small, by = "doi") %>% 
+    filter(!is.na(year)) %>% 
+    select(doi, funder_name, year) %>% 
+    group_by(year, funder_name) %>%
+    count()
+  
+  dataframes_for_app[["funder_year"]] <- funder_year
+  
+  
+  
+
+funder_metadata <- dbReadTable(con, "funder_grant_tag") %>% 
+  filter(!str_starts(funder_name, "https")) %>% 
+  filter(!funder_name == "Unknown") %>%
+  filter(doi %in% citations_small$doi) %>% 
+  distinct(doi, funder_name) %>%
+  left_join(citations_for_dl, by = "doi") %>% 
+  select(uid, doi, funder_name, year, title, author, url) %>% 
+  left_join(dummy_data_for_funder, by = "uid") %>% 
+  filter(!is.na(intervention))
+  
+dataframes_for_app[["funder_metadata"]] <- funder_metadata
 
 # Bring in llm predictions and tidy
 llm_predictions <- read.csv("llm_files/tiabme_gpt4-turbo_2.csv",row.names = NULL)
@@ -286,9 +345,6 @@ data_for_bubble_small <- included_small %>%
   select(-starts_with("method."))
 
 dataframes_for_app[["data_for_bubble_small"]] <- data_for_bubble_small
-
-
-source("dummy_data_create.R")
 
 dataframes_for_app[["dummy_data_for_bubble"]] <- dummy_data_for_bubble
 

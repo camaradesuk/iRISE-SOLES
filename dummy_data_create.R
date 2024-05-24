@@ -15,7 +15,7 @@ outcome_categories <- c("Type-I error reduction", "Type-II error reduction", "Ef
 
 # Generate dummy data
 generate_dummy_data <- function(categories) {
-  sample(categories, 1000, replace = TRUE)
+  sample(categories, 20000, replace = TRUE)
 }
 
 data <- list(
@@ -42,6 +42,40 @@ random_uids <- dbReadTable(con, "study_classification") %>%
   slice_sample(n = 200, replace = TRUE)
 
 dummy_data_for_bubble <- cbind(random_uids, dummy_data) 
+
+dummy_count <- dummy_data_for_bubble %>% 
+  count(uid)
+
+# Create Dummy Data for Funder -----
+
+generate_funder_dummy_data <- function(categories) {
+  sample(categories, 20000, replace = TRUE)
+}
+
+data <- list(
+  #'Evidence Category' = generate_funder_dummy_data(evidence_categories),
+  "intervention" = generate_funder_dummy_data(intervention_categories),
+  "intervention_provider" = generate_funder_dummy_data(provider_categories),
+  "method_of_delivery" = generate_funder_dummy_data(mod_categories),
+  "target_population" = generate_funder_dummy_data(target_categories),
+  "discipline" = generate_funder_dummy_data(discipline_categories),
+  "research_stage" = generate_funder_dummy_data(research_stage_categories),
+  "outcome_measures" = generate_funder_dummy_data(outcome_categories)
+)
+
+# Convert list to data frame
+dummy_data <- as.data.frame(data) %>%
+  mutate(discipline = gsub("\\(.*?\\)", "", discipline)) %>% 
+  mutate(intervention = gsub("\\(.*?\\)", "", intervention)) 
+
+
+
+random_uids <- dbReadTable(con, "study_classification") %>% 
+  filter(decision == "include") %>% 
+  select(uid) %>% 
+  slice_sample(n = 10000, replace = TRUE)
+
+dummy_data_for_funder <- cbind(random_uids, dummy_data) 
 
 # with_doi <- citations_for_dl %>%
 #   filter(!(doi == ""|is.na(doi)))
