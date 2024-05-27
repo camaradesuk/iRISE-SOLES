@@ -111,7 +111,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                      #bs4SidebarMenuItem(tags$p("Intervention / Outcome", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "data-int-out", icon = icon("chart-column", verify_fa = FALSE)),
                                      bs4SidebarMenuItem(tags$p("Evidence Map", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "int_ac_dis-bubble", icon = icon("users-gear", verify_fa = FALSE)),
                                      bs4SidebarMenuItem(tags$p("Intervention/Outcome", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "discipline_bar", icon = icon("chart-column", verify_fa = FALSE)),
-                                     bs4SidebarMenuItem(tags$p("Outcome Overview", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "outcome-overview-tab", icon = icon("landmark", verify_fa = FALSE)),
+                                     bs4SidebarMenuItem(tags$p("Outcome Overview", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "outcome-overview-tab", icon = icon("file-code", verify_fa = FALSE)),
                                      
                                      bs4SidebarMenuItem(tags$p("Funder", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "funder-tab", icon = icon("landmark", verify_fa = FALSE)),
                                      
@@ -389,125 +389,125 @@ ui <- bs4DashPage(freshTheme = mytheme,
                               
                       ),
                       
-                      tabItem(tabName = "pico-bubble",
-                              
-                              box(
-                                width= 12,
-                                status = "primary",
-                                id = "pico_bubble_search_tab",
-                                tags$style(HTML('.btn-light {
-                    background-color: #efefef !important;
-                    color: black !important;
-                    }')),
-                                #side = "left",
-                                
-                                tabPanel(title = "Population",
-                                         
-                                         fluidRow(column(width = 6,
-                                                         pickerInput(
-                                                           inputId = "select_intervention_provider",
-                                                           label = tags$p("Select an Intervention Provider", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
-                                                           choices = sort(unique(dummy_data_for_bubble$intervention_provider)),
-                                                           selected = sort(unique(dummy_data_for_bubble$intervention_provider)),
-                                                           multiple = TRUE,
-                                                           options = pickerOptions(noneSelectedText = "Please Select",
-                                                                                   virtualScroll = 100,
-                                                                                   actionsBox = TRUE,
-                                                                                   size = 10
-                                                           )
-                                                         )),
-                                                  column(width = 6,
-                                                         pickerInput(
-                                                           inputId = "select_pop_target",
-                                                           label = tags$p("Select a Target Population", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
-                                                           choices = sort(unique(dummy_data_for_bubble$target_population)),
-                                                           selected = sort(unique(dummy_data_for_bubble$target_population)),
-                                                           multiple = TRUE,
-                                                           options = pickerOptions(noneSelectedText = "Please Select",
-                                                                                   virtualScroll = 100,
-                                                                                   actionsBox = TRUE,
-                                                                                   size = 10
-                                                           )
-                                                           
-                                                           
-                                                         )
-                                                  ) ),
-                                         
-                                         fluidRow(column(width = 4,
-                                                         pickerInput(
-                                                           inputId = "select_discipline",
-                                                           label = tags$p("Select a Discipline", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
-                                                           choices = sort(unique(dummy_data_for_bubble$discipline)),
-                                                           selected = sort(unique(dummy_data_for_bubble$discipline)),
-                                                           multiple = TRUE,
-                                                           options = pickerOptions(noneSelectedText = "Please Select",
-                                                                                   virtualScroll = 100,
-                                                                                   actionsBox = TRUE,
-                                                                                   liveSearch = TRUE,
-                                                                                   size = 10
-                                                           )
-                                                         )),
-                                                  
-                                                  column(width = 4,
-                                                         pickerInput(
-                                                           inputId = "select_mod",
-                                                           label = tags$p("Select Method of Delivery", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
-                                                           choices = sort(unique(dummy_data_for_bubble$method_of_delivery)),
-                                                           selected = sort(unique(dummy_data_for_bubble$method_of_delivery)),
-                                                           multiple = TRUE,
-                                                           options = list(
-                                                             `actions-box` = TRUE,
-                                                             `live-search` = TRUE
-                                                           ))
-                                                         
-                                                         
-                                                  ),
-                                                  column(width = 4,
-                                                         pickerInput(
-                                                           inputId = "select_research_stage",
-                                                           label = tags$p("Select Research Stage", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
-                                                           choices = sort(unique(dummy_data_for_bubble$research_stage)),
-                                                           selected = sort(unique(dummy_data_for_bubble$research_stage)),
-                                                           multiple = TRUE,
-                                                           options = pickerOptions(noneSelectedText = "Please Select",
-                                                                                   virtualScroll = 100,
-                                                                                   actionsBox = TRUE,
-                                                                                   size = 10
-                                                           )
-                                                         )
-                                                  )
-                                         )
-                                )),
-                              
-                              box(
-                                
-                                width = 12,
-                                height = 700,
-                                id = "intervention_outcome",
-                                status = "primary",
-                                
-                                
-                                
-                                plotlyOutput("bubble_plot_multi") %>% withSpinner(color="#96c296"),
-                                #verbatimTextOutput("error_message"),
-                                tags$br(),
-                                tags$br()
-                                
-                                
-                              ),
-                              
-                              box(
-                                
-                                width = 12,
-                                id = "intervention_outcome_datatable",
-                                status = "primary",
-                                
-                                DT::dataTableOutput("pop_table") %>% withSpinner(color="#96c296")
-                                #verbatimTextOutput("error_message")
-                                
-                                
-                                
-                              )),
+                    #   tabItem(tabName = "pico-bubble",
+                    #           
+                    #           box(
+                    #             width= 12,
+                    #             status = "primary",
+                    #             id = "pico_bubble_search_tab",
+                    #             tags$style(HTML('.btn-light {
+                    # background-color: #efefef !important;
+                    # color: black !important;
+                    # }')),
+                    #             #side = "left",
+                    #             
+                    #             tabPanel(title = "Population",
+                    #                      
+                    #                      fluidRow(column(width = 6,
+                    #                                      pickerInput(
+                    #                                        inputId = "select_intervention_provider",
+                    #                                        label = tags$p("Select an Intervention Provider", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
+                    #                                        choices = sort(unique(dummy_data_for_bubble$intervention_provider)),
+                    #                                        selected = sort(unique(dummy_data_for_bubble$intervention_provider)),
+                    #                                        multiple = TRUE,
+                    #                                        options = pickerOptions(noneSelectedText = "Please Select",
+                    #                                                                virtualScroll = 100,
+                    #                                                                actionsBox = TRUE,
+                    #                                                                size = 10
+                    #                                        )
+                    #                                      )),
+                    #                               column(width = 6,
+                    #                                      pickerInput(
+                    #                                        inputId = "select_pop_target",
+                    #                                        label = tags$p("Select a Target Population", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
+                    #                                        choices = sort(unique(dummy_data_for_bubble$target_population)),
+                    #                                        selected = sort(unique(dummy_data_for_bubble$target_population)),
+                    #                                        multiple = TRUE,
+                    #                                        options = pickerOptions(noneSelectedText = "Please Select",
+                    #                                                                virtualScroll = 100,
+                    #                                                                actionsBox = TRUE,
+                    #                                                                size = 10
+                    #                                        )
+                    #                                        
+                    #                                        
+                    #                                      )
+                    #                               ) ),
+                    #                      
+                    #                      fluidRow(column(width = 4,
+                    #                                      pickerInput(
+                    #                                        inputId = "select_discipline",
+                    #                                        label = tags$p("Select a Discipline", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
+                    #                                        choices = sort(unique(dummy_data_for_bubble$discipline)),
+                    #                                        selected = sort(unique(dummy_data_for_bubble$discipline)),
+                    #                                        multiple = TRUE,
+                    #                                        options = pickerOptions(noneSelectedText = "Please Select",
+                    #                                                                virtualScroll = 100,
+                    #                                                                actionsBox = TRUE,
+                    #                                                                liveSearch = TRUE,
+                    #                                                                size = 10
+                    #                                        )
+                    #                                      )),
+                    #                               
+                    #                               column(width = 4,
+                    #                                      pickerInput(
+                    #                                        inputId = "select_mod",
+                    #                                        label = tags$p("Select Method of Delivery", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
+                    #                                        choices = sort(unique(dummy_data_for_bubble$method_of_delivery)),
+                    #                                        selected = sort(unique(dummy_data_for_bubble$method_of_delivery)),
+                    #                                        multiple = TRUE,
+                    #                                        options = list(
+                    #                                          `actions-box` = TRUE,
+                    #                                          `live-search` = TRUE
+                    #                                        ))
+                    #                                      
+                    #                                      
+                    #                               ),
+                    #                               column(width = 4,
+                    #                                      pickerInput(
+                    #                                        inputId = "select_research_stage",
+                    #                                        label = tags$p("Select Research Stage", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
+                    #                                        choices = sort(unique(dummy_data_for_bubble$research_stage)),
+                    #                                        selected = sort(unique(dummy_data_for_bubble$research_stage)),
+                    #                                        multiple = TRUE,
+                    #                                        options = pickerOptions(noneSelectedText = "Please Select",
+                    #                                                                virtualScroll = 100,
+                    #                                                                actionsBox = TRUE,
+                    #                                                                size = 10
+                    #                                        )
+                    #                                      )
+                    #                               )
+                    #                      )
+                    #             )),
+                    #           
+                    #           box(
+                    #             
+                    #             width = 12,
+                    #             height = 700,
+                    #             id = "intervention_outcome",
+                    #             status = "primary",
+                    #             
+                    #             
+                    #             
+                    #             plotlyOutput("bubble_plot_multi") %>% withSpinner(color="#96c296"),
+                    #             #verbatimTextOutput("error_message"),
+                    #             tags$br(),
+                    #             tags$br()
+                    #             
+                    #             
+                    #           ),
+                    #           
+                    #           box(
+                    #             
+                    #             width = 12,
+                    #             id = "intervention_outcome_datatable",
+                    #             status = "primary",
+                    #             
+                    #             DT::dataTableOutput("pop_table") %>% withSpinner(color="#96c296")
+                    #             #verbatimTextOutput("error_message")
+                    #             
+                    #             
+                    #             
+                    #           )),
                       # UI Interventions across disciplines ----
                       tabItem(tabName = "int_ac_dis-bubble",
                               
@@ -543,7 +543,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                          column(width = 4,
                                                 pickerInput(
                                                   inputId = "legend_bubble_select",
-                                                  label = tags$p("Select Comparator", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
+                                                  label = tags$p("Select Legend", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
                                                   choices = colnames(dummy_data_for_bubble)[colnames(dummy_data_for_bubble) %in% c("discipline", "intervention_provider", "target_population")],
                                                   selected = c("discipline"),
                                                   multiple = FALSE,
@@ -653,7 +653,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                            column(width = 4,
                                                   pickerInput(
                                                     inputId = "legend_select_specific",
-                                                    label = tags$p("Select Population", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
+                                                    label = tags$p("Legend Specfic", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
                                                     choices = list(),
                                                     selected = ,
                                                     multiple = TRUE,
@@ -771,98 +771,85 @@ ui <- bs4DashPage(freshTheme = mytheme,
                       
                       tabItem(tabName = "outcome-overview-tab",
                               
-                              box(width = 12,
-                                  height = "600px",
-                                  title = "Studies Funded by Year",
-                                  status = "primary",
-                                  solidHeader = TRUE,
-                                  
-                                  fluidRow(column(6,
-                                                  pickerInput(
-                                                    inputId = "outcome_select",
-                                                    label = tags$p("Select an Outcome Measure", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
-                                                    choices = sort(unique(dummy_data_for_bubble$outcome_measures)),
-                                                    selected = c("Code / analysis availability and re-use"),
-                                                    multiple = TRUE,
-                                                    options = pickerOptions(noneSelectedText = "Please Select",
-                                                                            virtualScroll = 100,
-                                                                            actionsBox = TRUE,
-                                                                            size = 10
-                                                    )
-                                                  )
-                                                  ),
-                                           column(6,
-                                                  pickerInput(
-                                                    inputId = "stakeholder_select",
-                                                    label = tags$p("Select an Intervention Provider", style = "color: #47B1A3;font-family: KohinoorBangla, sans-serif !important;"),
-                                                    choices = sort(unique(dummy_data_for_bubble$intervention_provider)),
-                                                    selected = sort(unique(dummy_data_for_bubble$intervention_provider)),
-                                                    multiple = FALSE,
-                                                    options = pickerOptions(noneSelectedText = "Please Select",
-                                                                            virtualScroll = 100,
-                                                                            actionsBox = TRUE,
-                                                                            size = 10
-                                                    )
-                                                  )
-                                           )
-                                           
-                                           
-                                           # column(6,
-                                           #        valueBoxOutput("outcome_summary", width = 12)
-                                           # )
-                                           ),
-                                  
-                                  # fluidRow(
-                                  #   column(6,
-                                  # pickerInput(inputId = "funder_comp_select",
-                                  #             label = "Choose a Funder for comparison:",
-                                  #             choices = unique(funder_overall_count$funder_name),
-                                  #             selected = c("National Science Foundation"),
-                                  #             multiple = TRUE,
-                                  #             options = pickerOptions(noneSelectedText = "Please Select",
-                                  #                                     virtualScroll = 100,
-                                  #                                     actionsBox = TRUE,
-                                  #                                     size = 10)))
-                                  # ),
-                                  
-                                  
-                                  
-                                  
-                                  plotlyOutput("outcome_year_plot") %>% withSpinner(color="#96c296")
-                                  
+                              fluidRow(
+                              box(
+                                title = "Select Filters",
+                                status = "primary",
+                                solidHeader = TRUE,
+                                width = 3,
+                                height = "500px",
+                               
+                                       pickerInput(
+                                         inputId = "provider_select",
+                                         label = tags$p("Select an Intervention Provider", style = "color: #47B1A3; font-family: KohinoorBangla, sans-serif;"),
+                                         choices = sort(unique(dummy_data_for_bubble$intervention_provider)),
+                                         selected = c("Institution"),
+                                         multiple = FALSE,
+                                         options = pickerOptions(
+                                           noneSelectedText = "Please Select",
+                                           virtualScroll = 100,
+                                           actionsBox = TRUE,
+                                           size = 10
+                                         )
+                                       ),
+                                       pickerInput(
+                                         inputId = "outcome_select",
+                                         label = tags$p("Select an Outcome Measure", style = "color: #47B1A3; font-family: KohinoorBangla, sans-serif;"),
+                                         choices = sort(unique(dummy_data_for_bubble$outcome_measures)),
+                                         selected = c("Code / analysis availability and re-use"),
+                                         multiple = TRUE,
+                                         options = pickerOptions(
+                                           noneSelectedText = "Please Select",
+                                           virtualScroll = 100,
+                                           actionsBox = TRUE,
+                                           size = 10
+                                         )
+                                       )
+                                
                               ),
-                              # fluidRow(
-                              #   
-                              #   valueBoxOutput("oa_box"),
-                              #   valueBoxOutput("od_box"),
-                              #   valueBoxOutput("oc_box")
-                              #   
-                              # ),
+                              box(
+                                title = "Outcomes by Year",
+                                status = "primary",
+                                solidHeader = TRUE,
+                                width = 9,
+                                height = "500px",
+                                plotlyOutput("outcome_year_plot") %>% withSpinner(color="#96c296")
+                              )),
+                      
+                    
+                              fluidRow(
+
+                                valueBoxOutput("top_int_all_time"),
+                                valueBoxOutput("top_int_five_years"),
+                                valueBoxOutput("top_int_five_no")
+
+                              ),
+                              uiOutput("dynamic_box"),
                               
                               # box(width = 12,
                               #     height = "600px",
-                              #     title = "Research",
+                              #     title = "Interventions by Outcome",
                               #     status = "primary",
-                              #     solidHeader = TRUE, 
-                              #     
+                              #     solidHeader = TRUE,
+                              # 
                               #     fluidRow(
                               #       column(6,
-                              #              pickerInput(inputId = "funder_category_select", 
-                              #                          label = "Choose a Category:", 
-                              #                          choices = c("Intervention", "Intervention Provider", "Method of Delivery", "Target Population", "Outcome Measures", "Research Stage", "Discipline"),
-                              #                          selected = c("Intervention"),
-                              #                          multiple = FALSE,
+                              #              pickerInput(inputId = "intervention_select",
+                              #                          label = "Choose an Intervention:",
+                              #                          choices = sort(unique(dummy_data_for_bubble$intervention)),
+                              #                          selected = sort(unique(dummy_data_for_bubble$intervention)),
+                              #                          multiple = TRUE,
                               #                          options = pickerOptions(noneSelectedText = "Please Select",
                               #                                                  virtualScroll = 100,
                               #                                                  actionsBox = TRUE,
                               #                                                  size = 10)),
                               #       ),
                               #       column(6,
-                              #              valueBoxOutput("funding_category_box", width = 12)
+                              #              valueBoxOutput("intervention_box", width = 12)
                               #       )
                               #     ),
-                              #     plotlyOutput("funder_category_bar")
-                              # ),
+                              #     plotlyOutput("interventions_by_outcome_bar")
+                              # )
                               
                               #uiOutput("data_table_box")        
                       ),
@@ -1170,54 +1157,7 @@ server <- function(input, output, session) {
     
   })
   
-  output$outcome_year_plot <- renderPlotly({
-    
-    data <- dummy_data_for_bubble %>% 
-      filter(outcome_measures %in% input$outcome_select) %>%
-      filter(intervention_provider %in% input$stakeholder_select) %>%
-      left_join(citations_for_dl, by = "uid") %>% 
-      select(year, outcome_measures, intervention_provider) %>% 
-      group_by(year, outcome_measures, intervention_provider) %>% 
-      count() %>% 
-      ungroup()
-    
-    min_year <- min(data$year)
-    max_year <- max(data$year)
-    
-    all_combinations <- expand.grid(
-      year = min_year:max_year,
-      outcome_measures = unique(data$outcome_measures),
-      intervention_provider = unique(data$intervention_provider)
-    )
-    
-    # Complete the data with all combinations
-    data_complete <- left_join(all_combinations, data, by = c("year", "outcome_measures", "intervention_provider")) %>%
-      replace_na(list(n = 0)) %>%
-      plot_ly(x = ~year,
-              type = 'scatter',
-              mode = 'lines',
-              color = ~outcome_measures,
-              y = ~n,
-              # marker = list(color = "#266080", line = list(
-              #   color = "#266080", 
-              #   width = 1        
-              # )),
-              hoverinfo = 'text',
-              textposition = "none",
-              text = ~paste(
-                "<br><b>Number of Publications:</b>", n,
-                "<br><b>Year:</b>", year)
-      ) %>%
-      layout(showlegend = TRUE,
-             yaxis = list(title = 'Number of publications', showgrid = TRUE),
-             xaxis = list(title = "", tickangle = -45, ticklen = 4, showgrid = FALSE), barmode='stack',
-             annotations =
-               list(x = 1, y = -0.2, text = "",
-                    showarrow = F, xref='paper', yref='paper',
-                    xanchor='right', yanchor='bottom', xshift=0, yshift=0,
-                    font=list(size=12, color="black")))  
-    
-  })
+  
   
   output$funder_category_bar <- renderPlotly({
     
@@ -1319,6 +1259,244 @@ server <- function(input, output, session) {
     
   })
   
+  output$dynamic_box <- renderUI({
+    #browser()
+    selected_outcome <- input$outcome_select
+    selected_provider <- input$provider_select
+
+        if (length(selected_outcome) > 1) {
+      selected_outcome_str <- paste(selected_outcome, collapse = ", ")
+      selected_title <- paste0("Interventions provided by: ", selected_provider, "<br>",
+                               "Outcome Measures: ", selected_outcome_str)
+    } else if (length(selected_outcome) == 1) {
+      selected_title <- paste0("Interventions provided by: ", selected_provider, "<br>",
+                               "Outcome Measure: ", selected_outcome)
+    } else {
+      selected_title <- "Interventions by Outcome" 
+    }
+    
+    box(
+      width = 12,
+      height = "600px",
+      title = HTML(selected_title),
+      status = "primary",
+      solidHeader = TRUE,
+      fluidRow(
+        column(6,
+               pickerInput(
+                 inputId = "intervention_select",
+                 label = "Choose an Intervention:",
+                 choices = sort(unique(dummy_data_for_bubble$intervention)),
+                 selected = sort(unique(dummy_data_for_bubble$intervention))[2:3],
+                 multiple = TRUE,
+                 options = pickerOptions(
+                   noneSelectedText = "Please Select",
+                   virtualScroll = 100,
+                   actionsBox = TRUE,
+                   size = 10
+                 )
+               )
+        ),
+        column(6,
+               valueBoxOutput("intervention_box", width = 12)
+        )
+      ),
+      plotlyOutput("interventions_by_outcome_bar")
+    )
+  })
+  
+  
+  
+  output$outcome_year_plot <- renderPlotly({
+    
+    data <- dummy_data_for_bubble %>% 
+      filter(outcome_measures %in% input$outcome_select) %>%
+      filter(intervention_provider %in% input$provider_select) %>%
+      left_join(citations_for_dl, by = "uid") %>% 
+      select(year, outcome_measures, intervention_provider) %>% 
+      group_by(year, outcome_measures, intervention_provider) %>% 
+      count() %>% 
+      ungroup()
+    
+    min_year <- min(data$year)
+    max_year <- max(data$year)
+    
+    all_combinations <- expand.grid(
+      year = min_year:max_year,
+      outcome_measures = unique(data$outcome_measures),
+      intervention_provider = unique(data$intervention_provider)
+    )
+    
+    # Complete the data with all combinations
+    data_complete <- left_join(all_combinations, data, by = c("year", "outcome_measures", "intervention_provider")) %>%
+      replace_na(list(n = 0)) %>%
+      plot_ly(x = ~year,
+              type = 'scatter',
+              mode = 'lines',
+              color = ~outcome_measures,
+              y = ~n,
+              line = list(width = 3),
+              # marker = list(color = "#266080", line = list(
+              #   color = "#266080", 
+              #   width = 1        
+              # )),
+              hoverinfo = 'text',
+              textposition = "none",
+              text = ~paste(
+                "<br><b>Number of Publications:</b>", n,
+                "<br><b>Year:</b>", year)
+      ) %>%
+      layout(showlegend = TRUE,
+             yaxis = list(title = 'Number of publications', showgrid = TRUE),
+             xaxis = list(title = "", tickangle = -45, ticklen = 4, showgrid = FALSE), barmode='stack',
+             annotations =
+               list(x = 1, y = -0.2, text = "",
+                    showarrow = F, xref='paper', yref='paper',
+                    xanchor='right', yanchor='bottom', xshift=0, yshift=0,
+                    font=list(size=12, color="black")))  
+    
+  })
+  
+  output$top_int_all_time <- renderValueBox({
+    #browser()
+    
+    #current_year <- 2024
+    #start_year <- current_year - 5
+    
+    int_all_time <- dummy_data_for_bubble %>%
+      left_join(citations_for_dl, by = "uid") %>% 
+      filter(outcome_measures %in% input$outcome_select) %>%
+      #filter(intervention %in% input$intervention_select) %>%
+      filter(intervention_provider %in% input$provider_select) %>% 
+      #filter(year >= start_year & year <= current_year) %>%
+      group_by(intervention) %>%
+      summarise(count = n()) %>%
+      arrange(desc(count)) %>% 
+      ungroup() %>% 
+      slice_head() %>% 
+      pull(intervention)
+    
+    
+    
+    valueBox(
+      width = 4,
+      subtitle = tags$p(HTML(paste0("The intervention with the most evidence!<br> Provided by: ", input$provider_select, "<br>for Outcome Measure: ", input$outcome_select, "<br>")), style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
+      color = "secondary",
+      value = tags$p(int_all_time, style = "font-size: 150%; color: white;"),
+      icon = icon("code"),       
+      elevation = 2
+      
+    )
+  })
+  
+  output$top_int_five_years <- renderValueBox({
+    #browser()
+    
+    current_year <- 2024
+    start_year <- current_year - 5
+    
+    int_out_table <- dummy_data_for_bubble %>%
+      left_join(citations_for_dl, by = "uid") %>% 
+      filter(outcome_measures %in% input$outcome_select) %>%
+      #filter(intervention %in% input$intervention_select) %>%
+      filter(intervention_provider %in% input$provider_select) %>% 
+      filter(year >= start_year & year <= current_year) %>%
+      group_by(intervention) %>%
+      summarise(count = n()) %>%
+      arrange(desc(count)) %>% 
+      ungroup() %>% 
+      slice_head(n = 3) %>%  
+      pull(intervention)
+      
+    interventions_html <- paste(int_out_table, collapse="<br>")
+    
+    
+    
+    valueBox(
+      width = 4,
+      subtitle = tags$p(HTML(paste0("The top 3 tested interventions with the most evidence in the last 5 years!<br> Provided by: ", input$provider_select, "<br>for Outcome Measure: ", input$outcome_select, "<br>")), style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
+      color = "secondary",
+      value = tags$p(HTML(interventions_html), style = "font-size: 150%; color: white;"),
+      icon = icon("code"),       
+      elevation = 2
+      
+    )
+  })
+
+  
+  
+  output$top_int_five_no <- renderValueBox({
+    
+    current_year <- 2024
+    start_year <- current_year - 5
+    
+    int_no_five_years <- dummy_data_for_bubble %>%
+      left_join(citations_for_dl, by = "uid") %>% 
+      filter(outcome_measures %in% input$outcome_select) %>%
+      #filter(intervention %in% input$intervention_select) %>%
+      filter(intervention_provider %in% input$provider_select) %>% 
+      filter(year >= start_year & year <= current_year) %>%
+      group_by(intervention) %>%
+      summarise(count = n()) %>%
+      arrange(desc(count)) %>% 
+      ungroup() %>% 
+      slice_head() 
+    
+    no_published <- int_no_five_years%>% 
+      pull(count)
+    
+    intervention <- int_no_five_years%>% 
+      pull(intervention)
+    
+    
+    
+    valueBox(
+      width = 4,
+      subtitle = tags$p(HTML(paste0("Studies have been published in the last 5 years <br> testing Intervention: ", intervention, "<br> Provided by: ", input$provider_select, "<br>for Outcome Measure: ", input$outcome_select, "<br>")), style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
+      color = "secondary",
+      value = tags$p(no_published, style = "font-size: 300%; color: white;"),
+      icon = icon("code"),       
+      elevation = 2
+      
+    )
+  })
+
+  output$interventions_by_outcome_bar <- renderPlotly({
+    
+      int_out_table <- dummy_data_for_bubble %>%
+        filter(outcome_measures %in% input$outcome_select) %>%
+        filter(intervention %in% input$intervention_select) %>%
+        filter(intervention_provider %in% input$provider_select) %>%
+        filter(!discipline == "Other") %>% 
+        group_by(intervention, outcome_measures, discipline) %>%
+        count() %>%
+        ungroup() %>%
+        arrange(n) 
+      
+      # Create plot
+      plot <- plot_ly(data = int_out_table, x = ~n, type = 'bar', orientation = 'h',
+                      y = ~factor(intervention, levels = unique(intervention)),
+                      color = ~discipline,
+                      marker = list(line = list(color = 'black', width = 1)),
+                      hoverinfo = 'text',
+                      text = ~paste(" Number of Publications:", n,"<br>", 
+                                    "Intervention:", intervention, "<br>",
+                                    "Outcome:", outcome_measures, "<br>",
+                                    "Discipline:", discipline),
+                      textposition = "none") %>%
+        layout(showlegend = TRUE,
+               yaxis = list(title = '', showgrid = FALSE, ticklen = 4, standoff = 25),
+               xaxis = list(title = "Number of Publications", ticklen = 2),
+               barmode = 'stack',
+               legend = list(title = list(text = "Discipline")),
+               annotations = list(x = 1, y = -0.2, text = "", showarrow = FALSE,
+                                  xref = 'paper', yref = 'paper', xanchor = 'right', 
+                                  yanchor = 'bottom', xshift = 0, yshift = 0, 
+                                  font = list(size = 12, color = "black")))
+      
+    
+  })
+  
   
   observe({
     choices <- switch(input$legend_bubble_select,
@@ -1340,7 +1518,7 @@ server <- function(input, output, session) {
   
   bubble_react <- reactive({
 
-        
+        #browser()
         req(input$select_outcome, input$legend_bubble_specific)
         
         data_filter <- dummy_data_for_bubble %>%
@@ -1356,15 +1534,17 @@ server <- function(input, output, session) {
       group_by(uid, intervention, !!sym(input$legend_bubble_select), outcome_measures) %>%
       count() %>%
       ungroup() %>%
-      count(intervention, !!sym(input$legend_bubble_select), outcome_measures)
+      count(intervention, !!sym(input$legend_bubble_select), outcome_measures) %>% 
+      arrange(!!sym(input$legend_bubble_select), outcome_measures, intervention)
     
-    
+    #browser()
     data$key <- row.names(data)
     data$col <- "#266080"
     
     click_data <- event_data("plotly_click", priority = "event", source = "B")
 
     if (!is.null(click_data)) {
+      
       #browser()
       bubble_react_new <- data %>%
         mutate(selected_colour = key %in% click_data$customdata)
@@ -1406,8 +1586,8 @@ server <- function(input, output, session) {
       assign("col_vector", bubble_react_new$col, envir = .GlobalEnv)
       
     }
-    bubble_react_new <- bubble_react_new %>% 
-       mutate(shape = ifelse(selected_colour == FALSE, "circle", "square"))
+    # bubble_react_new <- bubble_react_new %>% 
+    #    mutate(shape = ifelse(selected_colour == FALSE, "circle", "square"))
     
     
     
@@ -1618,18 +1798,17 @@ server <- function(input, output, session) {
       
       tryCatch({
         
-        #browser()
+       # browser()
         
-        plot <- plot_data() 
-        plot <- plot %>%
+        plot <- plot_data() %>%
+          ungroup() %>% 
           mutate(numeric_outcome = as.numeric(factor(outcome_measures))) %>%
           group_by(intervention, outcome_measures) %>%
           mutate(index = row_number(),  # Create an indexer within each group
                  jitter_base = ifelse(n() > 1, 0.15 / (n() - 1), 0),  # Jitter base depending on count
                  jittered_outcome = numeric_outcome + (jitter_base * n()) * ((index - 1) - (n() - 1) / 2)) %>%
           ungroup() %>%
-          mutate(shape == ifelse(col == "#47B1A3", "square", "circle"))
-                    #mutate(shape = ifelse(selected_colour == FALSE, "circle", "square"))
+          mutate(shape = ifelse(selected_colour == TRUE, "circle-cross-open", "circle"))
    
         # Calculate midpoints for line positions
         unique_outcomes <- sort(unique(plot$numeric_outcome))
@@ -1637,8 +1816,7 @@ server <- function(input, output, session) {
  
         max_n <- max(plot$n, na.rm = TRUE)
         sizeref_value <- 1 * (max_n/ 100)
-        
-        print(plot$shape)
+
         p <- plot_ly(plot,
                      x = ~jittered_outcome, y = ~intervention, size = ~n,
                      color = as.formula(paste0("~`", input$legend_bubble_select, "`")), 
@@ -1648,8 +1826,8 @@ server <- function(input, output, session) {
                      source = "B",
                      height = 750,
                      fill = ~'',
-                     marker = list(symbol = ~'circle', sizemode = 'area', 
-                                   opacity = 0.6, sizeref = sizeref_value,
+                     marker = list(symbol = ~shape, sizemode = 'area', 
+                                   opacity = 0.8, sizeref = sizeref_value,
                                    line = list(color = '#FFFFFF', width = 1),
                                    legendgroup = ~as.formula(paste0("~`", input$legend_bubble_select, "`"))),
                      hoverinfo = 'text',
