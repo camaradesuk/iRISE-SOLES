@@ -80,7 +80,7 @@ dataframes_for_app[["citations_for_dl"]] <- citations_for_dl
 # Create included tbl
 included_with_metadata <- citations_for_dl  %>%
   select(date, uid, title, journal, year, doi, uid, url, author, abstract, keywords, decision)
-  
+
 dataframes_for_app[["included_with_metadata"]] <- included_with_metadata 
 
 included_small <- included_with_metadata %>% 
@@ -151,42 +151,42 @@ funder <- dbReadTable(con, "funder_grant_tag") %>%
 
 dataframes_for_app[["funder"]] <- funder
 
-  
-  citations_small <- citations_for_dl %>% 
+
+citations_small <- citations_for_dl %>% 
   select(doi, year)
-  
-  funder_overall_count <- dbReadTable(con, "funder_grant_tag") %>% 
-    filter(!str_starts(funder_name, "https")) %>% 
-    filter(!funder_name == "Unknown") %>% 
-    distinct(doi, funder_name) %>% 
-    count(funder_name, sort = T) %>% 
-    slice_head(n = 100)
-  
-  dataframes_for_app[["funder_overall_count"]] <- funder_overall_count
-  
-  funder_transparency <- dbReadTable(con, "funder_grant_tag") %>% 
-    filter(!str_starts(funder_name, "https")) %>% 
-    filter(!funder_name == "Unknown") %>% 
-    distinct(doi, funder_name) %>% 
-    left_join(oa_tag %>% select(doi, is_oa), by = "doi") %>% 
-    left_join(transparency %>% select(doi, is_open_data, is_open_code), by = "doi") %>% 
-    filter(!is.na(is_oa))
-  
-  dataframes_for_app[["funder_transparency"]] <- funder_transparency
-  
-  funder_year <- dbReadTable(con, "funder_grant_tag") %>% 
-    filter(!str_starts(funder_name, "https")) %>% 
-    filter(!funder_name == "Unknown") %>%
-    left_join(citations_small, by = "doi") %>% 
-    filter(!is.na(year)) %>% 
-    select(doi, funder_name, year) %>% 
-    group_by(year, funder_name) %>%
-    count()
-  
-  dataframes_for_app[["funder_year"]] <- funder_year
-  
-  
-  
+
+funder_overall_count <- dbReadTable(con, "funder_grant_tag") %>% 
+  filter(!str_starts(funder_name, "https")) %>% 
+  filter(!funder_name == "Unknown") %>% 
+  distinct(doi, funder_name) %>% 
+  count(funder_name, sort = T) %>% 
+  slice_head(n = 100)
+
+dataframes_for_app[["funder_overall_count"]] <- funder_overall_count
+
+funder_transparency <- dbReadTable(con, "funder_grant_tag") %>% 
+  filter(!str_starts(funder_name, "https")) %>% 
+  filter(!funder_name == "Unknown") %>% 
+  distinct(doi, funder_name) %>% 
+  left_join(oa_tag %>% select(doi, is_oa), by = "doi") %>% 
+  left_join(transparency %>% select(doi, is_open_data, is_open_code), by = "doi") %>% 
+  filter(!is.na(is_oa))
+
+dataframes_for_app[["funder_transparency"]] <- funder_transparency
+
+funder_year <- dbReadTable(con, "funder_grant_tag") %>% 
+  filter(!str_starts(funder_name, "https")) %>% 
+  filter(!funder_name == "Unknown") %>%
+  left_join(citations_small, by = "doi") %>% 
+  filter(!is.na(year)) %>% 
+  select(doi, funder_name, year) %>% 
+  group_by(year, funder_name) %>%
+  count()
+
+dataframes_for_app[["funder_year"]] <- funder_year
+
+
+
 
 funder_metadata <- dbReadTable(con, "funder_grant_tag") %>% 
   filter(!str_starts(funder_name, "https")) %>% 
@@ -197,7 +197,7 @@ funder_metadata <- dbReadTable(con, "funder_grant_tag") %>%
   select(uid, doi, funder_name, year, title, author, url) %>% 
   left_join(dummy_data_for_funder, by = "uid") %>% 
   filter(!is.na(intervention))
-  
+
 dataframes_for_app[["funder_metadata"]] <- funder_metadata
 
 # Bring in llm predictions and tidy
@@ -345,6 +345,12 @@ data_for_bubble_small <- included_small %>%
   select(-starts_with("method."))
 
 dataframes_for_app[["data_for_bubble_small"]] <- data_for_bubble_small
+
+dummy_data_title_case <- dummy_data_for_bubble %>% 
+  rename_with(~ stringr::str_replace_all(stringr::str_to_title(.), pattern = "_", replacement = " ")) %>% 
+  rename("uid" = "Uid")
+
+dataframes_for_app[["dummy_data_title_case"]] <- dummy_data_title_case
 
 dataframes_for_app[["dummy_data_for_bubble"]] <- dummy_data_for_bubble
 
