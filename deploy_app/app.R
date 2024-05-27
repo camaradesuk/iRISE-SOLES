@@ -429,7 +429,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                   choices = colnames(dummy_data_for_bubble)[colnames(dummy_data_for_bubble) %in% c("discipline", "intervention_provider", "target_population")],
                                                   #choices = stringr::str_replace_all(stringr::str_to_title(colnames(dummy_data_for_bubble)[colnames(dummy_data_for_bubble) %in% c("discipline", "intervention_provider", "target_population")]), pattern = "_", replacement = " "),
                                                   
-                                                  selected = c("Discipline"),
+                                                  selected = c("discipline"),
                                                   multiple = FALSE,
                                                   options = pickerOptions(noneSelectedText = "Please Select",
                                                                           virtualScroll = 100,
@@ -462,9 +462,9 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                 id = "intervention_discipline",
                                 status = "primary",
                                 
-                                materialSwitch(inputId = "switch_over_time",
-                                               label = "Over time", 
-                                               status = "info"),
+                                # materialSwitch(inputId = "switch_over_time",
+                                #                label = "Over time", 
+                                #                status = "info"),
                                 
                                 
                                 verbatimTextOutput("error_message"),
@@ -1594,119 +1594,119 @@ server <- function(input, output, session) {
   output$int_ac_dis_bubble_plot <- renderPlotly({
     
     
-    if(input$switch_over_time){
-      #browser()
-      
-      data_filter <- dummy_data_for_bubble %>%
-        filter(outcome_measures %in% input$select_outcome) %>% 
-        filter(discipline %in% input$select_discipline_legend)
-      
-      citations_years <- citations_for_dl %>% 
-        select(uid, year)
-      
-      data <- data_filter %>%
-        left_join(citations_years, by = "uid") %>%
-        group_by(uid, year,  intervention, discipline, outcome_measures) %>%
-        count() %>%
-        ungroup() %>% 
-        group_by(year, intervention, discipline, outcome_measures) %>%
-        count(name = "yearly_count") %>%
-        ungroup() %>% 
-        group_by(intervention, discipline, outcome_measures) %>%
-        mutate(cumulative_count = cumsum(yearly_count)) %>%
-        ungroup()
-      
-      all_combinations <- expand.grid(
-        year = min(data$year):max(data$year),
-        intervention = unique(data$intervention),
-        discipline = unique(data$discipline),
-        outcome_measures = unique(data$outcome_measures)
-      )
-      
-      # Join this with the existing data
-      data_filled <- all_combinations %>%
-        left_join(data, by = c("year", "intervention", "discipline", "outcome_measures")) %>%
-        replace_na(list(yearly_count = 0))
-      
-      # Recalculate the cumulative counts
-      data_filled <- data_filled %>%
-        arrange(intervention, discipline, outcome_measures, year) %>%
-        group_by(intervention, discipline, outcome_measures) %>%
-        mutate(cumulative_count = cumsum(yearly_count)) %>% 
-        ungroup() %>% 
-        mutate(cumulative_count = as.numeric(cumulative_count)) %>% 
-        mutate(numeric_outcome = as.numeric(factor(outcome_measures)))
-      
-      
-      unique_outcomes <- sort(unique(data_filled$numeric_outcome))
-      line_positions <- head(unique_outcomes, -1) + diff(unique_outcomes) / 2
-      
-      max_n <- max(data_filled$cumulative_count, na.rm = TRUE)
-      sizeref_value <- 2 * max_n/ 100
-      
-      tryCatch({
-        p <- plot_ly(data_filled,
-                     x = ~outcome_measures, y = ~intervention, 
-                     size = ~cumulative_count,
-                     #colors = ~sort(unique(col)), 
-                     color = ~discipline, 
-                     #customdata = ~key,
-                     type = 'scatter',
-                     mode = 'markers',
-                     source = "B",
-                     frame = ~year,
-                     height = 750,
-                     fill = ~'',
-                     marker = list(symbol = 'circle', sizemode = 'area', opacity = 0.8,
-                                   line = list(color = '#FFFFFF'),
-                                   legendgroup = ~discipline,
-                                   sizeref = sizeref_value
-                                   
-                                   
-                     ),
-                     hoverinfo = 'text',
-                     textposition = "none",
-                     text = ~paste(" Intervention:", intervention,"<br>",
-                                   "Outcome:", outcome_measures,"<br>",
-                                   "Discipline:", discipline,"<br>",
-                                   "Number of Studies:", cumulative_count)
-        ) %>%
-          layout(yaxis = list(title = list(text = "Intervention", standoff = 25)
-                              #autotypenumbers = 'strict'
-          ),
-          xaxis = list(title = list(text = "Outcome Measures", standoff = 25),
-                       tickangle = -20,
-                       ticklen = 4,
-                       tickvals = unique(data_filled$numeric_outcome),
-                       ticktext = unique(data_filled$outcome_measures),
-                       showgrid = FALSE
-          ),
-          hoverlabel = list(bgcolor = "white",
-                            font = list(size = 14)),
-          showlegend = TRUE,
-          clickmode = "event + select",
-          shapes =
-            lapply(line_positions, function(pos) {
-              list(
-                type = "line",
-                x0 = pos, y0 = 0,
-                x1 = pos, y1 = 1,
-                xref = 'x', yref = 'paper',  # Vertical lines along x
-                line = list(color = 'grey', width = 1)
-              )
-            })
-          )
-        
-        return(p)
-      }, error = function(e) {
-        
-        #browser()
-        #output$error_message <- renderText({ "Error occurred: Please make another choice." })
-        
-        return(NULL)  # Return NULL to avoid further processing or showing an erroneous plot
-      })
-      
-    } else { 
+    # if(input$switch_over_time){
+    #   #browser()
+    #   
+    #   data_filter <- dummy_data_for_bubble %>%
+    #     filter(outcome_measures %in% input$select_outcome) %>% 
+    #     filter(discipline %in% input$select_discipline_legend)
+    #   
+    #   citations_years <- citations_for_dl %>% 
+    #     select(uid, year)
+    #   
+    #   data <- data_filter %>%
+    #     left_join(citations_years, by = "uid") %>%
+    #     group_by(uid, year,  intervention, discipline, outcome_measures) %>%
+    #     count() %>%
+    #     ungroup() %>% 
+    #     group_by(year, intervention, discipline, outcome_measures) %>%
+    #     count(name = "yearly_count") %>%
+    #     ungroup() %>% 
+    #     group_by(intervention, discipline, outcome_measures) %>%
+    #     mutate(cumulative_count = cumsum(yearly_count)) %>%
+    #     ungroup()
+    #   
+    #   all_combinations <- expand.grid(
+    #     year = min(data$year):max(data$year),
+    #     intervention = unique(data$intervention),
+    #     discipline = unique(data$discipline),
+    #     outcome_measures = unique(data$outcome_measures)
+    #   )
+    #   
+    #   # Join this with the existing data
+    #   data_filled <- all_combinations %>%
+    #     left_join(data, by = c("year", "intervention", "discipline", "outcome_measures")) %>%
+    #     replace_na(list(yearly_count = 0))
+    #   
+    #   # Recalculate the cumulative counts
+    #   data_filled <- data_filled %>%
+    #     arrange(intervention, discipline, outcome_measures, year) %>%
+    #     group_by(intervention, discipline, outcome_measures) %>%
+    #     mutate(cumulative_count = cumsum(yearly_count)) %>% 
+    #     ungroup() %>% 
+    #     mutate(cumulative_count = as.numeric(cumulative_count)) %>% 
+    #     mutate(numeric_outcome = as.numeric(factor(outcome_measures)))
+    #   
+    #   
+    #   unique_outcomes <- sort(unique(data_filled$numeric_outcome))
+    #   line_positions <- head(unique_outcomes, -1) + diff(unique_outcomes) / 2
+    #   
+    #   max_n <- max(data_filled$cumulative_count, na.rm = TRUE)
+    #   sizeref_value <- 2 * max_n/ 100
+    #   
+    #   tryCatch({
+    #     p <- plot_ly(data_filled,
+    #                  x = ~outcome_measures, y = ~intervention, 
+    #                  size = ~cumulative_count,
+    #                  #colors = ~sort(unique(col)), 
+    #                  color = ~discipline, 
+    #                  #customdata = ~key,
+    #                  type = 'scatter',
+    #                  mode = 'markers',
+    #                  source = "B",
+    #                  frame = ~year,
+    #                  height = 750,
+    #                  fill = ~'',
+    #                  marker = list(symbol = 'circle', sizemode = 'area', opacity = 0.8,
+    #                                line = list(color = '#FFFFFF'),
+    #                                legendgroup = ~discipline,
+    #                                sizeref = sizeref_value
+    #                                
+    #                                
+    #                  ),
+    #                  hoverinfo = 'text',
+    #                  textposition = "none",
+    #                  text = ~paste(" Intervention:", intervention,"<br>",
+    #                                "Outcome:", outcome_measures,"<br>",
+    #                                "Discipline:", discipline,"<br>",
+    #                                "Number of Studies:", cumulative_count)
+    #     ) %>%
+    #       layout(yaxis = list(title = list(text = "Intervention", standoff = 25)
+    #                           #autotypenumbers = 'strict'
+    #       ),
+    #       xaxis = list(title = list(text = "Outcome Measures", standoff = 25),
+    #                    tickangle = -20,
+    #                    ticklen = 4,
+    #                    tickvals = unique(data_filled$numeric_outcome),
+    #                    ticktext = unique(data_filled$outcome_measures),
+    #                    showgrid = FALSE
+    #       ),
+    #       hoverlabel = list(bgcolor = "white",
+    #                         font = list(size = 14)),
+    #       showlegend = TRUE,
+    #       clickmode = "event + select",
+    #       shapes =
+    #         lapply(line_positions, function(pos) {
+    #           list(
+    #             type = "line",
+    #             x0 = pos, y0 = 0,
+    #             x1 = pos, y1 = 1,
+    #             xref = 'x', yref = 'paper',  # Vertical lines along x
+    #             line = list(color = 'grey', width = 1)
+    #           )
+    #         })
+    #       )
+    #     
+    #     return(p)
+    #   }, error = function(e) {
+    #     
+    #     #browser()
+    #     #output$error_message <- renderText({ "Error occurred: Please make another choice." })
+    #     
+    #     return(NULL)  # Return NULL to avoid further processing or showing an erroneous plot
+    #   })
+    #   
+    # } else { 
       
       
       tryCatch({
@@ -1792,7 +1792,7 @@ server <- function(input, output, session) {
         return(NULL)  # Return NULL to avoid further processing or showing an erroneous plot
       })
       
-    }
+    #}
   })
   
   
