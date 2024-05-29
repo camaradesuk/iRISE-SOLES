@@ -1,8 +1,6 @@
-# Load required libraries
 library(dplyr)
 library(purrr)
 
-# Define list names
 evidence_categories <- c("Controlled observational study evaluating intervention (Aim #1)", "Controlled experiment evaluating intervention (Aim #1)", "Other evidence supporting an intervention (non-comparator research) (Aim #2)", "Evaluation of modifying factors of intervention (Aim #3)")
 intervention_categories <- c("Reporting guidelines, checklists, or standards (for example: TRIPOD, SRWR, COROQ, PRISMA, STROBE, SPIRIT, AGREE, SRQR, ARRIVE, ICMJE, SQUIRE, CHEERS, CARE, STARD, CONSORT, TOP, MDAR)", "Data sharing policy/guideline", "Materials sharing policy/guideline", "Code sharing policy/guideline", "other", "Quality checks / feedback (for example: Reporting quality, Computational reproducibility, Code quality, Data quality)", "Trial registration", "Analysis plan", "Pre-registration", "Protocol registration")
                              #"Registered reports", "Assessment quality", "Peer review processes (for example: Results-free peer review, Open peer review, Other peer review process)", "Workflow standardisation", "Data access policies / agreements", "Open science plans", "Citation standards", "Open access publication", "Publication policies", "Preprints", "Online sharing platform (for example: Open Science Framework , Zenodo, GitHub)", "Centralised sharing platform", "Open science infrastructure", "Open science badges (for example: Open code, Open materials, Open data, Pre-registration)", "Electronic lab notebooks", "Version control system", "Documentation system", "Experimental design", "Statistical method", "CRediT taxonomy", "ORCID iD", "Data management training", "Systematic review training", "Pre-registration training", "Statistical training", "Reproducible code/analysis training", "Training community", "Mentoring / role models")
@@ -13,7 +11,7 @@ discipline_categories <- c("Natural sciences (e.g., Mathematics, Computer and in
 research_stage_categories <- c("Planning and design stage", "Conduct stage", "Reporting stage", "Outreach", "Assessment")
 outcome_categories <- c("Type-I error reduction", "Type-II error reduction", "Effect size estimation", "Transparency of funding", "Transparency of interests", "Transparency of contributions", "Data availability and re-use", "Materials availability and re-use", "Code / analysis availability and re-use", "Reporting quality", "Transparency of evaluation", "Reporting bias", "Publication bias", "Computational reproducibility", "Research process / workflow transparency")
 
-# Generate dummy data
+# Generate dummy data for evidence map
 generate_dummy_data <- function(categories) {
   sample(categories, 20000, replace = TRUE)
 }
@@ -29,12 +27,10 @@ data <- list(
   "outcome_measures" = generate_dummy_data(outcome_categories)
 )
 
-# Convert list to data frame
 dummy_data <- as.data.frame(data) %>%
   mutate(discipline = gsub("\\(.*?\\)", "", discipline)) %>% 
   mutate(intervention = gsub("\\(.*?\\)", "", intervention)) 
   
-
 
 random_uids <- dbReadTable(con, "study_classification") %>% 
   filter(decision == "include") %>% 
@@ -43,8 +39,6 @@ random_uids <- dbReadTable(con, "study_classification") %>%
 
 dummy_data_for_bubble <- cbind(random_uids, dummy_data) 
 
-dummy_count <- dummy_data_for_bubble %>% 
-  count(uid)
 
 # Create Dummy Data for Funder -----
 
@@ -63,12 +57,9 @@ data <- list(
   "outcome_measures" = generate_funder_dummy_data(outcome_categories)
 )
 
-# Convert list to data frame
 dummy_data <- as.data.frame(data) %>%
   mutate(discipline = gsub("\\(.*?\\)", "", discipline)) %>% 
   mutate(intervention = gsub("\\(.*?\\)", "", intervention)) 
-
-
 
 random_uids <- dbReadTable(con, "study_classification") %>% 
   filter(decision == "include") %>% 
@@ -77,11 +68,35 @@ random_uids <- dbReadTable(con, "study_classification") %>%
 
 dummy_data_for_funder <- cbind(random_uids, dummy_data) 
 
-# with_doi <- citations_for_dl %>%
-#   filter(!(doi == ""|is.na(doi)))
-# 
-# pdfs <- dbReadTable(con, "full_texts") %>%
-#   filter(doi %in% with_doi$doi)
-# 
-# pdf_count <- pdfs %>%
-#   count(status)
+# Create Dummy Data for Map -----
+
+ror_institute_uids <- dbReadTable(con, "institution_location") %>% 
+  left_join(dbReadTable(con, "institution_tag"), by = "doi") %>%
+  filter(!name == "Unknown") %>%
+  left_join(included_small, by = "doi") %>%
+  select(uid)
+
+generate_map_dummy_data <- function(categories) {
+  sample(categories, nrow(ror_institute_uids), replace = TRUE)
+}
+
+
+data <- list(
+  #'Evidence Category' = generate_funder_dummy_data(evidence_categories),
+  "intervention" = generate_map_dummy_data(intervention_categories),
+  "intervention_provider" = generate_map_dummy_data(provider_categories),
+  "method_of_delivery" = generate_map_dummy_data(mod_categories),
+  "target_population" = generate_map_dummy_data(target_categories),
+  "discipline" = generate_map_dummy_data(discipline_categories),
+  "research_stage" = generate_map_dummy_data(research_stage_categories),
+  "outcome_measures" = generate_map_dummy_data(outcome_categories)
+)
+
+dummy_data_for_institution <- as.data.frame(data) %>%
+  mutate(discipline = gsub("\\(.*?\\)", "", discipline)) %>% 
+  mutate(intervention = gsub("\\(.*?\\)", "", intervention)) 
+
+
+
+dummy_data_for_map <- cbind(ror_institute_uids, dummy_data_for_institution) %>%
+  distinct()

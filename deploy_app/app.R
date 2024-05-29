@@ -1,4 +1,6 @@
-library(dplyr)
+library(sf)
+library(leaflet)
+library(leaflet.extras)
 library(shinythemes)
 library(viridis)
 library(viridisLite)
@@ -29,6 +31,8 @@ library(readr)
 library(jsonlite)
 library(tidyr)
 library(pool)
+library(dplyr)
+library(rmapshaper)
 
 source("irise_modules.R")
 
@@ -116,6 +120,8 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                      bs4SidebarMenuItem(tags$p("Funder", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "funder-tab", icon = icon("landmark", verify_fa = FALSE)),
                                      
                                      #bs4SidebarMenuItem(tags$p("Author Location", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "author_location", icon = icon("earth-americas")),
+                                     bs4SidebarMenuItem(tags$p("Location", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "location-tab", icon = icon("earth-americas")),
+                                     
                                      bs4SidebarMenuItem(tags$p("iRISE Database", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "module_search_database", icon = icon("search")),
                                      bs4SidebarMenuItem(tags$p("About", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "about", icon = icon("info"))
                                    )
@@ -663,7 +669,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                   width = 3,
                                   height = "500px",
                                   tags$br(),
-
+                                  
                                   pickerInput(
                                     inputId = "provider_select",
                                     label = tags$p("Select an Intervention Provider", style = "color: #47B1A3; font-family: KohinoorBangla, sans-serif;"),
@@ -717,61 +723,120 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                   width = 9,
                                   height = "500px",
                                   plotlyOutput("outcome_year_plot") %>% withSpinner(color="#96c296")
-                                )),
+                                )
+                              ),
                               
                               
                               
                               uiOutput("dynamic_box"),
                               
-                              # box(width = 12,
-                              #     height = "600px",
-                              #     title = "Interventions by Outcome",
-                              #     status = "primary",
-                              #     solidHeader = TRUE,
-                              # 
-                              #     fluidRow(
-                              #       column(6,
-                              #              pickerInput(inputId = "intervention_select",
-                              #                          label = "Choose an Intervention:",
-                              #                          choices = sort(unique(dummy_data_for_bubble$intervention)),
-                              #                          selected = sort(unique(dummy_data_for_bubble$intervention)),
-                              #                          multiple = TRUE,
-                              #                          options = pickerOptions(noneSelectedText = "Please Select",
-                              #                                                  virtualScroll = 100,
-                              #                                                  actionsBox = TRUE,
-                              #                                                  size = 10)),
-                              #       ),
-                              #       column(6,
-                              #              valueBoxOutput("intervention_box", width = 12)
-                              #       )
-                              #     ),
-                              #     plotlyOutput("interventions_by_outcome_bar")
-                              # )
-                              
-                              #uiOutput("data_table_box")        
                       ),
                       
-                      # tabItem(tabName = "author_location",
-                      # 
-                      #         tabBox(
-                      # 
-                      #           width = 12,
-                      #           id = "tabcard_location",
-                      #           title = "",
-                      #           status = "primary",
-                      #           solidHeader = FALSE,
-                      #           type = "tabs",
-                      # 
-                      #           tabPanel(
-                      #             width=12,
-                      #             title="World map of author location",
-                      #             status="success",
-                      #             solidHeader = TRUE,
-                      #             plotlyOutput("tagged_author_map", height = "550px") %>% withSpinner(color="#96c296")
-                      #           )
-                      # 
-                      #         )
-                      # ),
+                      tabItem(tabName = "location-tab",
+                              
+                              
+                              box(
+                                
+                                
+                                width = 12,
+                                title = "Institution Location",
+                                status = "primary",
+                                solidHeader = TRUE,
+                                collapsable = FALSE,
+                                closable=FALSE,
+                                
+                                sidebar = boxSidebar(
+                                  width = 30,
+                                  background = "#64C296",
+                                  id = "inst_loc_sidebar",
+                                  icon = icon("filter"),
+                                  
+                                  fluidRow(
+                                    column(width = 11,
+                                  
+                                  tags$div(
+                                    style = "padding: 0px;",
+                                    selectizeInput(inputId = "country_select",
+                                                   label = tags$p("Select a Country", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
+                                                   choices = sort(unique(ror_dummy_data$country)),
+                                                   selected = NULL,
+                                                   multiple = TRUE,
+                                                   options = list(
+                                                     placeholder = "Please select one or more countries")
+                                    ),
+                                    pickerInput(
+                                      inputId = "continent_select",
+                                      label = tags$p("Select a Continent", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
+                                      choices = sort(unique(ror_dummy_data$continent)),
+                                      selected = sort(unique(ror_dummy_data$continent)),
+                                      multiple = TRUE,
+                                      options = pickerOptions(
+                                        noneSelectedText = "Please Select",
+                                        virtualScroll = 100,
+                                        actionsBox = TRUE,
+                                        size = 10
+                                      )
+                                    ),
+                                    pickerInput(
+                                      inputId = "inst_outcome_select",
+                                      label = tags$p("Select an Outcome", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
+                                      choices = sort(unique(ror_dummy_data$outcome_measures)),
+                                      selected = sort(unique(ror_dummy_data$outcome_measures)),
+                                      multiple = TRUE,
+                                      options = pickerOptions(
+                                        noneSelectedText = "Please Select",
+                                        virtualScroll = 100,
+                                        actionsBox = TRUE,
+                                        size = 10
+                                      )
+                                    ),
+                                    pickerInput(
+                                      inputId = "inst_discipline_select",
+                                      label = tags$p("Select a Discipline", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
+                                      choices = sort(unique(ror_dummy_data$discipline)),
+                                      selected = sort(unique(ror_dummy_data$discipline)),
+                                      multiple = TRUE,
+                                      options = pickerOptions(
+                                        noneSelectedText = "Please Select",
+                                        virtualScroll = 100,
+                                        actionsBox = TRUE,
+                                        size = 10
+                                      )
+                                    ),
+                                    pickerInput(
+                                      inputId = "inst_type_select",
+                                      label = tags$p("Select Institution Type", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
+                                      choices = sort(unique(ror_dummy_data$type)),
+                                      selected = sort(unique(ror_dummy_data$type)),
+                                      multiple = TRUE,
+                                      options = pickerOptions(
+                                        noneSelectedText = "Please Select",
+                                        virtualScroll = 100,
+                                        actionsBox = TRUE,
+                                        size = 10
+                                      )
+                                    )
+                                  )))),
+                                fluidRow(
+                                  column(width = 12, 
+                                         leafletOutput("institution_map", height = 500) %>% withSpinner(color="#96c296") ),
+                                
+                                )
+                                
+                              ),
+                              box(
+                                title = "Selected Studies",
+                                status = "danger",
+                                solidHeader = TRUE,
+                                width = 12,
+                                #height = "500px",
+                                DT::dataTableOutput("location_table") %>% withSpinner(color="#96c296")
+                              )
+                              
+                              
+                            
+                              
+                      ),
                       
                       #Search database tab UI--------------------------------------------------------------------------------------------------------------------------
                       tabItem(tabName = "module_search_database",
@@ -909,7 +974,7 @@ server <- function(input, output, session) {
     )
   })
   
-  filtered_data <- reactive({
+  funder_filtered <- reactive({
     funder_transparency %>%
       filter(funder_name == input$funder_select)
   })
@@ -931,7 +996,7 @@ server <- function(input, output, session) {
   }
   
   oa_percentage <- reactive({
-    data <- filtered_data()
+    data <- funder_filtered()
     
     calculate_transparency_percent(data$is_oa)
   })
@@ -950,7 +1015,7 @@ server <- function(input, output, session) {
   
   
   od_percentage <- reactive({
-    data <- filtered_data()
+    data <- funder_filtered()
     
     calculate_transparency_percent(data$is_open_data)
   })
@@ -969,7 +1034,7 @@ server <- function(input, output, session) {
   })
   
   oc_percentage <- reactive({
-    data <- filtered_data()
+    data <- funder_filtered()
     
     calculate_transparency_percent(data$is_open_code)
   })
@@ -986,43 +1051,31 @@ server <- function(input, output, session) {
     )
   })
   
-  # observe({
-  #   funder_category_choices <- switch(input$funder_category_select,
-  #                     "Intervention" =  sort(unique(funder_metadata$intervention)),
-  #                     "Intervention Provider" = sort(unique(funder_metadata$intervention_provider)),
-  #                     "Target Population" = sort(unique(funder_metadata$target_population)),
-  #                     "Method of Delivery" = sort(unique(funder_metadata$method_of_delivery)),
-  #                     "Outcome Measures" = sort(unique(funder_metadata$outcome_measures)),
-  #                     "Method of Delivery" = sort(unique(funder_metadata$research_stage)),
-  #                     "Discipline" = sort(unique(funder_metadata$discipline)))
-  # 
+  
+  # output$funder_tag_pie <- renderPlotly({
+  #   
+  #   colors <- c("#266080", "#89CB93")
+  #   
+  #   df_count <- included_with_metadata %>%
+  #     left_join(funder, by = "doi", multiple="all") %>%
+  #     mutate(cat = ifelse(is.na(status), "Not Complete", "Complete")) %>%
+  #     select(doi, cat) %>%
+  #     distinct() %>%
+  #     group_by(cat) %>%
+  #     count()
+  #   
+  #   plot_ly(type='pie', labels=df_count$cat, values=df_count$n,
+  #           textinfo='label+percent',
+  #           marker = list(colors = colors,
+  #                         line = list(color = '#FFFFFF', width = 2)),
+  #           height = 150,
+  #           insidetextorientation='radial') %>% 
+  #     layout(showlegend = FALSE,
+  #            margin = list(b = 30, l = 20, r = 20, t = 30, pad = 0,
+  #                          autoexpand = TRUE)
+  #            
+  #     )
   # })
-  
-  
-  output$funder_tag_pie <- renderPlotly({
-    
-    colors <- c("#266080", "#89CB93")
-    
-    df_count <- included_with_metadata %>%
-      left_join(funder, by = "doi", multiple="all") %>%
-      mutate(cat = ifelse(is.na(status), "Not Complete", "Complete")) %>%
-      select(doi, cat) %>%
-      distinct() %>%
-      group_by(cat) %>%
-      count()
-    
-    plot_ly(type='pie', labels=df_count$cat, values=df_count$n,
-            textinfo='label+percent',
-            marker = list(colors = colors,
-                          line = list(color = '#FFFFFF', width = 2)),
-            height = 150,
-            insidetextorientation='radial') %>% 
-      layout(showlegend = FALSE,
-             margin = list(b = 30, l = 20, r = 20, t = 30, pad = 0,
-                           autoexpand = TRUE)
-             
-      )
-  })
   
   
   output$funder_year_plot <- renderPlotly({
@@ -1042,10 +1095,12 @@ server <- function(input, output, session) {
               text = ~paste(
                 "<br><b>Number of Publications:</b>", n,
                 "<br><b>Year:</b>", year)
+             
       ) %>%
       layout(showlegend = FALSE,
              yaxis = list(title = 'Number of publications', showgrid = TRUE),
-             xaxis = list(title = "", tickangle = -45, ticklen = 4, showgrid = FALSE), barmode='stack',
+             xaxis = list(title = "", tickangle = -45, ticklen = 4, showgrid = FALSE), 
+             barmode='stack',
              annotations =
                list(x = 1, y = -0.2, text = "",
                     showarrow = F, xref='paper', yref='paper',
@@ -1058,32 +1113,34 @@ server <- function(input, output, session) {
   
   output$funder_category_bar <- renderPlotly({
     
-      funder_metadata_table <- funder_metadata %>%
-        filter(funder_name == input$funder_select) %>%
-        filter(intervention %in% input$funder_intervention_select) %>% 
-        filter(!intervention == "other") %>% 
-        group_by(intervention) %>%
-        count() %>%
-        ungroup() %>%
-        arrange(n) 
-      
-      # Create plot
-      plot <- plot_ly(data = funder_metadata_table, x = ~n, type = 'bar', orientation = 'h',
-                      y = ~factor(intervention, levels = unique(intervention)),
-                      marker = list(color = '#B1E0CB', line = list(color = 'black', width = 1)),
-                      hoverinfo = 'text',
-                      text = ~paste("Number of Publications:", n, "<br>", 
-                                    "Intervention:", intervention),
-                      textposition = "none") %>%
-        layout(showlegend = FALSE,
-               yaxis = list(title = '', showgrid = FALSE, ticklen = 4, standoff = 20),
-               xaxis = list(title = "", ticklen = 2),
-               barmode = 'stack',
-               annotations = list(x = 1, y = -0.2, text = "", showarrow = FALSE,
-                                  xref = 'paper', yref = 'paper', xanchor = 'right', 
-                                  yanchor = 'bottom', xshift = 0, yshift = 0, 
-                                  font = list(size = 12, color = "black")))
-      
+    funder_metadata_table <- funder_metadata %>%
+      filter(funder_name == input$funder_select) %>%
+      filter(intervention %in% input$funder_intervention_select) %>% 
+      filter(!intervention == "other") %>% 
+      group_by(intervention) %>%
+      count() %>%
+      ungroup() %>%
+      arrange(n) 
+    
+    # Create plot
+    plot <- plot_ly(data = funder_metadata_table, x = ~n, type = 'bar', orientation = 'h',
+                    y = ~factor(intervention, levels = unique(intervention)),
+                    marker = list(color = '#B1E0CB', line = list(color = 'black', width = 1)),
+                    hoverinfo = 'text',
+                    textposition = "none",
+                    text = ~paste0("Number of Publications: ", n, "<br>", 
+                                  "Intervention: ", intervention),
+                    hoverlabel = list(bgcolor = "white", 
+                                      font = list(color = "black"))) %>%
+      layout(showlegend = FALSE,
+             yaxis = list(title = '', showgrid = FALSE, ticklen = 4, standoff = 20),
+             xaxis = list(title = "", ticklen = 2),
+             barmode = 'stack',
+             annotations = list(x = 1, y = -0.2, text = "", showarrow = FALSE,
+                                xref = 'paper', yref = 'paper', xanchor = 'right', 
+                                yanchor = 'bottom', xshift = 0, yshift = 0, 
+                                font = list(size = 12, color = "black")))
+    
     
   })
   
@@ -1211,7 +1268,6 @@ server <- function(input, output, session) {
   
   output$outcome_year_plot <- renderPlotly({
     
-    #browser()
     data <- dummy_data_for_bubble %>% 
       filter(outcome_measures %in% c(input$outcome_select, input$outcome_comparison_select)) %>%
       filter(intervention_provider %in% input$provider_select) %>%
@@ -1707,91 +1763,91 @@ server <- function(input, output, session) {
     #   })
     #   
     # } else { 
+    
+    
+    tryCatch({
       
+      # browser()
       
-      tryCatch({
-        
-        # browser()
-        
-        plot <- plot_data() %>%
-          ungroup() %>% 
-          mutate(numeric_outcome = as.numeric(factor(outcome_measures))) %>%
-          group_by(intervention, outcome_measures) %>%
-          mutate(index = row_number(),  # Create an indexer within each group
-                 jitter_base = ifelse(n() > 1, 0.15 / (n() - 1), 0),  # Jitter base depending on count
-                 jittered_outcome = numeric_outcome + (jitter_base * n()) * ((index - 1) - (n() - 1) / 2)) %>%
-          ungroup() %>%
-          mutate(shape = ifelse(selected_colour == TRUE, "circle-cross-open", "circle"))
-        
-        # Calculate midpoints for line positions
-        unique_outcomes <- sort(unique(plot$numeric_outcome))
-        line_positions <- head(unique_outcomes, -1) + diff(unique_outcomes) / 2
-        
-        max_n <- max(plot$n, na.rm = TRUE)
-        sizeref_value <- 1 * (max_n/ 100)
-        
-        p <- plot_ly(plot,
-                     x = ~jittered_outcome, y = ~intervention, size = ~n,
-                     color = as.formula(paste0("~`", input$legend_bubble_select, "`")), 
-                     customdata = ~key,
-                     type = 'scatter',
-                     mode = 'markers',
-                     source = "B",
-                     height = 750,
-                     fill = ~'',
-                     marker = list(symbol = ~shape, sizemode = 'area', 
-                                   opacity = 0.8, sizeref = sizeref_value,
-                                   line = list(color = '#FFFFFF', width = 1),
-                                   legendgroup = ~as.formula(paste0("~`", input$legend_bubble_select, "`"))),
-                     hoverinfo = 'text',
-                     textposition = "none",
-                     text = ~paste0(" Intervention: ", intervention,"<br>",
-                                    "Outcome: ", outcome_measures,"<br>",
-                                    input$legend_bubble_select,": ", get(input$legend_bubble_select), "","<br>",
-                                    "Number of Studies: ", n)) %>%
-          layout(yaxis = list(title = list(text = "Intervention", standoff = 25),
-                              # tickvals = unique(plot$numeric_intervention),
-                              # ticktext = unique(plot$intervention),
-                              showgrid = TRUE
-          ),
-          xaxis = list(title = list(text = "Outcome Measures", standoff = 25),
-                       tickangle = -20,
-                       ticklen = 4,
-                       tickvals = unique(plot$numeric_outcome),
-                       ticktext = unique(plot$outcome_measures),
-                       showgrid = FALSE
-          ),
-          hoverlabel = list(bgcolor = "white",
-                            font = list(size = 14)),
-          showlegend = TRUE,
-          clickmode = "event + select",
-          shapes = 
-            lapply(line_positions, function(pos) {
-              list(
-                type = "line",
-                x0 = pos, y0 = 0,
-                x1 = pos, y1 = 1,
-                xref = 'x', yref = 'paper',  # Vertical lines along x
-                line = list(color = 'grey', width = 1)
-              )
-            })
-          # lapply(horizontal_line_positions, function(pos) {
-          #   list(
-          #     type = "line",
-          #     x0 = 0, y0 = pos,
-          #     x1 = 1, y1 = pos,
-          #     xref = 'paper', yref = 'y',  # Horizontal lines along y
-          #     line = list(color = 'grey', width = 1)
-          #   )
-          # })
-          
-          )
-        return(p)
-      }, error = function(e) {
-        
-        return(NULL)  # Return NULL to avoid further processing or showing an erroneous plot
-      })
+      plot <- plot_data() %>%
+        ungroup() %>% 
+        mutate(numeric_outcome = as.numeric(factor(outcome_measures))) %>%
+        group_by(intervention, outcome_measures) %>%
+        mutate(index = row_number(),  # Create an indexer within each group
+               jitter_base = ifelse(n() > 1, 0.15 / (n() - 1), 0),  # Jitter base depending on count
+               jittered_outcome = numeric_outcome + (jitter_base * n()) * ((index - 1) - (n() - 1) / 2)) %>%
+        ungroup() %>%
+        mutate(shape = ifelse(selected_colour == TRUE, "circle-cross-open", "circle"))
       
+      # Calculate midpoints for line positions
+      unique_outcomes <- sort(unique(plot$numeric_outcome))
+      line_positions <- head(unique_outcomes, -1) + diff(unique_outcomes) / 2
+      
+      max_n <- max(plot$n, na.rm = TRUE)
+      sizeref_value <- 1 * (max_n/ 100)
+      
+      p <- plot_ly(plot,
+                   x = ~jittered_outcome, y = ~intervention, size = ~n,
+                   color = as.formula(paste0("~`", input$legend_bubble_select, "`")), 
+                   customdata = ~key,
+                   type = 'scatter',
+                   mode = 'markers',
+                   source = "B",
+                   height = 750,
+                   fill = ~'',
+                   marker = list(symbol = ~shape, sizemode = 'area', 
+                                 opacity = 0.8, sizeref = sizeref_value,
+                                 line = list(color = '#FFFFFF', width = 1),
+                                 legendgroup = ~as.formula(paste0("~`", input$legend_bubble_select, "`"))),
+                   hoverinfo = 'text',
+                   textposition = "none",
+                   text = ~paste0(" Intervention: ", intervention,"<br>",
+                                  "Outcome: ", outcome_measures,"<br>",
+                                  input$legend_bubble_select,": ", get(input$legend_bubble_select), "","<br>",
+                                  "Number of Studies: ", n)) %>%
+        layout(yaxis = list(title = list(text = "Intervention", standoff = 25),
+                            # tickvals = unique(plot$numeric_intervention),
+                            # ticktext = unique(plot$intervention),
+                            showgrid = TRUE
+        ),
+        xaxis = list(title = list(text = "Outcome Measures", standoff = 25),
+                     tickangle = -20,
+                     ticklen = 4,
+                     tickvals = unique(plot$numeric_outcome),
+                     ticktext = unique(plot$outcome_measures),
+                     showgrid = FALSE
+        ),
+        hoverlabel = list(bgcolor = "white",
+                          font = list(size = 14)),
+        showlegend = TRUE,
+        clickmode = "event + select",
+        shapes = 
+          lapply(line_positions, function(pos) {
+            list(
+              type = "line",
+              x0 = pos, y0 = 0,
+              x1 = pos, y1 = 1,
+              xref = 'x', yref = 'paper',  # Vertical lines along x
+              line = list(color = 'grey', width = 1)
+            )
+          })
+        # lapply(horizontal_line_positions, function(pos) {
+        #   list(
+        #     type = "line",
+        #     x0 = 0, y0 = pos,
+        #     x1 = 1, y1 = pos,
+        #     xref = 'paper', yref = 'y',  # Horizontal lines along y
+        #     line = list(color = 'grey', width = 1)
+        #   )
+        # })
+        
+        )
+      return(p)
+    }, error = function(e) {
+      
+      return(NULL)  # Return NULL to avoid further processing or showing an erroneous plot
+    })
+    
     #}
   })
   
@@ -2085,7 +2141,7 @@ server <- function(input, output, session) {
     }else if (input$legend_select == "Target Population"){
       
       if(input$bar_switch_over_time){
-        #browser()
+        
         data_for_bubble <- dummy_data_for_bubble %>%
           filter(outcome_measures %in% input$select_outcome_bar) %>% 
           filter(target_population %in% input$legend_select_specific)
@@ -2189,6 +2245,189 @@ server <- function(input, output, session) {
       }
     }
   })
+  
+  scale_size <- function(num) {
+    scales::rescale(num, c(3, 15))  # Adjust size range as necessary
+  }
+  
+  # Create a reactive color palette
+  color_palette <- reactive({
+    colorFactor(palette = "Set2", domain = ror_dummy_data$type)
+  })
+
+  
+  filtered_data <- reactive({
+
+    # If country is null
+    if (is.null(input$country_select)) {
+     
+      inst_locations_filter <- ror_dummy_data %>%
+        filter(continent %in% input$continent_select,
+               outcome_measures %in% input$inst_outcome_select,
+               discipline %in% input$inst_discipline_select,
+               type %in% input$inst_type_select) 
+      
+    } else {
+      
+      inst_locations_filter <- ror_dummy_data %>%
+        filter(country %in% input$country_select,
+               continent %in% input$continent_select,
+               outcome_measures %in% input$inst_outcome_select,
+               discipline %in% input$inst_discipline_select,
+               type %in% input$inst_type_select) 
+    }
+    
+    if (nrow(inst_locations_filter >= 1)){
+      inst_locations_filter <- inst_locations_filter %>% 
+        
+      
+      return(inst_locations_filter)
+      
+      
+    } else {
+        
+      inst_locations_filter <- ror_dummy_data
+      
+    }
+    
+
+    return(inst_locations_filter)
+  })
+  
+  # Render the Leaflet map
+  output$institution_map <- renderLeaflet({
+    data <- filtered_data() %>% 
+      group_by(name) %>% 
+      mutate(filter_no = n()) %>% 
+      ungroup()
+    
+    leaflet(data) %>%
+      addProviderTiles(providers$Esri.WorldStreetMap
+      ) %>%
+      addCircleMarkers(
+        ~long, 
+        ~lat, 
+        popup = ~paste0("<b>", name, "</b><br>",
+                        "Institution Type: ", type, "<br>",
+                        "Filtered No. of Publications: ", filter_no, "<br>",
+                        "Total No. of Publications: ", number_pub),
+        radius = ~scale_size(filter_no),
+        color = "black",
+        fillColor = ~color_palette()(type),
+        fillOpacity = 1,
+        label = ~name,
+        weight = 1,
+        layerId = ~name
+        
+      ) %>%
+      addLegend(
+        position = "bottomleft", 
+        pal = color_palette(),
+        values = ~type,
+        title = "Institution Type",
+        opacity = 0.8
+      ) %>% 
+      setView(lat = 0, lng = 0, zoom = 1) %>% 
+      fitBounds(lng1 = min(filtered_data()$long, na.rm = TRUE) - 3,
+                lat1 = min(filtered_data()$lat, na.rm = TRUE) - 3,
+                lng2 = max(filtered_data()$long, na.rm = TRUE) + 3,
+                lat2 = max(filtered_data()$lat, na.rm = TRUE) + 3)
+    
+    
+  })
+  
+  filtered_table_data <- reactiveVal() 
+  
+  observeEvent(input$institution_map_marker_click, {
+   
+    click <- input$institution_map_marker_click
+    
+    if (!is.null(click$id)) {
+
+        table_data <- filtered_data() %>% 
+        filter(name == click$id)
+          
+      
+      filtered_table_data(table_data)
+      
+    }
+    
+  })
+  
+  observeEvent(input$institution_map_click, {
+    filtered_table_data(NULL)
+  })
+  
+  observe({
+    leafletProxy("institution_map", data = filtered_data()) %>%
+      #clearShapes() %>%
+      fitBounds(lng1 = min(filtered_data()$long, na.rm = TRUE) - 3,
+                lat1 = min(filtered_data()$lat, na.rm = TRUE) - 3,
+                lng2 = max(filtered_data()$long, na.rm = TRUE) + 3,
+                lat2 = max(filtered_data()$lat, na.rm = TRUE) + 3)
+
+  })
+  
+  output$location_table <- DT::renderDataTable({
+    if (is.null(filtered_table_data()) || nrow(filtered_table_data()) == 0) {
+      
+      table <- filtered_data()
+      
+      }else{
+      
+      table <- filtered_table_data()
+      
+      }
+
+    table <- table %>% 
+    mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url))
+    
+    table$title <- paste0("<a href='",table$link, "' target='_blank'>",table$title,"</a>")
+    
+      
+    table$name <- paste0("<a href='",table$ror, "' target='_blank'>",table$name,"</a>")
+    
+    table_select <- table %>% 
+      select(Institution = name, Title = title, Country = country, "Institution Type" = type, Discipline = discipline, Outcome = outcome_measures)
+
+    DT::datatable(
+      table_select,
+      rownames = FALSE,
+      escape = FALSE,
+      # extensions = c('Buttons'),
+      options = list(
+        language = list(
+          zeroRecords = "Click on a point to show data",
+          emptyTable = "Click on a point to show data"),
+        deferRender = FALSE,
+        scrollY = 600,
+        scrollX = 100,
+        scroller = TRUE,
+        columnDefs = list(
+          list(
+            targets = c(2, 3), #target for JS code
+            render = JS(
+              "function(data, type, row, meta) {",
+              "return type === 'display' && data.length > 100 ?",
+              "'<span title=\"' + data + '\">' + data.substr(0, 100) + '...</span>' : data;",
+              "}")),
+          list(
+            targets = c(2, 3), #target for JS code
+            render = JS(
+              "function(data, type, row, meta) {",
+              "return type === 'display' && data.length > 15 ?",
+              "'<span title=\"' + data + '\">' + data.substr(0, 15) + '...</span>' : data;",
+              "}")),
+          
+          list(width = '10%', targets = "_all")
+        )
+      )
+      
+    )
+    
+  })
+  
+  
   
 }
 
