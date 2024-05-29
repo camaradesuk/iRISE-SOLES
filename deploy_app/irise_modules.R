@@ -900,7 +900,8 @@ search_UI <- function(id, table) {
 
              fluidRow(
                column(3,
-                      p(strong("Search the database to find relevant studies")) %>% shinyhelper::helper(type = "markdown", content = "searching", size="l", inline=F),
+                      tags$p("Search the database to find relevant publications", style = "color: black !important;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;")
+                      %>% shinyhelper::helper(type = "markdown", content = "searching", size="l", inline=F),
                )),
 
 
@@ -1004,8 +1005,9 @@ search_UI <- function(id, table) {
 
     box(width= 12,
         maximizable = TRUE,
-        status = "primary",
-        title = "Citations in database",
+        solidHeader = TRUE,
+        status = "secondary",
+        title = "Selected studies in database",
 
         textOutput(ns("search_results_text")),
         tags$head(tags$style("#search_results_text{color: green;
@@ -1569,8 +1571,10 @@ search_Server <- function(id,
 
       output$search_results_text <- renderText({
 
+
         # If there is no query and no filters
         if(values$search_query == "" & values$submit_filters == ""){
+
 
           paste0("All ", length(filter_results()$uid), " citations loaded. Use the search box above or apply filters to identify relevant studies!")
 
