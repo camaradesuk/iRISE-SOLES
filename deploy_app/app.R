@@ -127,7 +127,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                      bs4SidebarMenuItem(tags$p("Transparency Metrics", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "data-summary-transparency", icon = icon("chart-pie", verify_fa = FALSE)),
                                      #bs4SidebarMenuItem(tags$p("Intervention / Outcome", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "data-int-out", icon = icon("chart-column", verify_fa = FALSE)),
                                      bs4SidebarMenuItem(tags$p("Evidence Map", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "int_ac_dis-bubble", icon = icon("users-gear", verify_fa = FALSE)),
-                                     bs4SidebarMenuItem(tags$p("Intervention/Outcome", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "discipline_bar", icon = icon("chart-column", verify_fa = FALSE)),
+                                     #bs4SidebarMenuItem(tags$p("Intervention/Outcome", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "discipline_bar", icon = icon("chart-column", verify_fa = FALSE)),
                                      bs4SidebarMenuItem(tags$p("Outcome Overview", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "outcome-overview-tab", icon = icon("file-code", verify_fa = FALSE)),
 
 
@@ -321,7 +321,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                 title = tags$h1("Transparency Metrics", style = "font-family: KohinoorBangla, sans-serif !important;"),
                                 lead = tags$p("This summary shows the overall percentages of publications
                 across different transparency measures, including open access publication, open data, and open code. You can
-                also benchmark improvements by viewing the number of publications in each category over time.", style = ";font-family: Kohinoor Bangla;"),
+                also benchmark improvements by viewing the number of publications in each category over time.", style = ";font-family: Kohinoor Bangla, sans-serif !important;"),
                                 status = "primary",
                                 btnName = NULL
                               ),
@@ -730,7 +730,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                   column(2,
                                          pickerInput(
                                            inputId = "provider_select",
-                                           label = tags$p("Select an Intervention Provider", style = "color: #47B1A3; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                           label = tags$p("Intervention Provider", style = "color: #47B1A3; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
                                            choices = sort(unique(dummy_data_for_bubble$intervention_provider)),
                                            selected = c("Institution"),
                                            multiple = FALSE,
@@ -745,7 +745,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                   column(2,
                                          pickerInput(
                                            inputId = "outcome_select",
-                                           label = tags$p("Select an Outcome Measure", style = "color: #47B1A3; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                           label = tags$p("Outcome Measure", style = "color: #47B1A3; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
                                            choices = sort(unique(dummy_data_for_bubble$outcome_measures)),
                                            selected = c("Code / analysis availability and re-use"),
                                            multiple = FALSE,
@@ -761,7 +761,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                   column(3,
                                          pickerInput(
                                            inputId = "outcome_comparison_select",
-                                           label = tags$p("Select Outcome for Comparison", style = "color: #47B1A3; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                           label = tags$p("Outcome for Comparison", style = "color: #47B1A3; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
                                            choices = sort(unique(dummy_data_for_bubble$outcome_measures)),
                                            selected = NULL,
                                            multiple = TRUE,
@@ -777,8 +777,8 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                          # valueBoxOutput("top_int_five_no"),
                                          # valueBoxOutput("top_disc")
                                   )),
-                                plotlyOutput("outcome_year_plot", width = "100%") %>% withSpinner(color="#96c296")),
-
+                                fluidRow(column(12,
+                                plotlyOutput("outcome_year_plot", width = "100%", height="450px") %>% withSpinner(color="#96c296")))),
                               uiOutput("dynamic_box"),
 
                               uiOutput("data_table_box_outcome")),
