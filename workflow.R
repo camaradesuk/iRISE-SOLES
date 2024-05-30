@@ -1,3 +1,5 @@
+library(sf)
+library(rmapshaper)
 library(lubridate)
 library(soles)
 library(shiny)
@@ -45,8 +47,6 @@ con <- dbConnect(RPostgres::Postgres(),
                  user = Sys.getenv("irise_soles_user"),
                  password = Sys.getenv("irise_soles_password"))
 
-source("dummy_data_create.R")
-
 # Create tables for app and write to fst -----
 dataframes_for_app <- list()
 
@@ -84,7 +84,7 @@ included_with_metadata <- citations_for_dl  %>%
 dataframes_for_app[["included_with_metadata"]] <- included_with_metadata 
 
 included_small <- included_with_metadata %>% 
-  select(uid, doi, year)
+  select(uid, doi, year, title)
 
 # Gather data for included_per_year_plot
 n_included_per_year_plot_data <- unique_citations %>%
@@ -94,7 +94,8 @@ n_included_per_year_plot_data <- unique_citations %>%
   mutate(year = as.numeric(year)) %>%
   select(year, is_included) %>% 
   mutate(year = as.numeric(year)) %>% 
-  filter(!year == "")
+  filter(!year == "") %>% 
+  filter(is_included == "included")
 
 dataframes_for_app[["n_included_per_year_plot_data"]] <- n_included_per_year_plot_data
 
@@ -143,6 +144,9 @@ transparency <- included_small %>%
 
 dataframes_for_app[["transparency"]] <- transparency
 
+source("dummy_data_create.R")
+
+# Create Funder tables
 funder <- dbReadTable(con, "funder_grant_tag") %>% 
   filter(!str_starts(funder_name, "https")) %>% 
   filter(!funder_name == "Unknown") %>% 
@@ -155,6 +159,7 @@ dataframes_for_app[["funder"]] <- funder
 citations_small <- citations_for_dl %>% 
   select(doi, year)
 
+# Take the top 100 funders
 funder_overall_count <- dbReadTable(con, "funder_grant_tag") %>% 
   filter(!str_starts(funder_name, "https")) %>% 
   filter(!funder_name == "Unknown") %>% 
@@ -184,9 +189,6 @@ funder_year <- dbReadTable(con, "funder_grant_tag") %>%
   count()
 
 dataframes_for_app[["funder_year"]] <- funder_year
-
-
-
 
 funder_metadata <- dbReadTable(con, "funder_grant_tag") %>% 
   filter(!str_starts(funder_name, "https")) %>% 
@@ -227,7 +229,6 @@ dataframes_for_app[["interventions_df"]] <- interventions_df
 interventions_df_small <- aggregate(intervention ~ uid, interventions_df, FUN = paste, collapse = "; ")
 
 dataframes_for_app[["interventions_df_small"]] <- interventions_df_small
-
 
 
 # Create intervention provider dataframe
@@ -304,7 +305,6 @@ research_stage_df_small <- aggregate(research_stage ~ uid, research_stage_df, FU
 
 dataframes_for_app[["research_stage_df_small"]] <- research_stage_df_small
 
-
 # Create outcomes stage dataframe
 outcomes_df <- gpt4_predict %>% 
   select(uid, outcome_measures) %>%
@@ -332,7 +332,6 @@ data_for_bubble <- included_small %>%
 
 dataframes_for_app[["data_for_bubble"]] <- data_for_bubble
 
-
 data_for_bubble_small <- included_small %>% 
   select(uid) %>% 
   inner_join(interventions_df_small, by = "uid") %>% 
@@ -346,19 +345,35 @@ data_for_bubble_small <- included_small %>%
 
 dataframes_for_app[["data_for_bubble_small"]] <- data_for_bubble_small
 
-dummy_data_title_case <- dummy_data_for_bubble %>% 
-  rename_with(~ stringr::str_replace_all(stringr::str_to_title(.), pattern = "_", replacement = " ")) %>% 
-  rename("uid" = "Uid")
-
-dataframes_for_app[["dummy_data_title_case"]] <- dummy_data_title_case
-
 dataframes_for_app[["dummy_data_for_bubble"]] <- dummy_data_for_bubble
 
-#dummy_bubble <- read.fst("dummy_deploy_app/fst_files/data_for_bubble.fst")
+## REMINDER, make institution type titlecase in workflow (change it in function?)
+inst <- dbReadTable(con, "institution_tag") %>% 
+  mutate(type = toTitleCase(type))
+
+pico_country <- dbReadTable(con,"pico_ontology") %>% 
+  filter(type == "country") %>% 
+  dplyr::select(country = name, continent = main_category, sub_category2)
+
+ror_dummy_data <- dbReadTable(con, "institution_location") %>% 
+  left_join(dbReadTable(con, "institution_tag"), by = "doi") %>% 
+  left_join(pico_country, by = c("institution_country_code" = "sub_category2")) %>%  
+  left_join(included_with_metadata, by = "doi") %>% 
+  left_join(dummy_data_for_map, by = "uid") %>% 
+  distinct() %>%   
+  group_by(name) %>% 
+  mutate(number_pub = n()) %>% 
+  ungroup() %>% 
+  filter(!name == "Unknown") %>% 
+  mutate(lat = latitude,
+         long = longitude)
+
+dataframes_for_app[["ror_dummy_data"]] <- ror_dummy_data
 
 pico <- data.frame(uid = character())
 
 dataframes_for_app[["pico"]] <- pico
+
 
 # Create folder for fst_files if it does not exist
 fst_files_written <- 0
