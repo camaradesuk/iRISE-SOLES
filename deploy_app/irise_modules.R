@@ -45,8 +45,8 @@ yearBarUI <- function(id, title = "", theme = "", spinner_colour = "#96c296", ta
       )
     )
   )
-  
- 
+
+
 }
 
 #' Percentage Bar Chart by Year Server Function
@@ -123,8 +123,7 @@ yearBarServer <- function(id, table, column, order = c("reported", "not reported
               filter(!!rlang::sym(column) %in% display) %>%
               plot_ly(x = ~year,
                       y = ~percent,
-                      type= "bar",
-                      #mode = "markers", 
+                      mode = "markers",
                       marker = list(color = first(colours)),
                       hoverinfo = 'text',
                       textposition = "none",
@@ -209,7 +208,6 @@ yearBarUI_included_only <- function(id, title = "", theme = "", spinner_colour =
       column(width = 12,
              plotlyOutput(ns("plot")) %>% withSpinner(color = spinner_colour)
       )),
-    
 
     fluidRow(
       column(width = 1),
@@ -221,7 +219,7 @@ yearBarUI_included_only <- function(id, title = "", theme = "", spinner_colour =
 
                sliderInput(inputId =  ns("included_year_slider"),
                            label = "Select Year Range:",
-                           min = as.numeric(min(table$year, na.rm = TRUE)), 
+                           min = as.numeric(min(table$year, na.rm = TRUE)),
                            max = as.numeric(max(table$year, na.rm = TRUE)),
                            value = c(2000,
                                      as.numeric(max(table$year, na.rm = TRUE))),
@@ -231,6 +229,8 @@ yearBarUI_included_only <- function(id, title = "", theme = "", spinner_colour =
       )
     )
   )
+
+
 }
 
 #' Percentage Bar Chart by Year Server Function
@@ -586,9 +586,9 @@ pico_multi_select_UI <- function(id,
                  style = "color: #1A465F;",
                  tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar, .irs--shiny .irs-from, .irs--shiny .irs-to
                                  {background: #1A465F; border-top:#1A465F; border-bottom: #1A465F; background-color: #1A465F;}")),
-                 sliderInput(inputId =  ns("pico_year_slider"), 
+                 sliderInput(inputId =  ns("pico_year_slider"),
                              label = "Select Year Range:",
-                             min = as.numeric(min(table$year, na.rm = TRUE)), 
+                             min = as.numeric(min(table$year, na.rm = TRUE)),
                              max = as.numeric(max(table$year, na.rm = TRUE)) + 2,
                              value = c(2000,
                                        as.numeric(max(table$year, na.rm = TRUE))),
@@ -900,7 +900,8 @@ search_UI <- function(id, table) {
 
              fluidRow(
                column(3,
-                      p(strong("Search the database to find relevant studies")) %>% shinyhelper::helper(type = "markdown", content = "searching", size="l", inline=F),
+                      tags$p("Search the database to find relevant publications", style = "color: black !important;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;")
+                      %>% shinyhelper::helper(type = "markdown", content = "searching", size="l", inline=F),
                )),
 
 
@@ -1004,8 +1005,9 @@ search_UI <- function(id, table) {
 
     box(width= 12,
         maximizable = TRUE,
-        status = "primary",
-        title = "Citations in database",
+        solidHeader = TRUE,
+        status = "secondary",
+        title = "Selected studies in database",
 
         textOutput(ns("search_results_text")),
         tags$head(tags$style("#search_results_text{color: green;
@@ -1569,8 +1571,10 @@ search_Server <- function(id,
 
       output$search_results_text <- renderText({
 
+
         # If there is no query and no filters
         if(values$search_query == "" & values$submit_filters == ""){
+
 
           paste0("All ", length(filter_results()$uid), " citations loaded. Use the search box above or apply filters to identify relevant studies!")
 
