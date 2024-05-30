@@ -45,8 +45,8 @@ yearBarUI <- function(id, title = "", theme = "", spinner_colour = "#96c296", ta
       )
     )
   )
-
-
+  
+ 
 }
 
 #' Percentage Bar Chart by Year Server Function
@@ -123,7 +123,8 @@ yearBarServer <- function(id, table, column, order = c("reported", "not reported
               filter(!!rlang::sym(column) %in% display) %>%
               plot_ly(x = ~year,
                       y = ~percent,
-                      mode = "markers",
+                      type= "bar",
+                      #mode = "markers", 
                       marker = list(color = first(colours)),
                       hoverinfo = 'text',
                       textposition = "none",
@@ -206,8 +207,9 @@ yearBarUI_included_only <- function(id, title = "", theme = "", spinner_colour =
 
     fluidRow(
       column(width = 12,
-    plotlyOutput(ns("plot")) %>% withSpinner(color = spinner_colour)
-    )),
+             plotlyOutput(ns("plot")) %>% withSpinner(color = spinner_colour)
+      )),
+    
 
     fluidRow(
       column(width = 1),
@@ -219,18 +221,16 @@ yearBarUI_included_only <- function(id, title = "", theme = "", spinner_colour =
 
                sliderInput(inputId =  ns("included_year_slider"),
                            label = "Select Year Range:",
-                           min = as.numeric(min(table$year, na.rm = TRUE)),
-                         max = as.numeric(max(table$year, na.rm = TRUE)),
-                         value = c(2000,
-                                   as.numeric(max(table$year, na.rm = TRUE))),
-                         step = 1,
-                         sep = "")
+                           min = as.numeric(min(table$year, na.rm = TRUE)), 
+                           max = as.numeric(max(table$year, na.rm = TRUE)),
+                           value = c(2000,
+                                     as.numeric(max(table$year, na.rm = TRUE))),
+                           step = 1,
+                           sep = "")
              )
       )
     )
   )
-
-
 }
 
 #' Percentage Bar Chart by Year Server Function
@@ -586,14 +586,14 @@ pico_multi_select_UI <- function(id,
                  style = "color: #1A465F;",
                  tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar, .irs--shiny .irs-from, .irs--shiny .irs-to
                                  {background: #1A465F; border-top:#1A465F; border-bottom: #1A465F; background-color: #1A465F;}")),
-               sliderInput(inputId =  ns("pico_year_slider"),
-                           label = "Select Year Range:",
-                           min = as.numeric(min(table$year, na.rm = TRUE)),
-                           max = as.numeric(max(table$year, na.rm = TRUE)) + 2,
-                           value = c(2000,
-                                     as.numeric(max(table$year, na.rm = TRUE))),
-                           step = 1,
-                           sep = ""))
+                 sliderInput(inputId =  ns("pico_year_slider"), 
+                             label = "Select Year Range:",
+                             min = as.numeric(min(table$year, na.rm = TRUE)), 
+                             max = as.numeric(max(table$year, na.rm = TRUE)) + 2,
+                             value = c(2000,
+                                       as.numeric(max(table$year, na.rm = TRUE))),
+                             step = 1,
+                             sep = ""))
         )
       )
     )
@@ -999,7 +999,7 @@ search_UI <- function(id, table) {
                style = "unite",
                color = "success"
              )
-             )
+           )
     ),
 
 
@@ -1691,16 +1691,16 @@ search_Server <- function(id,
                   "}"),
 
                 width = "10%"
-                ),
+              ),
               list(
-               # targets = c(1), #target for JS code
-               # render = JS(
-               #   "function(data, type, row, meta) {",
-               #   "return type === 'display' && data.length > 15 ?",
-               #   "'<span title=\"' + data + '\">' + data.substr(0, 15) + '...</span>' : data;",
-               #   "}")
-               # width = "200px"
-                )
+                # targets = c(1), #target for JS code
+                # render = JS(
+                #   "function(data, type, row, meta) {",
+                #   "return type === 'display' && data.length > 15 ?",
+                #   "'<span title=\"' + data + '\">' + data.substr(0, 15) + '...</span>' : data;",
+                #   "}")
+                # width = "200px"
+              )
               # list(
               #   targets = c(3:7), # columns 4, 5, and 6
               #   render = JS(

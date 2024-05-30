@@ -1,4 +1,6 @@
-library(dplyr)
+library(sf)
+library(leaflet)
+library(leaflet.extras)
 library(shinythemes)
 library(viridis)
 library(viridisLite)
@@ -29,7 +31,9 @@ library(readr)
 library(jsonlite)
 library(tidyr)
 library(pool)
-library(shinyhelper)
+library(dplyr)
+library(rmapshaper)
+
 
 source("irise_modules.R")
 
@@ -117,6 +121,8 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                      bs4SidebarMenuItem(tags$p("Funder Profile", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "funder-tab", icon = icon("landmark", verify_fa = FALSE)),
 
                                      #bs4SidebarMenuItem(tags$p("Author Location", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "author_location", icon = icon("earth-americas")),
+                                     bs4SidebarMenuItem(tags$p("Location", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "location-tab", icon = icon("earth-americas")),
+                                     
                                      bs4SidebarMenuItem(tags$p("iRISE Database", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "module_search_database", icon = icon("search")),
                                      bs4SidebarMenuItem(tags$p("About", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "about", icon = icon("info"))
                                    )
@@ -792,29 +798,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
 
                               #uiOutput("data_table_box")
                       ),
-
-                      # tabItem(tabName = "author_location",
-                      #
-                      #         tabBox(
-                      #
-                      #           width = 12,
-                      #           id = "tabcard_location",
-                      #           title = "",
-                      #           status = "primary",
-                      #           solidHeader = FALSE,
-                      #           type = "tabs",
-                      #
-                      #           tabPanel(
-                      #             width=12,
-                      #             title="World map of author location",
-                      #             status="success",
-                      #             solidHeader = TRUE,
-                      #             plotlyOutput("tagged_author_map", height = "550px") %>% withSpinner(color="#96c296")
-                      #           )
-                      #
-                      #         )
-                      # ),
-
+                      
                       #Search database tab UI--------------------------------------------------------------------------------------------------------------------------
                       tabItem(tabName = "module_search_database",
 
@@ -961,8 +945,8 @@ server <- function(input, output, session) {
       elevation = 2
     )
   })
-
-  filtered_data <- reactive({
+  
+  funder_filtered <- reactive({
     funder_transparency %>%
       filter(funder_name == input$funder_select)
   })
@@ -984,8 +968,8 @@ server <- function(input, output, session) {
   }
 
   oa_percentage <- reactive({
-    data <- filtered_data()
-
+    data <- funder_filtered()
+    
     calculate_transparency_percent(data$is_oa)
   })
 
@@ -1003,8 +987,7 @@ server <- function(input, output, session) {
 
 
   od_percentage <- reactive({
-    data <- filtered_data()
-
+    data <- funder_filtered()    
     calculate_transparency_percent(data$is_open_data)
   })
 
@@ -1022,8 +1005,8 @@ server <- function(input, output, session) {
   })
 
   oc_percentage <- reactive({
-    data <- filtered_data()
-
+    data <- funder_filtered()
+    
     calculate_transparency_percent(data$is_open_code)
   })
 
@@ -1038,46 +1021,34 @@ server <- function(input, output, session) {
 
     )
   })
-
-  # observe({
-  #   funder_category_choices <- switch(input$funder_category_select,
-  #                     "Intervention" =  sort(unique(funder_metadata$intervention)),
-  #                     "Intervention Provider" = sort(unique(funder_metadata$intervention_provider)),
-  #                     "Target Population" = sort(unique(funder_metadata$target_population)),
-  #                     "Method of Delivery" = sort(unique(funder_metadata$method_of_delivery)),
-  #                     "Outcome Measures" = sort(unique(funder_metadata$outcome_measures)),
-  #                     "Method of Delivery" = sort(unique(funder_metadata$research_stage)),
-  #                     "Discipline" = sort(unique(funder_metadata$discipline)))
-  #
+  
+  
+  # output$funder_tag_pie <- renderPlotly({
+  #   
+  #   colors <- c("#266080", "#89CB93")
+  #   
+  #   df_count <- included_with_metadata %>%
+  #     left_join(funder, by = "doi", multiple="all") %>%
+  #     mutate(cat = ifelse(is.na(status), "Not Complete", "Complete")) %>%
+  #     select(doi, cat) %>%
+  #     distinct() %>%
+  #     group_by(cat) %>%
+  #     count()
+  #   
+  #   plot_ly(type='pie', labels=df_count$cat, values=df_count$n,
+  #           textinfo='label+percent',
+  #           marker = list(colors = colors,
+  #                         line = list(color = '#FFFFFF', width = 2)),
+  #           height = 150,
+  #           insidetextorientation='radial') %>% 
+  #     layout(showlegend = FALSE,
+  #            margin = list(b = 30, l = 20, r = 20, t = 30, pad = 0,
+  #                          autoexpand = TRUE)
+  #            
+  #     )
   # })
-
-
-  output$funder_tag_pie <- renderPlotly({
-
-    colors <- c("#266080", "#89CB93")
-
-    df_count <- included_with_metadata %>%
-      left_join(funder, by = "doi", multiple="all") %>%
-      mutate(cat = ifelse(is.na(status), "Not Complete", "Complete")) %>%
-      select(doi, cat) %>%
-      distinct() %>%
-      group_by(cat) %>%
-      count()
-
-    plot_ly(type='pie', labels=df_count$cat, values=df_count$n,
-            textinfo='label+percent',
-            marker = list(colors = colors,
-                          line = list(color = '#FFFFFF', width = 2)),
-            height = 150,
-            insidetextorientation='radial') %>%
-      layout(showlegend = FALSE,
-             margin = list(b = 30, l = 20, r = 20, t = 30, pad = 0,
-                           autoexpand = TRUE)
-
-      )
-  })
-
-
+  
+  
   output$funder_year_plot <- renderPlotly({
 
     funder_year %>%
@@ -1095,10 +1066,12 @@ server <- function(input, output, session) {
               text = ~paste(
                 "<br><b>Number of Publications:</b>", n,
                 "<br><b>Year:</b>", year)
+             
       ) %>%
       layout(showlegend = FALSE,
              yaxis = list(title = 'Number of publications', showgrid = TRUE),
-             xaxis = list(title = "", tickangle = -45, ticklen = 4, showgrid = FALSE), barmode='stack',
+             xaxis = list(title = "", tickangle = -45, ticklen = 4, showgrid = FALSE), 
+             barmode='stack',
              annotations =
                list(x = 1, y = -0.2, text = "",
                     showarrow = F, xref='paper', yref='paper',
@@ -1902,7 +1875,6 @@ server <- function(input, output, session) {
 
         return(NULL)  # Return NULL to avoid further processing or showing an erroneous plot
       })
-
     #}
   })
 
@@ -2195,7 +2167,7 @@ server <- function(input, output, session) {
     }else if (input$legend_select == "Target Population"){
 
       if(input$bar_switch_over_time){
-        #browser()
+        
         data_for_bubble <- dummy_data_for_bubble %>%
           filter(outcome_measures %in% input$select_outcome_bar) %>%
           filter(target_population %in% input$legend_select_specific)
@@ -2300,6 +2272,187 @@ server <- function(input, output, session) {
     }
   })
 
+  scale_size <- function(num) {
+    scales::rescale(num, c(3, 15))  # Adjust size range as necessary
+  }
+  
+  # Create a reactive color palette
+  color_palette <- reactive({
+    colorFactor(palette = "Set2", domain = ror_dummy_data$type)
+  })
+
+  
+  filtered_data <- reactive({
+
+    # If country is null
+    if (is.null(input$country_select)) {
+     
+      inst_locations_filter <- ror_dummy_data %>%
+        filter(continent %in% input$continent_select,
+               outcome_measures %in% input$inst_outcome_select,
+               discipline %in% input$inst_discipline_select,
+               type %in% input$inst_type_select) 
+      
+    } else {
+      
+      inst_locations_filter <- ror_dummy_data %>%
+        filter(country %in% input$country_select,
+               continent %in% input$continent_select,
+               outcome_measures %in% input$inst_outcome_select,
+               discipline %in% input$inst_discipline_select,
+               type %in% input$inst_type_select) 
+    }
+    
+    if (nrow(inst_locations_filter >= 1)){
+      inst_locations_filter <- inst_locations_filter %>% 
+        
+      
+      return(inst_locations_filter)
+      
+      
+    } else {
+        
+      inst_locations_filter <- ror_dummy_data
+      
+    }
+    
+
+    return(inst_locations_filter)
+  })
+  
+  # Render the Leaflet map
+  output$institution_map <- renderLeaflet({
+    data <- filtered_data() %>% 
+      group_by(name) %>% 
+      mutate(filter_no = n()) %>% 
+      ungroup()
+    
+    leaflet(data) %>%
+      addProviderTiles(providers$Esri.WorldStreetMap
+      ) %>%
+      addCircleMarkers(
+        ~long, 
+        ~lat, 
+        popup = ~paste0("<b>", name, "</b><br>",
+                        "Institution Type: ", type, "<br>",
+                        "Filtered No. of Publications: ", filter_no, "<br>",
+                        "Total No. of Publications: ", number_pub),
+        radius = ~scale_size(filter_no),
+        color = "black",
+        fillColor = ~color_palette()(type),
+        fillOpacity = 1,
+        label = ~name,
+        weight = 1,
+        layerId = ~name
+        
+      ) %>%
+      addLegend(
+        position = "bottomleft", 
+        pal = color_palette(),
+        values = ~type,
+        title = "Institution Type",
+        opacity = 0.8
+      ) %>% 
+      setView(lat = 0, lng = 0, zoom = 1) %>% 
+      fitBounds(lng1 = min(filtered_data()$long, na.rm = TRUE) - 3,
+                lat1 = min(filtered_data()$lat, na.rm = TRUE) - 3,
+                lng2 = max(filtered_data()$long, na.rm = TRUE) + 3,
+                lat2 = max(filtered_data()$lat, na.rm = TRUE) + 3)
+    
+    
+  })
+  
+  filtered_table_data <- reactiveVal() 
+  
+  observeEvent(input$institution_map_marker_click, {
+   
+    click <- input$institution_map_marker_click
+    
+    if (!is.null(click$id)) {
+
+        table_data <- filtered_data() %>% 
+        filter(name == click$id)
+          
+      
+      filtered_table_data(table_data)
+      
+    }
+    
+  })
+  
+  observeEvent(input$institution_map_click, {
+    filtered_table_data(NULL)
+  })
+  
+  observe({
+    leafletProxy("institution_map", data = filtered_data()) %>%
+      #clearShapes() %>%
+      fitBounds(lng1 = min(filtered_data()$long, na.rm = TRUE) - 3,
+                lat1 = min(filtered_data()$lat, na.rm = TRUE) - 3,
+                lng2 = max(filtered_data()$long, na.rm = TRUE) + 3,
+                lat2 = max(filtered_data()$lat, na.rm = TRUE) + 3)
+
+  })
+  
+  output$location_table <- DT::renderDataTable({
+    if (is.null(filtered_table_data()) || nrow(filtered_table_data()) == 0) {
+      
+      table <- filtered_data()
+      
+      }else{
+      
+      table <- filtered_table_data()
+      
+      }
+
+    table <- table %>% 
+    mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url))
+    
+    table$title <- paste0("<a href='",table$link, "' target='_blank'>",table$title,"</a>")
+    
+      
+    table$name <- paste0("<a href='",table$ror, "' target='_blank'>",table$name,"</a>")
+    
+    table_select <- table %>% 
+      select(Institution = name, Title = title, Country = country, "Institution Type" = type, Discipline = discipline, Outcome = outcome_measures)
+    
+    DT::datatable(
+      table_select,
+      rownames = FALSE,
+      escape = FALSE,
+      # extensions = c('Buttons'),
+      options = list(
+        language = list(
+          zeroRecords = "Click on a point to show data",
+          emptyTable = "Click on a point to show data"),
+        deferRender = FALSE,
+        scrollY = 600,
+        scrollX = 100,
+        scroller = TRUE,
+        columnDefs = list(
+          list(
+            targets = c(2, 3), #target for JS code
+            render = JS(
+              "function(data, type, row, meta) {",
+              "return type === 'display' && data.length > 100 ?",
+              "'<span title=\"' + data + '\">' + data.substr(0, 100) + '...</span>' : data;",
+              "}")),
+          list(
+            targets = c(2, 3), #target for JS code
+            render = JS(
+              "function(data, type, row, meta) {",
+              "return type === 'display' && data.length > 15 ?",
+              "'<span title=\"' + data + '\">' + data.substr(0, 15) + '...</span>' : data;",
+              "}")),
+          
+          list(width = '10%', targets = "_all")
+        )
+      )
+      
+    ) 
+    
+  })
+  
 }
 
 # Run the application
