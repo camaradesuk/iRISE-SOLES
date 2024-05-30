@@ -829,13 +829,16 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                 status = "danger",
                                 solidHeader = TRUE,
                                 width = 12,
-                                #height = "500px",
+                                tags$head(
+                                  tags$style(HTML("
+      .dataTables_wrapper .dataTable a {
+        color: #1A465F;  
+        text-decoration: underline; 
+      }
+    "))
+                                ),
                                 DT::dataTableOutput("location_table") %>% withSpinner(color="#96c296")
-                              )
-                              
-                              
-                            
-                              
+                              )     
                       ),
                       
                       #Search database tab UI--------------------------------------------------------------------------------------------------------------------------
@@ -2389,7 +2392,7 @@ server <- function(input, output, session) {
     
     table_select <- table %>% 
       select(Institution = name, Title = title, Country = country, "Institution Type" = type, Discipline = discipline, Outcome = outcome_measures)
-
+    
     DT::datatable(
       table_select,
       rownames = FALSE,
@@ -2423,7 +2426,7 @@ server <- function(input, output, session) {
         )
       )
       
-    )
+    ) 
     
   })
   
