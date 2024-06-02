@@ -900,8 +900,8 @@ search_UI <- function(id, table) {
 
              fluidRow(
                column(3,
-                      tags$p("Search the database to find relevant publications", style = "color: black !important;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;")
-                      %>% shinyhelper::helper(type = "markdown", content = "searching", size="l", inline=F),
+                      tags$p("Conduct a search for relevant articles", style = "color: black !important;font-family: KohinoorBangla, Sans-serif;")
+                      %>% shinyhelper::helper(type = "markdown", content = "searching", size="l", inline=T),
                )),
 
 
