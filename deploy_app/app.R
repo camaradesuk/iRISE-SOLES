@@ -6,6 +6,7 @@ library(viridis)
 library(viridisLite)
 library(shiny)
 library(shinyalert)
+library(shinyhelper)
 library(fst)
 library(shinyWidgets)
 library(ggplot2)
@@ -436,7 +437,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                   )),
                                 height = 900,
                                 solidHeader = TRUE,
-                                status = "warning",
+                                status = "primary",
                                 id = "pico_bubble_search_tab",
                                 tags$head(
                                   tags$style(HTML('
@@ -451,7 +452,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                 pickerInput(
                                                   inputId = "select_outcome",
                                                   label = tags$p("Select one or more reproducibility measures", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
-                                                  choices = sort(unique(dummy_data_for_bubble$outcome_measures)),
+                                                  choices = sort(unique(annotated_studies$outcome_measures)),
                                                   selected = c("Data availability and re-use", "Code / analysis availability and re-use"),
                                                   multiple = TRUE,
                                                   options = pickerOptions(noneSelectedText = "Please Select",
@@ -467,8 +468,6 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                          inputId = "legend_bubble_select",
                                          label = tags$p("Select a subgroup", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
                                          choices = c("Discipline"="discipline", "Intervention provider"="intervention_provider", "Target population"="target_population"),
-                                         #choices = stringr::str_replace_all(stringr::str_to_title(colnames(dummy_data_for_bubble)[colnames(dummy_data_for_bubble) %in% c("discipline", "intervention_provider", "target_population")]), pattern = "_", replacement = " "),
-
                                          selected = c("discipline"),
                                          multiple = FALSE,
                                          options = pickerOptions(noneSelectedText = "Please Select",
@@ -493,17 +492,6 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                        )
                                 )
                                 ),
-
-                                # box(
-                                #
-                                #   width = 12,
-                                #   height = 900,
-                                #   id = "intervention_discipline",
-                                #   status = "primary",
-
-                                # materialSwitch(inputId = "switch_over_time",
-                                #                label = "Over time",
-                                #                status = "info"),
 
 
                                 verbatimTextOutput("error_message"),
@@ -617,7 +605,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
 
                               box(width = 12,
                                   height = "600px",
-                                  title = "Studies Funded by Year",
+                                  title = "Publications funded by year",
                                   status = "primary",
                                   solidHeader = TRUE,
                                   sidebar = boxSidebar(
@@ -636,9 +624,9 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                   fluidRow(column(6,
                                                   pickerInput(inputId = "funder_select",
 
-                                                              label = "Choose a Funder:",
-                                                              choices = unique(funder_overall_count$funder_name),
-                                                              selected = c("National Institutes of Health"),
+                                                              label = tags$p("Select a funder", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                                              choices = unique(sort(funder_overall_count$funder_name)),
+                                                              selected = c("National Health and Medical Research Council"),
                                                               multiple = FALSE,
                                                               options = pickerOptions(noneSelectedText = "Please Select",
                                                                                       virtualScroll = 100,
@@ -649,18 +637,6 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                            column(6,
                                                   valueBoxOutput("funding_summary", width = 12)
                                            )),
-                                  # fluidRow(
-                                  #   column(6,
-                                  # pickerInput(inputId = "funder_comp_select",
-                                  #             label = "Choose a Funder for comparison:",
-                                  #             choices = unique(funder_overall_count$funder_name),
-                                  #             selected = c("National Science Foundation"),
-                                  #             multiple = TRUE,
-                                  #             options = pickerOptions(noneSelectedText = "Please Select",
-                                  #                                     virtualScroll = 100,
-                                  #                                     actionsBox = TRUE,
-                                  #                                     size = 10)))
-                                  # ),
 
 
 
@@ -685,9 +661,9 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                   fluidRow(
                                     column(6,
                                            pickerInput(inputId = "funder_intervention_select",
-                                                       label = "Choose an intervention:",
-                                                       choices = sort(unique(dummy_data_for_bubble$intervention)),
-                                                       selected = sort(unique(dummy_data_for_bubble$intervention)),
+                                                       label = tags$p("Select an intervention", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                                       choices = sort(unique(funder_metadata$intervention)),
+                                                       selected = sort(unique(funder_metadata$intervention)),
                                                        multiple = TRUE,
 
                                                        options = pickerOptions(noneSelectedText = "Please Select",
@@ -731,7 +707,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                          pickerInput(
                                            inputId = "provider_select",
                                            label = tags$p("Intervention Provider", style = "color: #47B1A3; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
-                                           choices = sort(unique(dummy_data_for_bubble$intervention_provider)),
+                                           choices = sort(unique(annotated_studies$intervention_provider)),
                                            selected = c("Institution"),
                                            multiple = FALSE,
                                            options = pickerOptions(
@@ -745,24 +721,23 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                   column(2,
                                          pickerInput(
                                            inputId = "outcome_select",
-                                           label = tags$p("Outcome Measure", style = "color: #47B1A3; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
-                                           choices = sort(unique(dummy_data_for_bubble$outcome_measures)),
-                                           selected = c("Code / analysis availability and re-use"),
+                                           label = tags$p("Outcome measure", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                           choices = NULL,
+                                           selected = NULL,
                                            multiple = FALSE,
                                            options = pickerOptions(
-                                             noneSelectedText = "Please Select",
+                                             noneSelectedttText = "Please Select",
                                              virtualScroll = 100,
                                              actionsBox = TRUE,
                                              size = 10
-                                           ))
-                                  ),
-
-
+                                           )
+                                         )),
+                                  
                                   column(3,
                                          pickerInput(
                                            inputId = "outcome_comparison_select",
-                                           label = tags$p("Outcome for Comparison", style = "color: #47B1A3; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
-                                           choices = sort(unique(dummy_data_for_bubble$outcome_measures)),
+                                           label = tags$p("Outcome(s) for comparison", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                           choices = NULL,
                                            selected = NULL,
                                            multiple = TRUE,
                                            options = pickerOptions(
@@ -809,7 +784,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                     style = "padding: 0px;",
                                     selectizeInput(inputId = "country_select",
                                                    label = tags$p("Select a Country", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
-                                                   choices = sort(unique(ror_dummy_data$country)),
+                                                   choices = sort(unique(ror_data$country)),
                                                    selected = NULL,
                                                    multiple = TRUE,
                                                    options = list(
@@ -818,8 +793,8 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                     pickerInput(
                                       inputId = "continent_select",
                                       label = tags$p("Select a Continent", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
-                                      choices = sort(unique(ror_dummy_data$continent)),
-                                      selected = sort(unique(ror_dummy_data$continent)),
+                                      choices = sort(unique(ror_data$continent)),
+                                      selected = sort(unique(ror_data$continent)),
                                       multiple = TRUE,
                                       options = pickerOptions(
                                         noneSelectedText = "Please Select",
@@ -831,8 +806,8 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                     pickerInput(
                                       inputId = "inst_outcome_select",
                                       label = tags$p("Select an Outcome", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
-                                      choices = sort(unique(ror_dummy_data$outcome_measures)),
-                                      selected = sort(unique(ror_dummy_data$outcome_measures)),
+                                      choices = sort(unique(ror_data$outcome_measures)),
+                                      selected = sort(unique(ror_data$outcome_measures)),
                                       multiple = TRUE,
                                       options = pickerOptions(
                                         noneSelectedText = "Please Select",
@@ -844,8 +819,8 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                     pickerInput(
                                       inputId = "inst_discipline_select",
                                       label = tags$p("Select a Discipline", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
-                                      choices = sort(unique(ror_dummy_data$discipline)),
-                                      selected = sort(unique(ror_dummy_data$discipline)),
+                                      choices = sort(unique(ror_data$discipline)),
+                                      selected = sort(unique(ror_data$discipline)),
                                       multiple = TRUE,
                                       options = pickerOptions(
                                         noneSelectedText = "Please Select",
@@ -857,8 +832,8 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                     pickerInput(
                                       inputId = "inst_type_select",
                                       label = tags$p("Select Institution Type", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
-                                      choices = sort(unique(ror_dummy_data$type)),
-                                      selected = sort(unique(ror_dummy_data$type)),
+                                      choices = sort(unique(ror_data$type)),
+                                      selected = sort(unique(ror_data$type)),
                                       multiple = TRUE,
                                       options = pickerOptions(
                                         noneSelectedText = "Please Select",
@@ -1024,7 +999,7 @@ server <- function(input, output, session) {
       group_by(intervention, year) %>%
       count() %>%
       ungroup() %>%
-      filter(year == 2023) %>%
+      filter(!is.na(intervention)) %>%
       arrange(desc(n)) %>%
       slice_head() %>%
       pull(intervention)
@@ -1032,7 +1007,7 @@ server <- function(input, output, session) {
 
     valueBox(
       width = 12,
-      value = tags$p(paste0("The top Intervention funded by ", input$funder_select, " in 2023 was"), style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
+      value = tags$p(paste0("The top Intervention funded by ", input$funder_select, " is"), style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
       subtitle = tags$h2(df, style = "font-size: 150%; color: white;"),
       icon = icon("university"),
       color = "primary",
@@ -1138,7 +1113,10 @@ server <- function(input, output, session) {
       ) %>%
       layout(showlegend = FALSE,
              yaxis = list(title = 'Number of publications', showgrid = TRUE),
-             xaxis = list(title = "", tickangle = -45, ticklen = 4, showgrid = FALSE),
+             xaxis = list(title = "", 
+                          tickangle = -45, ticklen = 4, showgrid = FALSE, tickmode = "linear",
+                          tick0 = 0,           # Set the starting tick
+                          dtick = 1),
              barmode='stack',
              annotations =
                list(x = 1, y = -0.2, text = "",
@@ -1150,14 +1128,18 @@ server <- function(input, output, session) {
 
   output$funder_category_bar <- renderPlotly({
 
+    #browser()
     funder_metadata_table <- funder_metadata %>%
       filter(funder_name == input$funder_select) %>%
       filter(intervention %in% input$funder_intervention_select) %>%
-      filter(!intervention == "other") %>%
+      filter(!intervention == "other") %>% 
+      select(uid, funder_name, intervention) %>% 
+      distinct() %>% 
       group_by(intervention) %>%
       count() %>%
       ungroup() %>%
       arrange(n)
+      
 
     # Create plot
     plot <- plot_ly(data = funder_metadata_table, x = ~n, type = 'bar', orientation = 'h',
@@ -1171,7 +1153,8 @@ server <- function(input, output, session) {
                                       font = list(color = "black"))) %>%
       layout(showlegend = FALSE,
              yaxis = list(title = '', showgrid = FALSE, ticklen = 4, standoff = 20),
-             xaxis = list(title = "", ticklen = 2),
+             xaxis = list(title = "", ticklen = 2, tick0 = 0, 
+                          dtick = 1),
              barmode = 'stack',
              annotations = list(x = 1, y = -0.2, text = "", showarrow = FALSE,
                                 xref = 'paper', yref = 'paper', xanchor = 'right',
@@ -1197,20 +1180,20 @@ server <- function(input, output, session) {
   })
 
   output$funder_data_table <- DT::renderDataTable({
-
-    funder_table <- funder_metadata %>%
+    
+    funder_table <- funder_metadata_small %>%
       filter(funder_name == input$funder_select)
-
-
+    
     selected_studies <- funder_table %>%
       mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
       arrange(desc(year))
 
     selected_studies$title <- paste0("<a href='",selected_studies$link, "' target='_blank'>",selected_studies$title,"</a>")
-
+    
     selected_studies <- selected_studies %>%
       distinct() %>%
-      select(year, author, title, intervention, outcome_measures, discipline)
+      select(Year = year, Author = author, Title = title, Intervention = intervention, "Outcome Measures" = outcome_measures, Discipline = discipline) %>% 
+      arrange(is.na(Intervention))
 
     DT::datatable(
       selected_studies,
@@ -1255,10 +1238,10 @@ server <- function(input, output, session) {
     if (length(selected_outcome) > 1) {
       selected_outcome_str <- paste(selected_outcome, collapse = " and ")
 
-      selected_title <- paste0("Bar plot of published articles with interventions to improve ", selected_outcome_str, " implemented by ", selected_provider)
+      selected_title <- paste0("Published articles with interventions to improve ", selected_outcome_str, " implemented by ", selected_provider)
 
     } else if (length(selected_outcome) == 1) {
-      selected_title <-paste0("Bar plot of published articles with interventions to improve ", selected_outcome, " implemented by ", selected_provider)
+      selected_title <-paste0("Published articles with interventions to improve ", selected_outcome, " implemented by ", selected_provider)
     } else {
       selected_title <- "Interventions by Outcome"
     }
@@ -1274,8 +1257,8 @@ server <- function(input, output, session) {
                pickerInput(
                  inputId = "intervention_select",
                  label = "Choose an Intervention:",
-                 choices = sort(unique(dummy_data_for_bubble$intervention)),
-                 selected = sort(unique(dummy_data_for_bubble$intervention))[2:3],
+                 choices = sort(unique(annotated_studies$intervention)),
+                 selected = sort(unique(annotated_studies$intervention)),
                  multiple = TRUE,
                  options = pickerOptions(
                    noneSelectedText = "Please Select",
@@ -1314,15 +1297,35 @@ server <- function(input, output, session) {
         DT::dataTableOutput("outcome_overview_data_table") %>% withSpinner(color="#96c296")
     )
   })
+  
+  # Reactive expression to filter dataset based on the selected provider
+  outcome_picker <- reactive({
+    annotated_studies %>%
+      filter(intervention_provider == input$provider_select)
+  })
+  
+  # Observe any changes in provider selection and update outcome fields
+  observeEvent(input$provider_select, {
+    # Access the outcomes related to the selected provider
+    outcomes <- sort(unique(outcome_picker()$outcome_measures))
+    
+    # Update the outcome selections
+    updatePickerInput(session, "outcome_select", choices = outcomes)
+    updatePickerInput(session, "outcome_comparison_select", choices = outcomes)
+  })
 
   output$outcome_overview_data_table <- DT::renderDataTable({
 
-    outcome_table <- dummy_data_for_bubble %>%
+    outcome_table <- annotated_studies %>%
       filter(intervention_provider == input$provider_select) %>%
       filter(outcome_measures == input$outcome_select)
+    
+    table_small <- annotated_studies_small %>% 
+      filter(uid %in% outcome_table$uid)
 
-    outcome_table <- left_join(outcome_table, included_with_metadata)
-
+    outcome_table <- left_join(table_small, included_with_metadata)
+    
+    
     selected_studies <- outcome_table %>%
       mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
       arrange(desc(year))
@@ -1331,8 +1334,8 @@ server <- function(input, output, session) {
 
     selected_studies <- selected_studies %>%
       distinct() %>%
-      select(year, author, title, intervention, outcome_measures, discipline)
-
+      select(Year = year, Author = author, Title = title, Intervention = intervention, "Outcome Measures" = outcome_measures, Discipline = discipline)
+    
     DT::datatable(
       selected_studies,
       rownames = FALSE,
@@ -1370,15 +1373,23 @@ server <- function(input, output, session) {
   })
 
   output$outcome_year_plot <- renderPlotly({
-    data <- dummy_data_for_bubble %>%
+   
+    data <- annotated_studies %>%
       filter(outcome_measures %in% c(input$outcome_select, input$outcome_comparison_select)) %>%
       filter(intervention_provider %in% input$provider_select) %>%
       left_join(citations_for_dl, by = "uid") %>%
       select(year, outcome_measures, intervention_provider) %>%
+      distinct() %>%
       group_by(year, outcome_measures, intervention_provider) %>%
       count() %>%
       ungroup()
-
+    if (nrow(data) == 0) {
+      # If no data, create an empty plot with text indicating no data available
+      plot_ly() %>%
+        layout(title = "No data available for the selected filters",
+               xaxis = list(showticklabels = FALSE),
+               yaxis = list(showticklabels = FALSE))
+    } else {
     min_year <- min(data$year)
     max_year <- max(data$year)
 
@@ -1413,10 +1424,12 @@ server <- function(input, output, session) {
                 text = ~paste(
                   "<br><b>Cumulative Publications:</b>", cumulative_n,
                   "<br><b>Year:</b>", year),
-                showlegend = TRUE) %>%
+                showlegend = FALSE) %>%
       layout(showlegend = TRUE,
              yaxis = list(title = 'Number of publications', showgrid = TRUE),
-             xaxis = list(title = "", tickangle = -45, ticklen = 4, showgrid = FALSE),
+             xaxis = list(title = "", tickangle = -45, ticklen = 4, 
+                          dtick = 1,       
+                          tick0 = 0, showgrid = FALSE),
              legend = list(orientation = 'h', x = 0, y = -0.2),  # Horizontal legend at the bottom
              margin = list(l = 50, r = 50, t = 50, b = 100),  # Adjust margins to maximize plot area
              barmode = 'group',
@@ -1425,18 +1438,20 @@ server <- function(input, output, session) {
                     showarrow = F, xref = 'paper', yref = 'paper',
                     xanchor = 'right', yanchor = 'bottom', xshift = 0, yshift = 0,
                     font = list(size = 12, color = "black")))
+    }
   })
   output$top_int_five_years <- renderValueBox({
-    #browser()
 
     current_year <- 2024
     start_year <- current_year - 5
 
-    int_out_table <- dummy_data_for_bubble %>%
-      left_join(citations_for_dl, by = "uid") %>%
+    int_out_table <- annotated_studies %>%
       filter(outcome_measures %in% input$outcome_select) %>%
       #filter(intervention %in% input$intervention_select) %>%
       filter(intervention_provider %in% input$provider_select) %>%
+      left_join(citations_for_dl, by = "uid") %>%
+      select(year, intervention) %>% 
+      distinct() %>% 
       filter(year >= start_year & year <= current_year) %>%
       group_by(intervention) %>%
       summarise(count = n()) %>%
@@ -1494,7 +1509,6 @@ server <- function(input, output, session) {
 
   output$top_disc <- renderValueBox({
 
-    #browser()
     int_all_time <- dummy_data_for_bubble %>%
       left_join(citations_for_dl, by = "uid") %>%
       filter(outcome_measures %in% input$outcome_select) %>%
@@ -1520,16 +1534,18 @@ server <- function(input, output, session) {
 
   output$interventions_by_outcome_bar <- renderPlotly({
 
-    int_out_table <- dummy_data_for_bubble %>%
+    int_out_table <- annotated_studies %>%
       filter(outcome_measures %in% input$outcome_select) %>%
       filter(intervention %in% input$intervention_select) %>%
       filter(intervention_provider %in% input$provider_select) %>%
-      filter(!discipline == "Other") %>%
-      group_by(intervention, outcome_measures, discipline) %>%
+      select(uid, intervention, outcome_measures, discipline) %>% 
+      distinct() %>% 
+      #filter(!discipline == "Other") %>%
+      group_by(uid, intervention, outcome_measures, discipline) %>%
       count() %>%
       ungroup() %>%
       arrange(n)
-
+    
     # Create plot
     plot <- plot_ly(data = int_out_table, x = ~n, type = 'bar', orientation = 'h',
                     y = ~factor(intervention, levels = unique(intervention)),
@@ -1543,7 +1559,10 @@ server <- function(input, output, session) {
                     textposition = "none") %>%
       layout(showlegend = TRUE,
              yaxis = list(title = '', showgrid = FALSE, ticklen = 4, standoff = 25),
-             xaxis = list(title = "Number of Publications", ticklen = 2),
+             xaxis = list(title = "Number of Publications", 
+                          ticklen = 2,
+                          dtick = 1,       
+                          tick0 = 0),
              barmode = 'stack',
              legend = list(title = list(text = "Discipline")),
              annotations = list(x = 1, y = -0.2, text = "", showarrow = FALSE,
@@ -1556,9 +1575,9 @@ server <- function(input, output, session) {
 
   observe({
     choices <- switch(input$legend_bubble_select,
-                      "intervention_provider" = sort(unique(dummy_data_for_bubble$intervention_provider)),
-                      "target_population" = sort(unique(dummy_data_for_bubble$target_population)),
-                      "discipline" = sort(unique(dummy_data_for_bubble$discipline)))
+                      "intervention_provider" = sort(unique(annotated_studies$intervention_provider)),
+                      "target_population" = sort(unique(annotated_studies$target_population)),
+                      "discipline" = sort(unique(annotated_studies$discipline)))
 
     updatePickerInput(session, "legend_bubble_specific",
                       choices = choices,
@@ -1575,7 +1594,7 @@ server <- function(input, output, session) {
 
     req(input$select_outcome, input$legend_bubble_specific)
 
-    data_filter <- dummy_data_for_bubble %>%
+    data_filter <- annotated_studies %>%
       filter(outcome_measures %in% input$select_outcome) %>%
       filter(!!sym(input$legend_bubble_select) %in% input$legend_bubble_specific)
 
@@ -1598,7 +1617,6 @@ server <- function(input, output, session) {
 
     if (!is.null(click_data)) {
 
-      #browser()
       bubble_react_new <- data %>%
         mutate(selected_colour = key %in% click_data$customdata)
 
@@ -1666,7 +1684,7 @@ server <- function(input, output, session) {
 
   table_react <- reactive({
 
-    table <- dummy_data_for_bubble %>%
+    table <- annotated_studies %>%
       filter(outcome_measures %in% input$select_outcome) %>%
       filter(!!sym(input$legend_bubble_select) %in% input$legend_bubble_specific)
 
@@ -1687,12 +1705,14 @@ server <- function(input, output, session) {
              !!sym(input$legend_bubble_select) %in% table_filter[[input$legend_bubble_select]],
              outcome_measures %in% table_filter$outcome_measures)
 
-    #browser()
-    final_table <- dummy_data_for_bubble %>%
+    final_table <- annotated_studies %>%
       filter(uid %in% table_new$uid) %>%
       filter(intervention %in% table_filter$intervention,
              !!sym(input$legend_bubble_select) %in% table_filter[[input$legend_bubble_select]],
-             outcome_measures %in% table_filter$outcome_measures) %>%
+             outcome_measures %in% table_filter$outcome_measures)
+
+    final_table <- annotated_studies_small %>% 
+      filter(uid %in% final_table$uid) %>% 
       left_join(citations_for_dl, by = "uid") %>%
       select(uid, year, author, title, discipline, intervention, outcome_measures, method_of_delivery, research_stage, doi, url) %>%
       mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
@@ -1705,7 +1725,14 @@ server <- function(input, output, session) {
     }
 
     final_table <- final_table %>%
-      select(-doi, -url, -link, - uid)
+      select(-doi, -url, -link, - uid) %>% 
+      select(Year = year, Author = author, Title = title, 
+             Discipline = discipline, 
+             Intervention = intervention, 
+             "Outcome Measures" = outcome_measures,
+             "Method of Delivery" = method_of_delivery,
+             "Research Stage" = research_stage
+             )
 
 
     return(final_table)
@@ -1733,7 +1760,6 @@ server <- function(input, output, session) {
   output$int_ac_dis_bubble_plot <- renderPlotly({
 
     tryCatch({
-
 
       plot <- plot_data() %>%
         ungroup() %>%
@@ -1765,7 +1791,7 @@ server <- function(input, output, session) {
       color_var <- plot[[input$legend_bubble_select]]
       unique_color_var <- unique(color_var)
       color_map <- setNames(irise_colours[1:length(unique_color_var)], unique_color_var)
-
+      
 
       p <- plot_ly(plot,
                    x = ~jittered_outcome, y = ~intervention, size = ~n,
@@ -1835,48 +1861,7 @@ server <- function(input, output, session) {
 
 
   output$int_ac_dis_table <- DT::renderDataTable({
-    #browser()
-    table <- table_react()
-    DT::datatable(
-      table_react(),
-      rownames = FALSE,
-      escape = FALSE,
-      # extensions = c('Buttons'),
-      options = list(
-        language = list(
-          zeroRecords = "Click on a point to show data",
-          emptyTable = "Click on a point to show data"),
-        deferRender = FALSE,
-        scrollY = 600,
-        scrollX = 100,
-        scroller = TRUE,
-        columnDefs = list(
-          list(
-            targets = c(2), #target for JS code
-            render = JS(
-              "function(data, type, row, meta) {",
-              "return type === 'display' && data.length > 100 ?",
-              "'<span title=\"' + data + '\">' + data.substr(0, 100) + '...</span>' : data;",
-              "}")),
-          list(
-            targets = c(1,2), #target for JS code
-            render = JS(
-              "function(data, type, row, meta) {",
-              "return type === 'display' && data.length > 15 ?",
-              "'<span title=\"' + data + '\">' + data.substr(0, 15) + '...</span>' : data;",
-              "}")),
-
-          list(width = '10%', targets = "_all")
-        )
-      )
-
-    )
-
-  })
-
-  output$int_ac_dis_table <- DT::renderDataTable({
-    #browser()
-    table <- table_react()
+    
     DT::datatable(
       table_react(),
       rownames = FALSE,
@@ -1935,7 +1920,6 @@ server <- function(input, output, session) {
   output$discipline_bar <- renderPlotly({
 
     # Interventions across disciplines bar ----
-    #browser()
     click <- event_data("plotly_click", priority = "event", source = "A")
 
     #input$legend_select
@@ -1944,7 +1928,7 @@ server <- function(input, output, session) {
     if (input$legend_select == "Discipline"){
 
       if(input$bar_switch_over_time){
-        #browser()
+        
         data_for_bubble <- dummy_data_for_bubble %>%
           filter(outcome_measures %in% input$select_outcome_bar) %>%
           filter(discipline %in% input$legend_select_specific)
@@ -2057,7 +2041,7 @@ server <- function(input, output, session) {
     } else if (input$legend_select == "Intervention Provider"){
 
       if(input$bar_switch_over_time){
-        #browser()
+        
         data_for_bubble <- dummy_data_for_bubble %>%
           filter(outcome_measures %in% input$select_outcome_bar) %>%
           filter(intervention_provider %in% input$legend_select_specific)
@@ -2162,7 +2146,7 @@ server <- function(input, output, session) {
     }else if (input$legend_select == "Target Population"){
 
       if(input$bar_switch_over_time){
-        #browser()
+        
         data_for_bubble <- dummy_data_for_bubble %>%
           filter(outcome_measures %in% input$select_outcome_bar) %>%
           filter(target_population %in% input$legend_select_specific)
@@ -2279,40 +2263,41 @@ server <- function(input, output, session) {
 
 
   filtered_data <- reactive({
-
+    
+    
     # If country is null
     if (is.null(input$country_select)) {
 
-      inst_locations_filter <- ror_dummy_data %>%
+      inst_locations_filter <- ror_data %>%
         filter(continent %in% input$continent_select,
                outcome_measures %in% input$inst_outcome_select,
                discipline %in% input$inst_discipline_select,
-               type %in% input$inst_type_select)
+               type %in% input$inst_type_select) %>% 
+        distinct()
 
     } else {
 
-      inst_locations_filter <- ror_dummy_data %>%
+      inst_locations_filter <- ror_data %>%
         filter(country %in% input$country_select,
                continent %in% input$continent_select,
                outcome_measures %in% input$inst_outcome_select,
                discipline %in% input$inst_discipline_select,
-               type %in% input$inst_type_select)
+               type %in% input$inst_type_select) %>%
+        distinct() 
     }
 
     if (nrow(inst_locations_filter >= 1)){
       inst_locations_filter <- inst_locations_filter %>%
-
-
-      return(inst_locations_filter)
-
+        distinct()
 
     } else {
 
-      inst_locations_filter <- ror_dummy_data
+      inst_locations_filter <- ror_data %>% 
+        distinct()
 
     }
-
-
+    
+  
     return(inst_locations_filter)
   })
 
@@ -2320,7 +2305,7 @@ server <- function(input, output, session) {
   output$institution_map <- renderLeaflet({
     data <- filtered_data() %>%
       group_by(name) %>%
-      mutate(filter_no = n()) %>%
+      mutate(filter_no = n_distinct(uid)) %>%
       ungroup()
 
     leaflet(data) %>%
@@ -2400,7 +2385,12 @@ server <- function(input, output, session) {
       table <- filtered_table_data()
 
       }
-
+    
+    table <- table %>% 
+      distinct(uid) %>% 
+      left_join(ror_data_small, by = "uid")
+      
+    
     table <- table %>%
     mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url))
 
@@ -2410,7 +2400,9 @@ server <- function(input, output, session) {
     table$name <- paste0("<a href='",table$ror, "' target='_blank'>",table$name,"</a>")
 
     table_select <- table %>%
-      select(Institution = name, Title = title, Country = country, "Institution Type" = type, Discipline = discipline, Outcome = outcome_measures)
+      select(Institution = name, Title = title, Country = country, "Institution Type" = type, Discipline = discipline, Outcome = outcome_measures) %>% 
+      distinct() %>% 
+      arrange(Discipline == "Unknown")
 
     DT::datatable(
       table_select,

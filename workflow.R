@@ -145,6 +145,11 @@ transparency <- included_small %>%
 dataframes_for_app[["transparency"]] <- transparency
 
 source("dummy_data_create.R")
+source("compile_annotations.R")
+
+dataframes_for_app[["annotated_studies"]] <- annotated_studies
+dataframes_for_app[["annotated_studies_small"]] <- annotated_studies_small
+
 
 # Create Funder tables
 funder <- dbReadTable(con, "funder_grant_tag") %>% 
@@ -194,13 +199,27 @@ funder_metadata <- dbReadTable(con, "funder_grant_tag") %>%
   filter(!str_starts(funder_name, "https")) %>% 
   filter(!funder_name == "Unknown") %>%
   filter(doi %in% citations_small$doi) %>% 
-  distinct(doi, funder_name) %>%
   left_join(citations_for_dl, by = "doi") %>% 
   select(uid, doi, funder_name, year, title, author, url) %>% 
-  left_join(dummy_data_for_funder, by = "uid") %>% 
-  filter(!is.na(intervention))
+  left_join(annotated_studies, by = "uid") %>%
+  #left_join(dummy_data_for_funder, by = "uid") %>% 
+  #filter(!is.na(intervention)) %>%
+  distinct()
 
 dataframes_for_app[["funder_metadata"]] <- funder_metadata
+
+funder_metadata_small <- dbReadTable(con, "funder_grant_tag") %>% 
+  filter(!str_starts(funder_name, "https")) %>% 
+  filter(!funder_name == "Unknown") %>%
+  filter(doi %in% citations_small$doi) %>% 
+  left_join(citations_for_dl, by = "doi") %>% 
+  select(uid, doi, funder_name, year, title, author, url) %>% 
+  left_join(annotated_studies_small, by = "uid") %>%
+  #left_join(dummy_data_for_funder, by = "uid") %>% 
+  #filter(!is.na(intervention)) %>%
+  distinct()
+
+dataframes_for_app[["funder_metadata_small"]] <- funder_metadata_small
 
 # Bring in llm predictions and tidy
 llm_predictions <- read.csv("llm_files/tiabme_gpt4-turbo_2.csv",row.names = NULL)
@@ -369,6 +388,40 @@ ror_dummy_data <- dbReadTable(con, "institution_location") %>%
          long = longitude)
 
 dataframes_for_app[["ror_dummy_data"]] <- ror_dummy_data
+
+ror_data <- dbReadTable(con, "institution_location") %>% 
+  left_join(dbReadTable(con, "institution_tag"), by = "doi") %>% 
+  left_join(pico_country, by = c("institution_country_code" = "sub_category2")) %>%  
+  left_join(included_with_metadata, by = "doi") %>% 
+  left_join(annotated_studies, by = "uid") %>% 
+  distinct() %>%   
+  group_by(name) %>% 
+  mutate(number_pub = n_distinct(uid)) %>% 
+  ungroup() %>% 
+  filter(!name == "Unknown") %>% 
+  mutate(lat = latitude,
+         long = longitude) %>% 
+  mutate(outcome_measures = ifelse(is.na(outcome_measures), "Unknown", outcome_measures)) %>% 
+  mutate(discipline = ifelse(is.na(discipline), "Unknown", discipline)) 
+
+dataframes_for_app[["ror_data"]] <- ror_data
+
+ror_data_small <- dbReadTable(con, "institution_location") %>% 
+  left_join(dbReadTable(con, "institution_tag"), by = "doi") %>% 
+  left_join(pico_country, by = c("institution_country_code" = "sub_category2")) %>%  
+  left_join(included_with_metadata, by = "doi") %>% 
+  left_join(annotated_studies_small, by = "uid") %>% 
+  distinct() %>%   
+  group_by(name) %>% 
+  mutate(number_pub = n_distinct(uid)) %>% 
+  ungroup() %>% 
+  filter(!name == "Unknown") %>% 
+  mutate(lat = latitude,
+         long = longitude) %>% 
+  mutate(outcome_measures = ifelse(is.na(outcome_measures), "Unknown", outcome_measures)) %>% 
+  mutate(discipline = ifelse(is.na(discipline), "Unknown", discipline))
+
+dataframes_for_app[["ror_data_small"]] <- ror_data_small
 
 pico <- data.frame(uid = character())
 
