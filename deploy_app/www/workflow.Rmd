@@ -1,0 +1,51 @@
+---
+title: 
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{=html}
+<style>
+.list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover {
+    background-color: #1A465F;
+}
+
+body, h1, h2, h3, h4, h5, h6, p {
+  font-family: 'KohinoorBangla', sans-serif !important;
+}
+
+</style>
+```
+## Identifying relevant evidence
+
+Guided by a pre-registered [protocol](https://osf.io/2vufx/?view_only=d74ff8089864468cb43daa06733e0be6), we performed a wide-ranging search in January 2024 spanning multiple databases to identify research of interest. Our full search strategy is available [here](https://osf.io/kawfz/?view_only=d74ff8089864468cb43daa06733e0be6).
+
+In total, we identified 123,815 articles. We used the Automated Systematic Search Deduplicator [(ASySD)](https://bmcbiol.biomedcentral.com/articles/10.1186/s12915-023-01686-z) to identify and remove duplicates automatically. After deduplication, we had 68,944 articles.
+
+<img src="search_numbers_image.png" align="right"/>
+
+Once we had run this initial search, we used application programming interfaces (API) to automatically retrieve studies on an ongoing basis from PubMed, Web of Science, and Scopus. We are currently investigating ways to automate retrieval from other sources.
+
+## Screening for inclusion
+
+We want to include articles in iRISE SOLES which **evaluate an intervention to improve reproducibility and/or reproducibility proxies**. Reproducibility proxies are measures which are likley to lead to improvements in reproducibility indirectly, such as data-sharing, open science practices, and adherence to guidelines to improve transparency. For a more detailed description of our inclusion criteria, please see our [protocol](https://osf.io/2vufx/?view_only=d74ff8089864468cb43daa06733e0be6).
+
+From the 68,944 unique articles identified, we took a sample of 5000 articles, oversampling for studies that were included at the title/abstract screening phase of an [ongoing scoping review](). The decisions from this review were used as "Screener 1", when available. Each article was screened in duplicate. These decisions were used to train a support vector machine learning classifier hosted by our collaborators at Univesity College London. Screening decisions and accompaying titles/abstracts are split into "train" and "test" datasets, where the train dataset is used by the machine to "learn" from the words/phrases in the text and associate these to the classifications (included / excluded). The test dataset is used to test the machine's performance by comparing the machine decision to a human decision. From this, we obtained an initial sensitivity (% of studies included / all studies that should be included) of 95% and a specificity (% of studies excluded that should be excluded) of xx%.
+
+<img src="screening_image.png" align="right"/>
+
+Once the machine classifier was deemed good enough, we applied this to the remainder of the dataset to obtain xx included articles.
+
+As new articles enter into the iRISE-SOLES workflow from the API-enabled searches, they will be screened for inclusion using the same classifer. We may re-train or improve this classifier over time to ensure it continues to perform well on new research in this domain.
+
+## Manual article annotation
+
+## Automated article annotation
+
+## Other integrations and tools
+
+## WCRI Presentation
+
+We recently presented iRISE-SOLES at the World Conference for Research Integrity 2024! Please check out our slides [on the Open Science Framework]().
