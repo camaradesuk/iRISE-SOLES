@@ -44,6 +44,25 @@ As new articles enter into the iRISE-SOLES workflow from the API-enabled searche
 
 ## Automated article annotation
 
+For our primary approach to automated data annotation we have decided to utilise the power of large language models. In particular we are using GPT-4o, which is the latest model from OpenAI.
+
+We initially used 10 studies as training for prompt engineering. This is where we fine tuned our queries to optimise the model’s performance. We did this by providing the model with lists of each entity we aimed to extract (such as interventions, disciplines, outcome measures etc), and asking it to annotate the corresponding fields. 
+
+**Example prompt:**
+
+{Intervention : string // What intervention has been evaluated in this study? Select the fewest number of options possible, almost exclusively from the Interventions list but if this is not comprehensive enough you can provide up to one additional intervention,\\n}
+
+We have developed a framework to easily compare the performance of using the article's Title and Abstract versus using the Title, Methods, and Abstract. This also allows us to compare the performance between the OpenAI models. 
+
+When we were happy we had optimised our prompts for maximum performance, we tested them on an additional 25 papers, each of which had been annotated by 2 humans and reconciled by a 3rd. The performance has been measured by comparing the model’s results to the human results, labelling each result as correct, partial or incorrect. Correct, meaning the machine returned the exact same result as the human. Partial if 1 or more of the results matched up. For example, if there were 3 outcome measures and the machine correctly identified 2 of them. Incorrect if the machine returned a completely different result to the human. 
+
+<img src="llm_results.png" align="centre"/>
+
+This is our current performance on the 35 annotated studies we have, using the Title, Abstract, and Methods sections processed through the GPT-4o API. We have not yet applied this to the entire dataset, as we believe we can improve the performance further.
+
+Currently, we are running a zero-shot approach, meaning that we do not train the model at all prior to running the prompts. For our next steps we plan on training the model, providing it with example texts and annotations, which should improve performance.
+
+
 ## Other integrations and tools
 
 ## WCRI Presentation

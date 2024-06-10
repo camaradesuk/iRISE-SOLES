@@ -2,6 +2,7 @@ library(tidyr)
 library(dplyr)
 library(soles)
 library(janitor)
+library(DBI)
 
 setwd("/home/scsmith/projects/iRISE_new/")
 
@@ -38,6 +39,7 @@ annotated_studies <- annotated_studies_small %>%
   separate_rows(intervention, sep = ";") %>% 
   separate_rows(intervention_provider, sep = ";") %>% 
   separate_rows(outcome_measures, sep = ";") %>% 
+  separate_rows(target_population, sep = ";") %>% 
   separate_rows(method_of_delivery, sep = ";") %>% 
   filter(!discipline == "Other (leave a comment)") %>% 
   select(uid, intervention, intervention_provider, target_population, discipline, method_of_delivery, research_stage, outcome_measures)

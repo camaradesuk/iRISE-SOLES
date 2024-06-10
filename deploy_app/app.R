@@ -35,6 +35,7 @@ library(pool)
 library(dplyr)
 library(rmapshaper)
 
+#setwd("/home/scsmith/projects/iRISE_new/")
 
 source("irise_modules.R")
 
@@ -184,7 +185,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                   style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
                                                   "The overall aim for iRISE-SOLES is to systematically identify, synthesise and evaluate information on existing candidate interventions and tools to improve reproducibility. To do this, we have
                                                   developed an integrated workflow of automated tools to collect and tag published research articles and visualise the evidence in this interactive web application.
-                                                  We tag studies by discipline, study type, author country, intervention type, and reproducibility relevant outcomes. We also assess the transparency metrics of studies witin iRISE-SOLES e.g. their open access status and presence of data/code sharing.")),
+                                                  We tag studies by discipline, intervention type, institution location, intervention provider, and reproducibility relevant outcomes. We also assess the transparency metrics of studies witin iRISE-SOLES e.g. their open access status and presence of data/code sharing.")),
 
                               fluidRow(
 
@@ -2258,7 +2259,7 @@ server <- function(input, output, session) {
 
   # Create a reactive color palette
   color_palette <- reactive({
-    colorFactor(palette = "Set2", domain = ror_dummy_data$type)
+    colorFactor(palette = "Set2", domain = ror_data$type)
   })
 
 
