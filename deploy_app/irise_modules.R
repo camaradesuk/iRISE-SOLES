@@ -1740,53 +1740,53 @@ search_Server <- function(id,
           write.csv(search_results_download(), file, row.names = FALSE)
         }
       )
-
+      
       search_results_download <- reactive({t
-
+        
         results <- citations_for_download %>%
           filter(uid %in% !!filter_results()$uid)
-
-
-
+        
+        
+        
       })
-
+      
       search_results_download_syrf <- reactive({
-
+        
         # tbl(con, "unique_citations"), filter, collect
         results <- citations_for_download %>%
           filter(uid %in% !!filter_results()$uid)
-
-        results <- results %>%
+        
+        rresults <- results %>%
           rename(Authors = author,
                  Title = title,
                  Abstract = abstract,
                  Url = url,
                  Year = year,
                  DOI= doi,
-                 `Publication Name` = journal) %>%
-          mutate(`Alternate Name` = "",
-                 `Author Address` = "",
-                 `Reference Type` = "",
+                 PublicationName = journal) %>%
+          mutate(AlternateName = "",
+                 AuthorAddress = "",
+                 ReferenceType = "",
                  Keywords = keywords,
                  CustomId = uid,
-                 `PDF Relative Path` = paste0(uid, ".pdf")) %>%
+                 PdfRelativePath = paste0(uid, ".pdf")) %>%
           select(Title,
                  Authors,
-                 `Publication Name`,
-                 `Alternate Name`,
+                 PublicationName,
+                 AlternateName,
                  Abstract,
                  Url,
-                 `Author Address`,
+                 AuthorAddress,
                  Year,
                  DOI,
-                 `Reference Type`,
+                 ReferenceType,
                  Keywords,
                  CustomId,
-                 `PDF Relative Path`)
-
-
+                 PdfRelativePath)
+        
+        
       })
-
+      
       # download refs button server side - endnote
       output$download_syrf <- downloadHandler(
         filename = function() {
@@ -1795,15 +1795,16 @@ search_Server <- function(id,
         },
         content = function(file) {
           write.csv(search_results_download_syrf(), file,
-                    col.names=TRUE, row.names = F, quote=FALSE, na="")
+                    #col.names=TRUE, 
+                    row.names = F, na="")
         })
-
+      
       search_results_download_endnote <- reactive({
-
+        
         # tbl(con, "unique_citations"), filter, collect
         results <- citations_for_download %>%
           filter(uid %in% !!filter_results()$uid)
-
+        
         results <- results %>%
           filter(uid %in% search_results()$uid) %>%
           mutate("Reference Type" = "Journal Article") %>%
@@ -1816,16 +1817,16 @@ search_Server <- function(id,
                  "pages", "volume", "number", "abstract",
                  "Custom 1", "ISBN/ISSN") %>%
           mutate(abstract = gsub("\\r\\n|\\r|\\n", "", abstract))
-
+        
         names(results) <- toTitleCase(names(results))
-
+        
         results <- results %>%
           rename("DOI"= Doi)
-
+        
         return(results)
-
+        
       })
-
+      
       # download refs button server side -endnote
       output$download_endnote <- downloadHandler(
         filename = function() {
@@ -1836,8 +1837,8 @@ search_Server <- function(id,
           write.table(search_results_download_endnote(), file, sep="\t",
                       col.names=TRUE, row.names = F, quote=FALSE, na="")
         })
-
-
+      
+      
     }
   )
 }
