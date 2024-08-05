@@ -492,7 +492,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                   inputId = "select_outcome",
                                                   label = tags$p("Select one or more reproducibility measures", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
                                                   choices = sort(unique(annotated_studies$outcome_measures)),
-                                                  selected = c("Data availability and re-use", "Code / analysis availability and re-use"),
+                                                  selected = c("Computational reproducibility"),
                                                   multiple = TRUE,
                                                   options = pickerOptions(noneSelectedText = "Please Select",
                                                                           virtualScroll = 100,
@@ -1029,7 +1029,7 @@ server <- function(input, output, session) {
     
     updatePickerInput(session, "legend_bubble_specific",
                       choices = choices,
-                      selected = choices[1:3])
+                      selected = choices[1:4])
   })
   
   previous_state <- reactiveValues(
@@ -1157,11 +1157,11 @@ server <- function(input, output, session) {
       filter(intervention %in% table_filter$intervention,
              !!sym(input$legend_bubble_select) %in% table_filter[[input$legend_bubble_select]],
              outcome_measures %in% table_filter$outcome_measures)
-    
+    #browser()
     final_table <- annotated_studies_small %>% 
       filter(uid %in% final_table$uid) %>% 
       left_join(citations_for_dl, by = "uid") %>%
-      select(uid, year, author, title, discipline, intervention, outcome_measures, method_of_delivery, research_stage, doi, url) %>%
+      select(uid, year, author, title, discipline, intervention, outcome_measures, research_stage, doi, url) %>%
       mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
       arrange(desc(year))
     
@@ -1177,7 +1177,6 @@ server <- function(input, output, session) {
              Discipline = discipline, 
              Intervention = intervention, 
              "Outcome Measures" = outcome_measures,
-             "Method of Delivery" = method_of_delivery,
              "Research Stage" = research_stage
       )
     

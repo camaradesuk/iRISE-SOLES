@@ -280,24 +280,25 @@ transparency <- included_small %>%
 dataframes_for_app[["transparency"]] <- transparency
 
 #source("dummy_data_create.R")
-source("compile_annotations.R")
-source("format_llm_predictions.R")
+source("formatting_scripts/compile_annotations.R")
+
+#source("formatting_scripts/format_llm_predictions.R")
 
 data_for_bubble_small <- included_small %>% 
   select(uid) %>% 
-  inner_join(predictions_df, by = "uid")
+  inner_join(annotated_studies_small, by = "uid")
 
 dataframes_for_app[["data_for_bubble_small"]] <- data_for_bubble_small
 
 data_for_bubble <- included_small %>% 
   select(uid) %>% 
-  inner_join(interventions_df_bubble, by = "uid") %>% 
-  inner_join(intervention_provider_df_bubble, by = "uid") %>% 
-  inner_join(target_population_df_bubble, by ="uid") %>% 
-  inner_join(target_pop_location_df_bubble, by ="uid") %>% 
-  inner_join(discipline_df_bubble, by ="uid") %>% 
-  inner_join(research_stage_df_bubble, by = "uid") %>% 
-  inner_join(outcome_measures_df_bubble, by = "uid") %>% 
+  inner_join(intervention_df, by = "uid") %>% 
+  inner_join(intervention_provider_df, by = "uid") %>% 
+  inner_join(target_population_df, by ="uid") %>% 
+  inner_join(location_pop_df, by ="uid") %>% 
+  inner_join(discipline_df, by ="uid") %>% 
+  inner_join(research_stage_df, by = "uid") %>% 
+  inner_join(outcome_measures_df, by = "uid") %>% 
   select(-starts_with("method."))
 
 # data_for_bubble <- included_small %>% 
@@ -400,8 +401,6 @@ funder_metadata_small <- dbReadTable(con, "funder_grant_tag") %>%
 dataframes_for_app[["funder_metadata_small"]] <- funder_metadata_small
 
 
-
-
 ## REMINDER, make institution type titlecase in workflow (change it in function?)
 inst <- dbReadTable(con, "institution_tag") %>% 
   mutate(type = toTitleCase(type))
@@ -462,7 +461,9 @@ dataframes_for_app[["ror_data_small"]] <- ror_data_small
 #pico <- data.frame(uid = character())
 
 pico <- data_for_bubble_small %>% 
-  select(uid, intervention, intervention_provider, discipline, outcome_measures)
+  select(uid, intervention, discipline, outcome_measures)
+
+
 
 dataframes_for_app[["pico"]] <- pico
 
