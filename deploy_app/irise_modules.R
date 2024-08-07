@@ -1048,8 +1048,8 @@ search_UI <- function(id, table) {
                      actionBttn(inputId = ns("submit_filters"),
                                 label = "Apply filters"),
 
-                     prettySwitch(inputId = ns("highly_sensitive"),
-                                  label = "High sensitivity")
+                     # prettySwitch(inputId = ns("highly_sensitive"),
+                     #              label = "High sensitivity")
             )
         ),
 
@@ -1496,10 +1496,13 @@ search_Server <- function(id,
           combined_pico_table <- unique(combined_pico_table)
           selected_studies$title <- paste0("<a href='",selected_studies$link, "' target='_blank'>",selected_studies$title,"</a>")
           selected_studies <- selected_studies %>%
-            select(year, author, journal, title, uid) %>%
+            select(uid, year, author, journal, title) %>%
             left_join(combined_pico_table, by="uid") %>%
-            distinct() %>%
-            select(year, author, title, uid)
+            distinct() %>% 
+            arrange(is.na(intervention))
+          ### REMOVE THIS ONCE FULLY TAGGED
+          # %>%
+          #   select(year, author, title, uid)
 
           selected_studies <- as.data.frame(selected_studies) %>%
             ungroup()
@@ -1557,10 +1560,13 @@ search_Server <- function(id,
         combined_pico_table <- unique(combined_pico_table)
         selected_studies$title <- paste0("<a href='",selected_studies$link, "' target='_blank'>",selected_studies$title,"</a>")
         selected_studies <- selected_studies %>%
-          select(year, author, journal, title, uid) %>%
+          select(uid, year, author, journal, title) %>%
           left_join(combined_pico_table, by="uid") %>%
-          distinct() %>%
-          select(year, author, title, uid)
+          distinct() %>% 
+          arrange(is.na(intervention))
+        ### REMOVE THIS ONCE FULLY TAGGED
+        # %>%
+        #   select(year, author, title, uid)
 
         selected_studies <- as.data.frame(selected_studies) %>%
           ungroup()
@@ -1669,7 +1675,7 @@ search_Server <- function(id,
       output$search_results_studies <- DT::renderDataTable({
 
         DT::datatable(
-          filter_results()[,1:3],
+          filter_results()[,2:ncol(filter_results())],
           rownames = FALSE,
           escape = FALSE,
           # extensions = c('Buttons'),
@@ -2202,6 +2208,184 @@ pico_dropdown_Server <- function(id, table,
 
       return(dynamic_dropdown_search)
 
+    }
+  )
+}
+
+download_table_UI <- function(id) {
+  ns <- NS(id)
+
+
+div(style="display: inline-block;vertical-align:top; width: 50px;",
+    
+    dropdown(
+      downloadBttn(
+        ns("download_csv"),
+        label = "Download citations in CSV format",
+        style = "unite",
+        color = "primary",
+        size = "sm",
+        block = FALSE,
+        no_outline = TRUE
+      ),
+      downloadBttn(
+        ns("download_endnote"),
+        label = "Download citations in Endnote tab delimited format",
+        style = "unite",
+        color = "primary",
+        size = "sm",
+        block = FALSE,
+        no_outline = TRUE
+      ),
+      downloadBttn(
+        ns("download_syrf"),
+        label = "Download citations in SyRF upload format",
+        style = "unite",
+        color = "primary",
+        size = "sm",
+        block = FALSE,
+        no_outline = TRUE
+      ),
+      
+      br(),
+      p("Note for Rayyan export option below: download file and open in MS Excel first on your computer. Save as .csv in excel, then import saved file into Rayyan"),
+      downloadBttn(
+        ns("download_rayyan"),
+        label = "Download citations in Rayyan upload format",
+        style = "unite",
+        color = "primary",
+        size = "sm",
+        block = FALSE,
+        no_outline = TRUE
+      ),
+      
+      style = "unite", icon = icon("download"),
+      inline = TRUE,
+      status = "success", width = "600px",
+      animate = animateOptions(
+        enter = animations$fading_entrances$fadeInLeftBig,
+        exit = animations$fading_exits$fadeOutRightBig),
+      tooltip = tooltipOptions(title = "Click to download relevant studies")
+      
+    )
+    
+)
+}
+
+download_table_Server <- function(id, table) {
+  moduleServer(
+    id,
+    function(input, output, session) {
+      ns <- NS(id)  
+      
+      # Download citations sever side --------
+      # download refs button server side -csv
+      output$download_csv <- downloadHandler(
+        filename = function() {
+          paste0("citations-", Sys.Date(),
+                 ".csv", sep="")
+        },
+        
+        content = function(file) {
+          write.csv(search_results_download(), file, row.names = FALSE)
+        }
+      )
+      
+      search_results_download <- reactive({
+        
+        results <- citations_for_dl %>%
+          filter(uid %in% !!table$uid)
+        
+
+      })
+      
+      search_results_download_syrf <- reactive({
+        
+        # tbl(con, "unique_citations"), filter, collect
+        results <- citations_for_dl %>%
+          filter(uid %in% !!table$uid)
+        
+        rresults <- results %>%
+          rename(Authors = author,
+                 Title = title,
+                 Abstract = abstract,
+                 Url = url,
+                 Year = year,
+                 DOI= doi,
+                 PublicationName = journal) %>%
+          mutate(AlternateName = "",
+                 AuthorAddress = "",
+                 ReferenceType = "",
+                 Keywords = keywords,
+                 CustomId = uid,
+                 PdfRelativePath = paste0(uid, ".pdf")) %>%
+          select(Title,
+                 Authors,
+                 PublicationName,
+                 AlternateName,
+                 Abstract,
+                 Url,
+                 AuthorAddress,
+                 Year,
+                 DOI,
+                 ReferenceType,
+                 Keywords,
+                 CustomId,
+                 PdfRelativePath)
+        
+        
+      })
+      
+      # download refs button server side - endnote
+      output$download_syrf <- downloadHandler(
+        filename = function() {
+          paste0("citations-srf-", Sys.Date(),
+                 ".csv", sep="")
+        },
+        content = function(file) {
+          write.csv(search_results_download_syrf(), file,
+                    #col.names=TRUE, 
+                    row.names = F, na="")
+        })
+      
+      search_results_download_endnote <- reactive({
+        
+        # tbl(con, "unique_citations"), filter, collect
+        results <- citations_for_dl %>%
+          filter(uid %in% !!table$uid)
+        
+        results <- results %>%
+          filter(uid %in% table$uid) %>%
+          mutate("Reference Type" = "Journal Article") %>%
+          mutate(isbn = gsub("\\r\\n|\\r|\\n", "", isbn)) %>%
+          rename("Custom 1" = uid,
+                 "Secondary Title" = journal,
+                 "ISBN/ISSN" = isbn) %>%
+          select("Reference Type", "author", "year",
+                 "Secondary Title", "doi", "title",
+                 "pages", "volume", "number", "abstract",
+                 "Custom 1", "ISBN/ISSN") %>%
+          mutate(abstract = gsub("\\r\\n|\\r|\\n", "", abstract))
+        
+        names(results) <- toTitleCase(names(results))
+        
+        results <- results %>%
+          rename("DOI"= Doi)
+        
+        return(results)
+        
+      })
+      
+      # download refs button server side -endnote
+      output$download_endnote <- downloadHandler(
+        filename = function() {
+          paste0("citations-", Sys.Date(),
+                 ".txt", sep="")
+        },
+        content = function(file) {
+          write.table(search_results_download_endnote(), file, sep="\t",
+                      col.names=TRUE, row.names = F, quote=FALSE, na="")
+        })
     }
   )
 }
