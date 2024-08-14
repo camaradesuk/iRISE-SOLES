@@ -195,7 +195,7 @@ citations_for_dl <- tbl(con, "study_classification")  %>%
   filter(decision == "include") %>%
   left_join(tbl(con, "unique_citations"), by = "uid") %>%
   #select(-decision) %>%
-  mutate(year = as.numeric(year)) %>% 
+  mutate(year = as.numeric(year)) %>%
   collect()
 
 dataframes_for_app[["citations_for_dl"]] <- citations_for_dl
@@ -367,7 +367,7 @@ funder_metadata <- dbReadTable(con, "funder_grant_tag") %>%
   filter(doi %in% citations_small$doi) %>%
   left_join(citations_for_dl, by = "doi") %>%
   select(uid, doi, funder_name, year, title, author, url) %>%
-  left_join(all_annotations_restricted, by = "uid") %>%
+  left_join(all_annotations, by = "uid") %>%
   #left_join(dummy_data_for_funder, by = "uid") %>%
   #filter(!is.na(intervention)) %>%
   distinct()
@@ -380,7 +380,7 @@ funder_metadata_small <- dbReadTable(con, "funder_grant_tag") %>%
   filter(doi %in% citations_small$doi) %>%
   left_join(citations_for_dl, by = "doi") %>%
   select(uid, doi, funder_name, year, title, author, url) %>%
-  left_join(all_annotations_small_restricted, by = "uid") %>%
+  left_join(all_annotations_small, by = "uid") %>%
   #left_join(dummy_data_for_funder, by = "uid") %>%
   #filter(!is.na(intervention)) %>%
   distinct()
@@ -399,39 +399,35 @@ pico_country <- dbReadTable(con,"pico_ontology") %>%
 ror_data <- dbReadTable(con, "institution_location") %>%
   left_join(inst, by = "doi") %>%
   left_join(pico_country, by = c("institution_country_code" = "sub_category2")) %>%
-  filter(doi %in% included_with_metadata$doi) %>% 
+  filter(doi %in% included_with_metadata$doi) %>%
   left_join(included_with_metadata, by = "doi") %>%
-  #filter(uid %in% all_annotations$uid) %>% 
-  left_join(all_annotations_restricted, by = "uid") %>%
+  #filter(uid %in% all_annotations$uid) %>%
+  left_join(all_annotations, by = "uid") %>%
   distinct() %>%
   group_by(name) %>%
   mutate(number_pub = n_distinct(uid)) %>%
   ungroup() %>%
   filter(!name == "Unknown") %>%
   mutate(lat = latitude,
-         long = longitude) %>%
-  mutate(outcome_measures = ifelse(is.na(outcome_measures), "Unknown", outcome_measures)) %>%
-  mutate(discipline = ifelse(is.na(discipline), "Unknown", discipline))
+         long = longitude)
 
 dataframes_for_app[["ror_data"]] <- ror_data
 
 
 ror_data_small <- dbReadTable(con, "institution_location") %>%
-  filter(!doi == "") %>% 
+  filter(!doi == "") %>%
   left_join(inst, by = "doi") %>%
   left_join(pico_country, by = c("institution_country_code" = "sub_category2")) %>%
-  filter(doi %in% included_with_metadata$doi) %>% 
+  filter(doi %in% included_with_metadata$doi) %>%
   left_join(included_with_metadata, by = "doi") %>%
-  left_join(all_annotations_small_restricted, by = "uid") %>%
+  left_join(all_annotations_small, by = "uid") %>%
   distinct() %>%
   group_by(name) %>%
   mutate(number_pub = n_distinct(uid)) %>%
   ungroup() %>%
   filter(!name == "Unknown") %>%
   mutate(lat = latitude,
-         long = longitude) %>%
-  mutate(outcome_measures = ifelse(is.na(outcome_measures), "Unknown", outcome_measures)) %>%
-  mutate(discipline = ifelse(is.na(discipline), "Unknown", discipline))
+         long = longitude)
 
 dataframes_for_app[["ror_data_small"]] <- ror_data_small
 

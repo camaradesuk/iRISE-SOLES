@@ -23,6 +23,7 @@ annotated_data <- read.csv("Annotation_data_-_2024_08_05_-_Long_format_-_1059b82
                             "4ef35ea9-c3f8-47e8-9295-1eed2dec6b59", "89d2afbf-b16e-44ef-8b29-9f06da4fd7f5", "f0ae17a8-f6f8-4ea2-bb28-1e78d6a492f5", "cad6c230-df70-490b-8b50-0fa4615a0a9f",
                             "b7c6ce9a-3ebd-4060-b396-d86a7d4e9b51", "acfbccc0-af40-4eef-a219-ef5991f67fda", "e2923c42-e304-4813-9b92-e501eb3f6b2d", "916076be-e5c9-4ac7-bd58-84c22a767874"))
 
+
 annotated_studies_small <- annotated_data %>%
   select(study_id, title, abstract, custom_id, investigator_id, question, answer) %>%
   pivot_wider(names_from = question, values_from = answer) %>%
@@ -46,8 +47,17 @@ annotated_studies_small <- annotated_data %>%
   )) %>%
   mutate(target_population = ifelse(is.na(target_population), population_evaluated, target_population)) %>%
   select(uid = custom_id, abstract, evidence_type = type_of_evidence, intervention, intervention_provider, discipline, target_population, research_stage, outcome_measures, location_pop, edi_impications_discussed, edi_impact_measured, cost_of_intervention_measured) %>%
-  mutate(discipline = ifelse(discipline == "Other (leave a comment)", "Unspecified", discipline)) %>% 
+  mutate(discipline = ifelse(discipline == "Other (leave a comment)", "Unspecified", discipline)) %>%
   mutate(across(everything(), ~if_else(is.na(.), "Unspecified", .)))
+
+
+annotated_studies_small$outcome_measures <- gsub("Effect size estimation", "Type I/II error reduction",annotated_studies_small$outcome_measures)
+annotated_studies_small$outcome_measures <- gsub("Type-I error reduction", "Type I/II error reduction",annotated_studies_small$outcome_measures)
+annotated_studies_small$outcome_measures <- gsub("Type-II error reduction", "Type I/II error reduction",annotated_studies_small$outcome_measures)
+annotated_studies_small$outcome_measures <- gsub("Type I/II error reduction; Type I/II error reduction", "Type I/II error reduction",annotated_studies_small$outcome_measures)
+annotated_studies_small$outcome_measures <- gsub("Type I/II error reduction; Type I/II error reduction", "Type I/II error reduction",annotated_studies_small$outcome_measures)
+annotated_studies_small$outcome_measures <- gsub("Pre-registration", "Preregistration", annotated_studies_small$outcome_measures)
+annotated_studies_small$intervention <- gsub("Pre-registration", "Preregistration", annotated_studies_small$intervention)
 
 annotated_studies <- annotated_studies_small %>%
   separate_rows(research_stage, sep = ";") %>%
@@ -116,12 +126,13 @@ outcome_measures_df_human <- outcome_measures_df_human_small %>%
   mutate(method = "human")
 
 # All human annotations
-all_human_annotations_small <- annotated_studies_small %>% 
+all_human_annotations_small <- annotated_studies_small %>%
   select(uid, intervention, intervention_provider, target_population, target_population_location = location_pop,
          discipline, research_stage, outcome_measures)
 
-all_human_annotations <- annotated_studies %>% 
+all_human_annotations <- annotated_studies %>%
   select(uid, intervention, intervention_provider, target_population, target_population_location = location_pop,
          discipline, research_stage, outcome_measures)
+
 
 #write.csv(reconciled_studies, "iRISE_syrf_annotations_300524.csv")
