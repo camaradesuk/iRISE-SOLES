@@ -195,8 +195,8 @@ citations_for_dl <- tbl(con, "study_classification")  %>%
   filter(decision == "include") %>%
   left_join(tbl(con, "unique_citations"), by = "uid") %>%
   #select(-decision) %>%
-  collect() %>%
-  mutate(year = as.numeric(year))
+  mutate(year = as.numeric(year)) %>% 
+  collect()
 
 dataframes_for_app[["citations_for_dl"]] <- citations_for_dl
 
@@ -284,19 +284,9 @@ source("formatting_scripts/compile_annotations.R")
 source("formatting_scripts/format_llm_predictions.R")
 
 
-dataframes_for_app[["data_for_bubble_small"]] <- data_for_bubble
+#dataframes_for_app[["data_for_bubble_small"]] <- data_for_bubble
 
-data_for_bubble <- included_small %>%
-  select(uid) %>%
-  inner_join(interventions_df, by = "uid") %>%
-  inner_join(intervention_provider_df, by = "uid") %>%
-  inner_join(target_population_df, by ="uid") %>%
-  inner_join(target_pop_location_df, by ="uid") %>%
-  inner_join(discipline_df, by ="uid") %>%
-  inner_join(research_stage_df, by = "uid") %>%
-  inner_join(outcome_measures_df, by = "uid") %>%
-  select(-starts_with("method.")) %>%
-  mutate(across(where(is.character), str_trim))
+
 
 # data_for_bubble <- included_small %>%
 #   select(uid) %>%
@@ -321,10 +311,10 @@ data_for_bubble <- included_small %>%
 #   separate_rows(outcome_measures, sep = ";")
 
 
-dataframes_for_app[["data_for_bubble"]] <- data_for_bubble
+#dataframes_for_app[["data_for_bubble"]] <- data_for_bubble
 
-dataframes_for_app[["annotated_studies"]] <- annotated_studies
-dataframes_for_app[["annotated_studies_small"]] <- annotated_studies_small
+#dataframes_for_app[["annotated_studies"]] <- annotated_studies
+#dataframes_for_app[["annotated_studies_small"]] <- annotated_studies_small
 
 
 # Create Funder tables
@@ -377,7 +367,7 @@ funder_metadata <- dbReadTable(con, "funder_grant_tag") %>%
   filter(doi %in% citations_small$doi) %>%
   left_join(citations_for_dl, by = "doi") %>%
   select(uid, doi, funder_name, year, title, author, url) %>%
-  left_join(data_for_bubble, by = "uid") %>%
+  left_join(all_annotations_restricted, by = "uid") %>%
   #left_join(dummy_data_for_funder, by = "uid") %>%
   #filter(!is.na(intervention)) %>%
   distinct()
@@ -390,7 +380,7 @@ funder_metadata_small <- dbReadTable(con, "funder_grant_tag") %>%
   filter(doi %in% citations_small$doi) %>%
   left_join(citations_for_dl, by = "doi") %>%
   select(uid, doi, funder_name, year, title, author, url) %>%
-  left_join(data_for_bubble, by = "uid") %>%
+  left_join(all_annotations_small_restricted, by = "uid") %>%
   #left_join(dummy_data_for_funder, by = "uid") %>%
   #filter(!is.na(intervention)) %>%
   distinct()
@@ -406,26 +396,13 @@ pico_country <- dbReadTable(con,"pico_ontology") %>%
   filter(type == "country") %>%
   dplyr::select(country = name, continent = main_category, sub_category2)
 
-# ror_dummy_data <- dbReadTable(con, "institution_location") %>%
-#   left_join(dbReadTable(con, "institution_tag"), by = "doi") %>%
-#   left_join(pico_country, by = c("institution_country_code" = "sub_category2")) %>%
-#   left_join(included_with_metadata, by = "doi") %>%
-#   left_join(dummy_data_for_map, by = "uid") %>%
-#   distinct() %>%
-#   group_by(name) %>%
-#   mutate(number_pub = n()) %>%
-#   ungroup() %>%
-#   filter(!name == "Unknown") %>%
-#   mutate(lat = latitude,
-#          long = longitude)
-#
-# dataframes_for_app[["ror_dummy_data"]] <- ror_dummy_data
-
 ror_data <- dbReadTable(con, "institution_location") %>%
-  left_join(dbReadTable(con, "institution_tag"), by = "doi") %>%
+  left_join(inst, by = "doi") %>%
   left_join(pico_country, by = c("institution_country_code" = "sub_category2")) %>%
+  filter(doi %in% included_with_metadata$doi) %>% 
   left_join(included_with_metadata, by = "doi") %>%
-  left_join(data_for_bubble, by = "uid") %>%
+  #filter(uid %in% all_annotations$uid) %>% 
+  left_join(all_annotations_restricted, by = "uid") %>%
   distinct() %>%
   group_by(name) %>%
   mutate(number_pub = n_distinct(uid)) %>%
@@ -438,11 +415,14 @@ ror_data <- dbReadTable(con, "institution_location") %>%
 
 dataframes_for_app[["ror_data"]] <- ror_data
 
+
 ror_data_small <- dbReadTable(con, "institution_location") %>%
-  left_join(dbReadTable(con, "institution_tag"), by = "doi") %>%
+  filter(!doi == "") %>% 
+  left_join(inst, by = "doi") %>%
   left_join(pico_country, by = c("institution_country_code" = "sub_category2")) %>%
+  filter(doi %in% included_with_metadata$doi) %>% 
   left_join(included_with_metadata, by = "doi") %>%
-  left_join(data_for_bubble, by = "uid") %>%
+  left_join(all_annotations_small_restricted, by = "uid") %>%
   distinct() %>%
   group_by(name) %>%
   mutate(number_pub = n_distinct(uid)) %>%
@@ -455,11 +435,8 @@ ror_data_small <- dbReadTable(con, "institution_location") %>%
 
 dataframes_for_app[["ror_data_small"]] <- ror_data_small
 
-#pico <- data.frame(uid = character())
-
-pico <- data_for_bubble %>%
+pico <- all_annotations_small %>%
   select(uid, intervention, discipline, outcome_measures)
-
 
 dataframes_for_app[["pico"]] <- pico
 

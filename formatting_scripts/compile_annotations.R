@@ -27,7 +27,6 @@ annotated_studies_small <- annotated_data %>%
   select(study_id, title, abstract, custom_id, investigator_id, question, answer) %>%
   pivot_wider(names_from = question, values_from = answer) %>%
   clean_names() %>%
-  #filter(reconciled_annotations == "True") %>%
   filter(are_you_reconciling_these_annotations == "True") %>%
   filter(should_this_article_be_included == "True") %>%
   rename(intervention = intervention_evaluated,
@@ -38,7 +37,6 @@ annotated_studies_small <- annotated_data %>%
          location_pop = target_population_location,
          edi_impications_discussed = do_the_authors_discuss_the_edi_implications_of_the_intervention,
          edi_impact_measured = do_authors_measure_the_impact_of_the_intervention_on_specific_aspects_of_edi) %>%
-  #mutate(intervention_provider = ifelse(is.na(intervention_provider), og_intervention_provider, intervention_provider)) %>%
   mutate(do_authors_measure_the_costs_of_applying_this_intervention = ifelse(is.na(do_authors_measure_the_costs_of_applying_this_intervention), "", do_authors_measure_the_costs_of_applying_this_intervention)) %>%
   mutate(do_authors_measure_the_costs_of_applying_this_intervention_2 = ifelse(is.na(do_authors_measure_the_costs_of_applying_this_intervention_2), "", do_authors_measure_the_costs_of_applying_this_intervention_2)) %>%
   mutate(cost_of_intervention_measured = case_when(
@@ -48,8 +46,8 @@ annotated_studies_small <- annotated_data %>%
   )) %>%
   mutate(target_population = ifelse(is.na(target_population), population_evaluated, target_population)) %>%
   select(uid = custom_id, abstract, evidence_type = type_of_evidence, intervention, intervention_provider, discipline, target_population, research_stage, outcome_measures, location_pop, edi_impications_discussed, edi_impact_measured, cost_of_intervention_measured) %>%
+  mutate(discipline = ifelse(discipline == "Other (leave a comment)", "Unspecified", discipline)) %>% 
   mutate(across(everything(), ~if_else(is.na(.), "Unspecified", .)))
-
 
 annotated_studies <- annotated_studies_small %>%
   separate_rows(research_stage, sep = ";") %>%
@@ -59,10 +57,9 @@ annotated_studies <- annotated_studies_small %>%
   separate_rows(outcome_measures, sep = ";") %>%
   separate_rows(location_pop, sep = ";") %>%
   separate_rows(target_population, sep = ";") %>%
-  filter(!discipline == "Other (leave a comment)") %>%
   select(uid, intervention, intervention_provider, target_population, location_pop, discipline, research_stage, outcome_measures)
 
-# # Interventions tables
+# Interventions tables
 intervention_df_human_small <- annotated_studies_small %>%
   select(uid, intervention)
 
@@ -70,6 +67,7 @@ intervention_df_human <- intervention_df_human_small %>%
   separate_rows(intervention, sep = ";") %>%
   mutate(method = "human")
 
+# Intervention Provider tables
 intervention_provider_df_human_small <- annotated_studies_small %>%
   select(uid, intervention_provider)
 
@@ -77,6 +75,7 @@ intervention_provider_df_human <- intervention_provider_df_human_small %>%
   separate_rows(intervention_provider, sep = ";") %>%
   mutate(method = "human")
 
+# Target Population tables
 target_population_df_human_small <- annotated_studies_small %>%
   select(uid, target_population)
 
@@ -84,6 +83,7 @@ target_population_df_human <- target_population_df_human_small %>%
   separate_rows(target_population, sep = ";") %>%
   mutate(method = "human")
 
+# Discipline tables
 discipline_df_human_small <- annotated_studies_small %>%
   select(uid, discipline)
 
@@ -91,6 +91,7 @@ discipline_df_human <- discipline_df_human_small %>%
   separate_rows(discipline, sep = ";") %>%
   mutate(method = "human")
 
+# Research Stage tables
 research_stage_df_human_small <- annotated_studies_small %>%
   select(uid, research_stage)
 
@@ -98,6 +99,7 @@ research_stage_df_human <- research_stage_df_human_small %>%
   separate_rows(research_stage, sep = ";") %>%
   mutate(method = "human")
 
+# Location Population tables
 location_pop_df_human_small <- annotated_studies_small %>%
   select(uid, location_pop)
 
@@ -105,11 +107,21 @@ location_pop_df_human <- location_pop_df_human_small %>%
   separate_rows(location_pop, sep = ";") %>%
   mutate(method = "human")
 
+# Outcome Measures tables
 outcome_measures_df_human_small <- annotated_studies_small %>%
   select(uid, outcome_measures)
 
 outcome_measures_df_human <- outcome_measures_df_human_small %>%
   separate_rows(outcome_measures, sep = ";") %>%
   mutate(method = "human")
+
+# All human annotations
+all_human_annotations_small <- annotated_studies_small %>% 
+  select(uid, intervention, intervention_provider, target_population, target_population_location = location_pop,
+         discipline, research_stage, outcome_measures)
+
+all_human_annotations <- annotated_studies %>% 
+  select(uid, intervention, intervention_provider, target_population, target_population_location = location_pop,
+         discipline, research_stage, outcome_measures)
 
 #write.csv(reconciled_studies, "iRISE_syrf_annotations_300524.csv")
