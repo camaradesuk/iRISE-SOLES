@@ -46,7 +46,7 @@ irise_colours <- list(
     gradient_arrow = "#89CB93",
     turquoise = "#47B1A3",
     dark_turquoise = "#266080"
-    
+
   ))
 
 
@@ -70,7 +70,7 @@ mytheme <- create_theme(
     color = "#FFF",
     hover_color = "#FFF"
   ),
-  
+
   bs4dash_status(
     primary = "#64C296",
     danger = "#1A465F",
@@ -119,7 +119,7 @@ pico_elements_list <- list(
 )
 
 ui <- bs4DashPage(freshTheme = mytheme,
-                  
+
                   dark = NULL,
                   help = NULL,
                   dbHeader <- dashboardHeader(title = "iRISE-SOLES",
@@ -141,18 +141,18 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                      bs4SidebarMenuItem(tags$p("About", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "about", icon = icon("info"))
                                    )
                   ),
-                  
+
                   bs4DashBody(
-                    
+
                     use_theme(mytheme),
-                    
+
                     useShinyjs(),
-                    
-                    
+
+
                     tabItems(
-                      
+
                       tabItem(tabName = "home",
-                              
+
                               box(
                                 div(
                                   style = "text-align: center;",
@@ -161,21 +161,21 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                     tags$img(src = "iRISE_logo_dark_round.png", height = "300px")
                                   )
                                 ),
-                                
+
                                 tags$br(),
                                 div(
-                                  
+
                                   style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
                                   "Taking an integrated approach to understanding, investigating and guiding strategies to address irreproducibility"
                                 ),
-                                
-                                
+
+
                                 background = "primary",
                                 width = 12,
                                 solidHeader = TRUE,
                                 title = "",
                                 status = "primary"),
-                              
+
                               plot_interpret_UI(id = "home_info",
                                                 title = "",
                                                 theme = "danger",
@@ -184,11 +184,11 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                   "The overall aim for iRISE-SOLES is to systematically identify, synthesise and evaluate information on existing candidate interventions and tools to improve reproducibility. To do this, we have
                                                   developed an integrated workflow of automated tools to collect and tag published research articles and visualise the evidence in this interactive web application.
                                                   We tag studies by discipline, intervention type, institution location, intervention provider, and reproducibility relevant outcomes. We also assess the transparency metrics of studies witin iRISE-SOLES e.g. their open access status and presence of data/code sharing.")),
-                              
+
                               fluidRow(
-                                
+
                                 column(4,
-                                       
+
                                        box(
                                          div(
                                            style = "text-align: center;",
@@ -197,7 +197,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                              tags$img(src = "osf_logo.png", height = "300px")
                                            )
                                          ),
-                                         
+
                                          tags$br(),
                                          div(
                                            style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
@@ -207,7 +207,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                          solidHeader = TRUE,
                                          title = "",
                                          status = "warning")),
-                                
+
                                 column(4,
                                        box(
                                          div(
@@ -217,7 +217,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                              tags$img(src = "paper_screenshot.PNG", height = "300px")
                                            )
                                          ),
-                                         
+
                                          tags$br(),
                                          div(
                                            style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
@@ -227,7 +227,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                          solidHeader = TRUE,
                                          title = "",
                                          status = "secondary")),
-                                
+
                                 column(4,
                                        box(
                                          div(
@@ -237,7 +237,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                              tags$img(src = "irise_website.png", height = "300px")
                                            )
                                          ),
-                                         
+
                                          tags$br(),
                                          div(
                                            style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
@@ -247,9 +247,9 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                          solidHeader = TRUE,
                                          title = "",
                                          status = "info")
-                                       
+
                                 ))),
-                      
+
                       # Data collection - ui -----
                       tabItem(tabName = "dc-main",
                               fluidRow(
@@ -260,7 +260,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                   value = tags$p(sum(as.numeric(include_by_date$n)[which(include_by_date$date >= Sys.Date()-7)]),
                                                  style = "font-size: 300%; color: white; font-family: KohinoorBangla, sans-serif !important"),
                                   icon = icon("clock", verify_fa = FALSE)),
-                                
+
                                 valueBox(
                                   width=3,
                                   subtitle = tags$p("new citations this month", style = "font-size: 120%; color: white;font-family: KohinoorBangla, sans-serif !important"),
@@ -268,7 +268,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                   value = tags$p(sum(as.numeric(include_by_date$n)[which(include_by_date$date >= Sys.Date()-30)]),
                                                  style = "font-size: 300%; color: white;font-family: KohinoorBangla, sans-serif !important"),
                                   icon = icon("calendar")),
-                                
+
                                 valueBox(
                                   width=3,
                                   subtitle = tags$p("new citations in the last year", style = "font-size: 120%; color: white;font-family: KohinoorBangla, sans-serif !important"),
@@ -276,7 +276,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                   value = tags$p(sum(as.numeric(include_by_date$n)[which(include_by_date$date >= Sys.Date()-365)]),
                                                  style = "font-size: 300%; color: white;font-family: KohinoorBangla, sans-serif !important"),
                                   icon = icon("calendar", verify_fa = FALSE)),
-                                
+
                                 valueBox(
                                   width=3,
                                   subtitle = tags$p("citations in database", style = "font-size: 120%; color: white;font-family: KohinoorBangla, sans-serif !important"),
@@ -285,9 +285,9 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                  style = "font-size: 300%; color: white;font-family: KohinoorBangla, sans-serif !important"),
                                   icon = icon("database"))
                               ),
-                              
+
                               fluidRow(
-                                
+
                                 tabBox(
                                   width=12,
                                   id = "tabcard_included_studies",
@@ -295,27 +295,27 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                   status = "primary",
                                   solidHeader = FALSE,
                                   type = "tabs",
-                                  
+
                                   yearBarUI_included_only("included_studies_over_time_bar",
                                                           title = tags$p("Included Studies Over Time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
                                                           theme = "danger",
                                                           spinner_colour = "#89CB93",
                                                           table = n_included_per_year_plot_data)
-                                  
+
                                 )
                               )
                       ),
-                      
+
                       # Methodology - ui ----
                       tabItem(tabName = "workflow-accordion-dc",
-                              
+
                               uiOutput("workflow")
                       ),
-                      
-                      
+
+
                       # Transparency info - ui -----
                       tabItem(tabName = "data-summary-transparency",
-                              
+
                               bs4Jumbotron(
                                 title = tags$h1("Transparency Metrics", style = "font-family: KohinoorBangla, sans-serif !important;"),
                                 lead = tags$p("This summary shows the overall percentages of publications
@@ -324,9 +324,9 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                 status = "primary",
                                 btnName = NULL
                               ),
-                              
+
                               fluidRow(
-                                
+
                                 valueBox(
                                   width=4,
                                   subtitle = tags$h2("Open Access", style = "color: white;font-family: KohinoorBangla, sans-serif !important;"),
@@ -335,7 +335,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                  style = "font-size: 300%; color: white;"),
                                   icon = icon("lock")
                                 ),
-                                
+
                                 valueBox(
                                   width=4,
                                   subtitle = tags$h2("Open Data", style = "color: white;font-family: KohinoorBangla, sans-serif !important;"),
@@ -344,7 +344,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                  style = "font-size: 300%; color: white;"),
                                   icon = icon("bar-chart", verify_fa = FALSE)
                                 ),
-                                
+
                                 valueBox(
                                   width=4,
                                   subtitle = tags$h2("Open Code", style = "color: white;font-family: KohinoorBangla, sans-serif !important;"),
@@ -354,47 +354,47 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                   icon = icon("code")
                                 )
                               ),
-                              
-                              
+
+
                               tabBox(
-                                
+
                                 width = 12,
                                 id = "tabcard",
                                 title = "",
                                 status = "secondary",
                                 solidHeader = FALSE,
                                 type = "tabs",
-                                
+
                                 yearBarUI("oa_pubs_per_year",
                                           title = tags$p("Open access over time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
                                           theme = "secondary",
                                           spinner_colour = "#89CB93",
                                           table = oa_tag),
-                                
+
                                 yearBarUI("oa_pub_type_per_year",
                                           title = tags$p("Open access type over time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
                                           theme = "danger",
                                           spinner_colour = "#89CB93",
                                           table = oa_tag),
-                                
+
                                 yearBarUI("open_data_pubs_per_year",
                                           title = tags$p("Open data availability over time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
                                           theme = "danger",
                                           spinner_colour = "#89CB93",
                                           table = transparency),
-                                
+
                                 yearBarUI("open_code_pubs_per_year",
                                           title = tags$p("Open code availability over time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
                                           theme = "danger",
                                           spinner_colour = "#89CB93",
                                           table = transparency)
-                                
-                                
+
+
                               ),
-                              
+
                               plot_interpret_UI("transparency_intepret",
                                                 title = tags$p("How To Interpret This Plot", style = "font-family: KohinoorBangla, sans-serif !important;"),
-                                                
+
                                                 div(
                                                   tags$p("Each bar plot shows the number of papers in each category over time.
                     Navigate between tabs to see different transparency measures.
@@ -405,20 +405,20 @@ ui <- bs4DashPage(freshTheme = mytheme,
                     still missing a transparency status for one or more measures due to processing time or lack of available data.", style = "font-family: KohinoorBangla, sans-serif !important;"),
                                                   tags$br(),
                                                   tags$br(),
-                                                  
+
                                                   tags$a(
                                                     href = 'https://research.library.gsu.edu/c.php?g=115588&p=754380',
                                                     tags$button("Open Access Type Info", class = "btn btn-primary", style = "background-color: #1A465F; border-color: #1A465F;font-family: KohinoorBangla, sans-serif !important;")
                                                   )),
                                                 theme = "primary")
-                              
-                              
+
+
                       ),
-                      
-                      
+
+
                       # Evidence map - ui ----
                       tabItem(tabName = "evidence_map_bubble",
-                              
+
                               box(
                                 title="Evidence map",
                                 width= 12,
@@ -450,7 +450,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                 pickerInput(
                                                   inputId = "select_outcome",
                                                   label = tags$p("Select one or more reproducibility measures", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
-                                                  choices = sort(unique(all_annotations_restricted$outcome_measures)),
+                                                  choices = sort(unique(all_annotations$outcome_measures)),
                                                   #choices = sort(c("Type-I error reduction", "Type-II error reduction", "Effect size estimation", "Transparency of funding", "Transparency of interests", "Transparency of contributions", "Data availability and re-use", "Materials availability and re-use", "Code / analysis availability and re-use", "Reporting quality", "Transparency of evaluation", "Reporting bias", "Publication bias", "Computational reproducibility")),
                                                   selected = c("Computational reproducibility"),
                                                   multiple = TRUE,
@@ -461,7 +461,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                   )
                                                 )
                                 ),
-                                
+
                                 column(width = 4,
                                        pickerInput(
                                          inputId = "legend_bubble_select",
@@ -491,37 +491,37 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                        )
                                 )
                                 ),
-                                
-                                
+
+
                                 verbatimTextOutput("error_message"),
                                 plotlyOutput("evidence_map_plot") %>% withSpinner(color="#96c296"),
                                 tags$br(),
                                 tags$br()
-                                
-                                
+
+
                               ),
-                              
+
                               box(
                                 title = "Selected studies",
                                 solidHeader = TRUE,
                                 width = 12,
                                 id = "bubble_evidence_map",
                                 status = "secondary",
-                                
+
                                 download_table_UI("dl_evidence_map"),
-                                
-                                
-                                
+
+
+
                                 DT::dataTableOutput("int_ac_dis_table") %>% withSpinner(color="#96c296")
                                 #verbatimTextOutput("error_message")
-                                
-                                
-                                
+
+
+
                               )),
-                      
-                      
+
+
                       tabItem(tabName = "funder-tab",
-                              
+
                               box(width = 12,
                                   height = "600px",
                                   title = "Publications funded by year",
@@ -539,10 +539,10 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                              We also provide the % of funded studies that are open access, and provide open code or data, stratified
                                              by different funders")
                                     )),
-                                  
+
                                   fluidRow(column(6,
                                                   pickerInput(inputId = "funder_select",
-                                                              
+
                                                               label = tags$p("Select a funder", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
                                                               choices = unique(sort(funder_overall_count$funder_name)),
                                                               selected = c("National Health and Medical Research Council"),
@@ -551,32 +551,32 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                                                       virtualScroll = 100,
                                                                                       actionsBox = TRUE,
                                                                                       size = 10))),
-                                           
-                                           
+
+
                                            column(6,
                                                   valueBoxOutput("funding_summary", width = 12)
                                            )),
-                                  
-                                  
-                                  
-                                  
+
+
+
+
                                   plotlyOutput("funder_year_plot") %>% withSpinner(color="#96c296")
-                                  
+
                               ),
                               fluidRow(
-                                
+
                                 valueBoxOutput("oa_box"),
                                 valueBoxOutput("od_box"),
                                 valueBoxOutput("oc_box")
-                                
+
                               ),
-                              
+
                               box(width = 12,
                                   height = "600px",
                                   title = "Interventions",
                                   status = "primary",
                                   solidHeader = TRUE,
-                                  
+
                                   fluidRow(
                                     column(6,
                                            pickerInput(inputId = "funder_intervention_select",
@@ -584,7 +584,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                        choices = NULL,
                                                        selected = NULL,
                                                        multiple = TRUE,
-                                                       
+
                                                        options = pickerOptions(noneSelectedText = "Please Select",
                                                                                virtualScroll = 100,
                                                                                actionsBox = TRUE,
@@ -596,10 +596,10 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                   ),
                                   plotlyOutput("funder_category_bar")
                               ),
-                              
+
                               uiOutput("data_table_box")
                       ),
-                      
+
                       tabItem(tabName = "outcome-overview-tab",
                               box(
                                 title = "Publications targetting reproducibility outcomes",
@@ -620,7 +620,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                              articles with relevant evidence related to your selected outcome measure" )
                                   )),
                                 width=12,
-                                
+
                                 fluidRow(
                                   column(2,
                                          pickerInput(
@@ -637,7 +637,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                              size = 10
                                            ))
                                   ),
-                                  
+
                                   column(2,
                                          pickerInput(
                                            inputId = "outcome_select",
@@ -654,7 +654,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                              size = 10
                                            )
                                          )),
-                                  
+
                                   column(3,
                                          pickerInput(
                                            inputId = "outcome_comparison_select",
@@ -668,7 +668,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                              actionsBox = TRUE,
                                              size = 10
                                            ))),
-                                  
+
                                   column(5,
                                          valueBoxOutput("top_int_five_years", width=NULL)
                                          # valueBoxOutput("top_int_five_no"),
@@ -677,32 +677,32 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                 fluidRow(column(12,
                                                 plotlyOutput("outcome_year_plot", width = "100%", height="450px") %>% withSpinner(color="#96c296")))),
                               uiOutput("dynamic_box"),
-                              
-                              
+
+
                               uiOutput("data_table_box_outcome")),
-                      
+
                       tabItem(tabName = "location-tab",
-                              
-                              
+
+
                               box(
-                                
-                                
+
+
                                 width = 12,
                                 title = "Institution Location",
                                 status = "primary",
                                 solidHeader = TRUE,
                                 collapsable = FALSE,
                                 closable=FALSE,
-                                
+
                                 sidebar = boxSidebar(
                                   width = 30,
                                   background = "#64C296",
                                   id = "inst_loc_sidebar",
                                   icon = icon("filter"),
-                                  
+
                                   fluidRow(
                                     column(width = 11,
-                                           
+
                                            tags$div(
                                              style = "padding: 0px;",
                                              selectizeInput(inputId = "country_select",
@@ -729,9 +729,9 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                              pickerInput(
                                                inputId = "inst_outcome_select",
                                                label = tags$p("Select an Outcome", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
-                                               choices = sort(c("Type-I error reduction", "Type-II error reduction", "Effect size estimation", "Transparency of funding", "Transparency of interests", "Transparency of contributions", "Data availability and re-use", "Materials availability and re-use", "Code / analysis availability and re-use", "Reporting quality", "Transparency of evaluation", "Reporting bias", "Publication bias", "Computational reproducibility", "Unspecified")),
-                                               selected = sort(c("Type-I error reduction", "Type-II error reduction", "Effect size estimation", "Transparency of funding", "Transparency of interests", "Transparency of contributions", "Data availability and re-use", "Materials availability and re-use", "Code / analysis availability and re-use", "Reporting quality", "Transparency of evaluation", "Reporting bias", "Publication bias", "Computational reproducibility", "Unspecified")),
-                                               
+                                               choices = sort(c("Type I/II error reduction", "Transparency of funding", "Transparency of interests", "Transparency of contributions", "Data availability and re-use", "Materials availability and re-use", "Code / analysis availability and re-use", "Reporting quality", "Transparency of evaluation", "Reporting bias", "Publication bias", "Computational reproducibility", "Other", "Unknown")),
+                                               selected = sort(c("Type I/II error reduction", "Transparency of funding", "Transparency of interests", "Transparency of contributions", "Data availability and re-use", "Materials availability and re-use", "Code / analysis availability and re-use", "Reporting quality", "Transparency of evaluation", "Reporting bias", "Publication bias", "Computational reproducibility", "Other", "Unknown")),
+
                                                #selected = sort(unique(ror_data$outcome_measures)),
                                                multiple = TRUE,
                                                options = pickerOptions(
@@ -771,9 +771,9 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                 fluidRow(
                                   column(width = 12,
                                          leafletOutput("institution_map", height = 500) %>% withSpinner(color="#96c296") ),
-                                  
+
                                 )
-                                
+
                               ),
                               box(
                                 title = "Selected Studies",
@@ -792,22 +792,22 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                 DT::dataTableOutput("location_table") %>% withSpinner(color="#96c296")
                               )
                       ),
-                      
+
                       # Search - ui -----
                       tabItem(tabName = "module_search_database",
-                              
-                              
+
+
                               search_UI("search_results",
                                         table = citations_for_dl)
-                              
-                              
+
+
                       ),
-                      
+
                       tabItem(tabName = "about",
-                              
-                              
+
+
                               fluidRow(
-                                
+
                                 box(width = 5,
                                     title = "Funding",
                                     background="danger",
@@ -818,7 +818,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                       European Research Executive Agency (ERA). Neither the European Union nor the ERA can be held responsible for them."),
                                     tags$img(class = "img-responsive img-rounded center-block",
                                              src="european_union_logo.jpg", height=100, width=470, align="center")),
-                                
+
                                 box(width = 7,
                                     title = "Using iRISE-SOLES data",
                                     background="warning",
@@ -831,9 +831,9 @@ ui <- bs4DashPage(freshTheme = mytheme,
                       Sarah McCann, and Emily S. Sena on behalf of the iRISE consortium (2023), A protocol for a systematic online living evidence summary of the interventions to improve reproducibility (iRISE-SOLES),
                                       Open Science Framework. https://doi.org/10.31222/osf.io/nbe5q"))
                               ),
-                              
+
                               fluidRow(
-                                
+
                                 box(width = 12,
                                     title = "Development",
                                     status="info",
@@ -852,9 +852,9 @@ ui <- bs4DashPage(freshTheme = mytheme,
 
 
 server <- function(input, output, session) {
-  
+
   observe_helpers(help_dir = "helpfiles")
-  
+
   output$workflow <- renderUI({
     tags$iframe(
       seamless = "seamless",
@@ -863,17 +863,17 @@ server <- function(input, output, session) {
       height = 800
     )
   })
-  
-  
+
+
   shinyalert("Welcome", "Welcome to the draft iRISE-SOLES Dashboard!
              Please note this app is still under development. The data presented are not representative and should not be used for any research purposes yet.", type = "info")
-  
-  
+
+
   yearBarServer_included_only("included_studies_over_time_bar",
                               table=n_included_per_year_plot_data,
                               column="is_included",
                               colour = "#89CB93")
-  
+
   # Transparency - bar plots -----
   yearBarServer("oa_pubs_per_year", table=oa_tag, column="is_oa", display=TRUE, order=c(TRUE, FALSE), text="Source:CrossRef", colours = c("#89CB93", "grey")) %>%
     bindCache(nrow(transparency))
@@ -881,7 +881,7 @@ server <- function(input, output, session) {
                 text="Source:CrossRef", colours = c("red", "lightblue", "orange", "gold", "green")) %>% bindCache(nrow(transparency))
   yearBarServer("open_data_pubs_per_year", table=transparency, column="is_open_data", display=TRUE, order=c(TRUE, FALSE),  text="Tool: OddPub, Riedel, N, et al. (2020), DOI:10.5334/dsj-2020-042", colours = c("#89CB93", "grey")) %>% bindCache(nrow(transparency))
   yearBarServer("open_code_pubs_per_year", table=transparency, column="is_open_code", display=TRUE, order=c(TRUE, FALSE),  text="Tool: OddPub, Riedel, N, et al. (2020), DOI:10.5334/dsj-2020-042", colours = c("#89CB93", "grey")) %>% bindCache(nrow(transparency))
-  
+
   # Search Page - server -----
   search_Server("search_results",
                 pico_data = pico_elements_list,
@@ -889,47 +889,47 @@ server <- function(input, output, session) {
                 combined_pico_table = pico,
                 citations_for_download = citations_for_dl,
                 project_name = "iRISE-SOLES")
-  
-  
+
+
   download_table_Server("dl_evidence_map", table = dl_evidence_map)
-  
+
   download_table_Server("dl_funder_data", table = dl_funder)
-  
+
   download_table_Server("dl_outcome_overview", table = dl_outcome_overview)
-  
+
   download_table_Server("dl_location", table = dl_location)
-  
-  
-  
+
+
+
   # Evidence Map - server -----
   observe({
     choices <- switch(input$legend_bubble_select,
-                      "intervention_provider" = sort(unique(all_annotations_restricted$intervention_provider)),
-                      "target_population" = sort(unique(all_annotations_restricted$target_population)),
-                      "discipline" = sort(unique(all_annotations_restricted$discipline)))
-    
+                      "intervention_provider" = sort(unique(all_annotations$intervention_provider)),
+                      "target_population" = sort(unique(all_annotations$target_population)),
+                      "discipline" = sort(unique(all_annotations$discipline)))
+
     updatePickerInput(session, "legend_bubble_specific",
                       choices = choices,
                       selected = choices[1:4])
   })
-  
+
   previous_state <- reactiveValues(
     column1 = NULL,
     column2 = NULL
   )
-  
+
   bubble_react <- reactive({
-    
+
     req(input$select_outcome, input$legend_bubble_specific)
-    
-    data_filter <- all_annotations_restricted %>%
+
+    data_filter <- all_annotations %>%
       filter(outcome_measures %in% input$select_outcome) %>%
       filter(!!sym(input$legend_bubble_select) %in% input$legend_bubble_specific)
-    
-    
+
+
     citations_years <- citations_for_dl %>%
       select(uid, year)
-    
+
     data <- data_filter %>%
       left_join(citations_years, by = "uid") %>%
       group_by(uid, intervention, !!sym(input$legend_bubble_select), outcome_measures) %>%
@@ -937,67 +937,67 @@ server <- function(input, output, session) {
       ungroup() %>%
       count(intervention, !!sym(input$legend_bubble_select), outcome_measures) %>%
       arrange(!!sym(input$legend_bubble_select), outcome_measures, intervention)
-    
+
     data$key <- row.names(data)
     data$col <- "#266080"
-    
+
     click_data <- event_data("plotly_click", priority = "event", source = "B")
-    
+
     if (!is.null(click_data)) {
-      
+
       bubble_react_new <- data %>%
         mutate(selected_colour = key %in% click_data$customdata)
-      
+
       bubble_react_new$selected_colour <- data$key %in% click_data$customdata
-      
+
       if (exists("col_vector")){
-        
+
         bubble_react_new$col <- col_vector
       }
-      
+
       selected_row <- which(rownames(bubble_react_new) %in% click_data$customdata)
-      
+
       if (!bubble_react_new$col[selected_row] == "#47B1A3"){
-        
+
         bubble_react_new$col[selected_row] <- "#47B1A3"
-        
+
         assign("col_vector", bubble_react_new$col, envir = .GlobalEnv)
-        
+
       } else{
-        
+
         bubble_react_new$col[selected_row] <- "#266080"
-        
+
         assign("col_vector", bubble_react_new$col, envir = .GlobalEnv)
-        
+
       }
-      
-      
+
+
     }
     else {
-      
+
       data$col <- "#266080"
-      
+
       bubble_react_new <- data %>%
         mutate(selected_colour = FALSE)
-      
+
       assign("col_vector", bubble_react_new$col, envir = .GlobalEnv)
-      
+
     }
-    
+
     return(bubble_react_new)
   })
-  
-  
-  
+
+
+
   table_react <- reactive({
-    
-    table <- all_annotations_restricted %>%
-      filter(outcome_measures %in% input$select_outcome) %>%
+
+    table <- all_annotations %>%
+      filter(outcome_measures %in% input$select_outcome)
       filter(!!sym(input$legend_bubble_select) %in% input$legend_bubble_specific)
-    
+
     bubble_data <- bubble_react()
-    
-    
+
+
     if ("selected_colour" %in% names(bubble_data)) {
       table_filter <- bubble_data %>%
         filter(selected_colour == TRUE)
@@ -1006,31 +1006,31 @@ server <- function(input, output, session) {
       table_filter <- bubble_data
       message("Column 'selected_colour' does not exist. No rows filtered.")
     }
-    
+
     table_new <- table %>%
       filter(intervention %in% table_filter$intervention,
              !!sym(input$legend_bubble_select) %in% table_filter[[input$legend_bubble_select]],
              outcome_measures %in% table_filter$outcome_measures)
-    
-    final_table <- all_annotations_restricted %>%
+
+    final_table <- all_annotations %>%
       filter(uid %in% table_new$uid) %>%
       filter(intervention %in% table_filter$intervention,
              !!sym(input$legend_bubble_select) %in% table_filter[[input$legend_bubble_select]],
              outcome_measures %in% table_filter$outcome_measures)
     #browser()
-    final_table <- all_annotations_small_restricted %>%
+    final_table <- all_annotations_small %>%
       filter(uid %in% final_table$uid) %>%
       left_join(citations_for_dl, by = "uid") %>%
       select(uid, year, author, title, discipline, intervention, outcome_measures, research_stage, doi, url) %>%
       mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
       arrange(desc(year))
-    
+
     if (nrow(final_table) > 0 ){
-      
+
       final_table$title <- paste0("<a href='",final_table$link, "' target='_blank'>",final_table$title,"</a>")
-      
+
     }
-    
+
     final_table <- final_table %>%
       select(-doi, -url, -link) %>%
       select(uid, Year = year, Author = author, Title = title,
@@ -1039,11 +1039,11 @@ server <- function(input, output, session) {
              "Outcome Measures" = outcome_measures,
              "Research Stage" = research_stage
       )
-    
-    
+
+
     return(final_table)
   })
-  
+
   plot_data <- reactive({
     tryCatch({
       # Assuming fetch_data() might throw an error
@@ -1052,7 +1052,7 @@ server <- function(input, output, session) {
       NULL  # Indicative of an error
     })
   })
-  
+
   output$error_message <- renderText({
     if (is.null(plot_data())) {
       "Please double-click to reset plot!"
@@ -1060,12 +1060,12 @@ server <- function(input, output, session) {
       ""
     }
   })
-  
+
   # Evidence map - plot -----
   output$evidence_map_plot <- renderPlotly({
-    
+
     tryCatch({
-      
+
       #browser()
       # old_plot <- plot_data() %>%
       #   ungroup() %>%
@@ -1077,7 +1077,7 @@ server <- function(input, output, session) {
       #   ungroup() %>%
       #   #filter(n > 2) %>%
       #   mutate(shape = ifelse(selected_colour == TRUE, "circle-cross-open", "circle"))
-      
+
       subcat_count <- plot_data() %>%
         ungroup() %>%
         filter(n > 2) %>%
@@ -1088,21 +1088,21 @@ server <- function(input, output, session) {
         ungroup() %>%
         filter(n > 2) %>%
         mutate(numeric_outcome = as.numeric(factor(outcome_measures))) %>%
-        mutate(index = as.integer(factor(!!sym(input$legend_bubble_select)))) %>% 
+        mutate(index = as.integer(factor(!!sym(input$legend_bubble_select)))) %>%
       group_by(intervention, outcome_measures) %>%
         mutate(
                jitter_base = ifelse(subcat_count > 1, 0.3 / (subcat_count - 1), 0),
-               jittered_outcome = numeric_outcome + (index - (subcat_count + 1) / 2) * jitter_base) %>% 
+               jittered_outcome = numeric_outcome + (index - (subcat_count + 1) / 2) * jitter_base) %>%
       ungroup() %>%
         mutate(shape = ifelse(selected_colour == TRUE, "circle-cross-open", "circle"))
-      
+
       # Calculate midpoints for line positions
       unique_outcomes <- sort(unique(plot$numeric_outcome))
       line_positions <- head(unique_outcomes, -1) + diff(unique_outcomes) / 2
-      
+
       max_n <- max(plot$n, na.rm = TRUE)
       sizeref_value <- 1 * (max_n/300)
-      
+
       irise_colours <- c(
         dark_blue = "#1A465F",
         dot_text_green = "#64C296",
@@ -1111,13 +1111,13 @@ server <- function(input, output, session) {
         lavender = "#E6E6FA",
         slate_grey = "#708090"
       )
-      
+
       # Generate a named color map based on the input variable for coloring
       color_var <- plot[[input$legend_bubble_select]]
       unique_color_var <- unique(color_var)
       color_map <- setNames(irise_colours[1:length(unique_color_var)], unique_color_var)
-      
-      
+
+
       p <- plot_ly(plot,
                    x = ~jittered_outcome, y = ~intervention, size = ~n,
                    color = as.formula(paste0("~`", input$legend_bubble_select, "`")),
@@ -1150,7 +1150,7 @@ server <- function(input, output, session) {
                      tickvals = unique(plot$numeric_outcome),
                      ticktext = unique(plot$outcome_measures),
                      # tickvals = seq(min(plot$jittered_outcome, na.rm = TRUE), max(plot$jittered_outcome, na.rm = TRUE),
-                     #     length.out = 3), 
+                     #     length.out = 3),
                      showgrid = FALSE
         ),
         hoverlabel = list(bgcolor = "white",
@@ -1167,21 +1167,21 @@ server <- function(input, output, session) {
             line = list(color = 'grey', width = 1)
           )
         })
-        
+
         )
       return(p)
     }, error = function(e) {
-      
+
       return(NULL)  # Return NULL to avoid further processing or showing an erroneous plot
     })
-    
+
     #}
   })
-  
+
   # Evidence map - datatable -----
   output$int_ac_dis_table <- DT::renderDataTable({
     dl_evidence_map <<- table_react()
-    
+
     DT::datatable(
       table_react()[,2:ncol(table_react())],
       rownames = FALSE,
@@ -1210,19 +1210,19 @@ server <- function(input, output, session) {
               "return type === 'display' && data.length > 15 ?",
               "'<span title=\"' + data + '\">' + data.substr(0, 15) + '...</span>' : data;",
               "}")),
-          
+
           list(width = '10%', targets = "_all")
         )
       )
-      
+
     )
-    
+
   })
-  
-  
+
+
   # Funder - server -----
   output$funding_summary <- renderValueBox({
-    
+
     df_count <- included_with_metadata %>%
       left_join(funder, by = "doi", multiple="all") %>%
       mutate(cat = ifelse(is.na(status), "Not Complete", "Complete")) %>%
@@ -1231,14 +1231,14 @@ server <- function(input, output, session) {
       group_by(cat) %>%
       count() %>%
       ungroup()
-    
+
     df_percentage <- df_count %>%
       mutate(percentage = round(n / sum(n) * 100, 1)) %>%
       filter(cat == "Complete") %>%
       pull(percentage)
-    
+
     percentage_complete <- paste0(df_percentage, " %")
-    
+
     valueBox(
       width = 12,
       value = tags$h2(percentage_complete, style = "font-size: 200%; color: white;"),
@@ -1247,13 +1247,13 @@ server <- function(input, output, session) {
       color = "primary"
     )
   })
-  
+
   output$funding_category_box <- renderValueBox({
-    
+
     df <- funder_metadata %>%
       filter(funder_name == input$funder_select) %>%
-      select(uid, funder_name, intervention) %>% 
-      distinct() %>% 
+      select(uid, funder_name, intervention) %>%
+      distinct() %>%
       group_by(intervention) %>%
       count() %>%
       ungroup() %>%
@@ -1261,8 +1261,8 @@ server <- function(input, output, session) {
       arrange(desc(n)) %>%
       slice_head() %>%
       pull(intervention)
-    
-    
+
+
     valueBox(
       width = 12,
       value = tags$p(paste0("The top Intervention funded by ", input$funder_select, " is"), style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
@@ -1272,36 +1272,36 @@ server <- function(input, output, session) {
       elevation = 2
     )
   })
-  
+
   funder_filtered <- reactive({
     funder_transparency %>%
       filter(funder_name == input$funder_select)
   })
-  
+
   # Funder - transparency boxes -----
   calculate_transparency_percent <- function(column) {
-    
+
     if (length(column) > 0) {
-      
+
       true_values <- na.omit(column)
       num_true = sum(true_values)
-      
+
       total_non_na = length(true_values)
       percentage_true = round((num_true / total_non_na) * 100, 1)
-      
+
       paste0(percentage_true, " %")
     } else {
       "0%"
     }
   }
-  
+
   oa_percentage <- reactive({
     data <- funder_filtered()
-    
+
     calculate_transparency_percent(data$is_oa)
   })
-  
-  
+
+
   output$oa_box <- renderValueBox({
     valueBox(
       width = 4,
@@ -1312,14 +1312,14 @@ server <- function(input, output, session) {
       elevation = 2
     )
   })
-  
-  
+
+
   od_percentage <- reactive({
     data <- funder_filtered()
     calculate_transparency_percent(data$is_open_data)
   })
-  
-  
+
+
   output$od_box <- renderValueBox({
     valueBox(
       width = 4,
@@ -1328,17 +1328,17 @@ server <- function(input, output, session) {
       value = tags$p(od_percentage(), style = "font-size: 300%; color: white;"),
       icon = icon("bar-chart"),
       elevation = 2
-      
+
     )
   })
-  
+
   oc_percentage <- reactive({
     data <- funder_filtered()
-    
+
     calculate_transparency_percent(data$is_open_code)
   })
-  
-  
+
+
   output$oc_box <- renderValueBox({
     valueBox(
       width = 4,
@@ -1346,14 +1346,14 @@ server <- function(input, output, session) {
       color = "secondary",
       value = tags$p(oc_percentage(), style = "font-size: 300%; color: white;"),
       icon = icon("code"),       elevation = 2
-      
+
     )
   })
-  
-  
+
+
   # Funder - publications by year plot -----
   output$funder_year_plot <- renderPlotly({
-    
+
     funder_year %>%
       filter(funder_name == input$funder_select) %>%
       plot_ly(x = ~year,
@@ -1369,7 +1369,7 @@ server <- function(input, output, session) {
               text = ~paste(
                 "<br><b>Number of Publications:</b>", n,
                 "<br><b>Year:</b>", year)
-              
+
       ) %>%
       layout(showlegend = FALSE,
              yaxis = list(title = 'Number of publications', showgrid = TRUE),
@@ -1383,29 +1383,29 @@ server <- function(input, output, session) {
                     showarrow = F, xref='paper', yref='paper',
                     xanchor='right', yanchor='bottom', xshift=0, yshift=0,
                     font=list(size=12, color="black")))
-    
+
   })
-  
+
   # Reactive expression to filter dataset based on the selected provider
   funder_picker <- reactive({
     funder_metadata %>%
       filter(funder_name == input$funder_select)
   })
-  
+
   # Observe any changes in provider selection and update outcome fields
   observeEvent(input$funder_select, {
-    
-    funder_interventions <- sort(unique(funder_picker()$intervention)) 
-    
+
+    funder_interventions <- sort(unique(funder_picker()$intervention))
+
     # Update the intervention selections
     updatePickerInput(session, "funder_intervention_select", choices = funder_interventions, selected = funder_interventions)
 
-    
+
   })
-  
+
   # Funder - interventions plot
   output$funder_category_bar <- renderPlotly({
-    
+
     funder_metadata_table <- funder_metadata %>%
       filter(funder_name == input$funder_select) %>%
       filter(intervention %in% input$funder_intervention_select) %>%
@@ -1416,8 +1416,8 @@ server <- function(input, output, session) {
       count() %>%
       ungroup() %>%
       arrange(n)
-    
-    
+
+
     plot <- plot_ly(data = funder_metadata_table, x = ~n, type = 'bar', orientation = 'h',
                     y = ~factor(intervention, levels = unique(intervention)),
                     marker = list(color = '#B1E0CB', line = list(color = 'black', width = 1)),
@@ -1436,47 +1436,47 @@ server <- function(input, output, session) {
                                 xref = 'paper', yref = 'paper', xanchor = 'right',
                                 yanchor = 'bottom', xshift = 0, yshift = 0,
                                 font = list(size = 12, color = "black")))
-    
-    
+
+
   })
-  
+
   # Funder - renderUI for datatable
   output$data_table_box <- renderUI({
     title_value <- input$funder_select
-    
+
     if (is.null(title_value)){
-      
+
       title_value <- "Select a Funder"
     }
     box(width = 12,
         solidHeader = TRUE,
         status = "primary",
         title = paste0("Studies Funded by ", title_value),
-        
+
         download_table_UI("dl_funder_data"),
         DT::dataTableOutput("funder_data_table") %>% withSpinner(color="#96c296")
     )
   })
-  
+
   # Funder - datatable
   output$funder_data_table <- DT::renderDataTable({
-    
+
     funder_table <- funder_metadata_small %>%
       filter(funder_name == input$funder_select)
-    
+
     selected_studies <- funder_table %>%
       mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
       arrange(desc(year))
-    
+
     selected_studies$title <- paste0("<a href='",selected_studies$link, "' target='_blank'>",selected_studies$title,"</a>")
-    
+
     selected_studies <- selected_studies %>%
       distinct() %>%
       select(uid, Year = year, Author = author, Title = title, Intervention = intervention, "Outcome Measures" = outcome_measures, Discipline = discipline) %>%
       arrange(is.na(Intervention))
-    
+
     dl_funder <<- selected_studies
-    
+
     DT::datatable(
       selected_studies[,2:ncol(selected_studies)],
       rownames = FALSE,
@@ -1504,31 +1504,31 @@ server <- function(input, output, session) {
               "return type === 'display' && data.length > 15 ?",
               "'<span title=\"' + data + '\">' + data.substr(0, 15) + '...</span>' : data;",
               "}")),
-          
+
           list(width = '10%', targets = "_all")
         )
       )
-      
+
     )
-    
+
   })
-  
+
   # Outcome overview - renderUI -----
   output$dynamic_box <- renderUI({
     selected_outcome <- input$outcome_select
     selected_provider <- input$provider_select
-    
+
     if (length(selected_outcome) > 1) {
       selected_outcome_str <- paste(selected_outcome, collapse = " and ")
-      
+
       selected_title <- paste0("Published articles with interventions to improve ", selected_outcome_str, " implemented by ", selected_provider)
-      
+
     } else if (length(selected_outcome) == 1) {
       selected_title <-paste0("Published articles with interventions to improve ", selected_outcome, " implemented by ", selected_provider)
     } else {
       selected_title <- "Interventions by Outcome"
     }
-    
+
     box(
       width = 12,
       height = "550px",
@@ -1558,21 +1558,21 @@ server <- function(input, output, session) {
       plotlyOutput("interventions_by_outcome_bar")
     )
   })
-  
+
   output$data_table_box_outcome <- renderUI({
     provider_select_val <- input$provider_select
     outcome_select_val <- input$outcome_select
-    
+
     if (is.null(provider_select_val)){
-      
+
       provider_select_val <- "Select a Provider"
     }
-    
+
     if (is.null(outcome_select_val)){
-      
+
       outcome_select_val <- "Select an Outcome"
     }
-    
+
     box(width = 12,
         solidHeader = TRUE,
         status = "secondary",
@@ -1581,67 +1581,67 @@ server <- function(input, output, session) {
         DT::dataTableOutput("outcome_overview_data_table") %>% withSpinner(color="#96c296")
     )
   })
-  
+
   # Outcome overview - server -----
-  
+
   # Reactive expression to filter dataset based on the selected provider
   outcome_picker <- reactive({
-    all_annotations_restricted %>%
+    all_annotations %>%
       filter(intervention_provider == input$provider_select)
   })
-  
+
   # Observe any changes in provider selection and update outcome fields
   observeEvent(input$provider_select, {
     #browser()
     # Access the outcomes related to the selected provider
     #outcome_categories <- sort(c("Type-I error reduction", "Type-II error reduction", "Effect size estimation", "Transparency of funding", "Transparency of interests", "Transparency of contributions", "Data availability and re-use", "Materials availability and re-use", "Code / analysis availability and re-use", "Reporting quality", "Transparency of evaluation", "Reporting bias", "Publication bias", "Computational reproducibility", "Unspecified"))
-    
-    outcomes <- sort(unique(outcome_picker()$outcome_measures)) 
-    
+
+    outcomes <- sort(unique(outcome_picker()$outcome_measures))
+
     # Update the outcome selections
     updatePickerInput(session, "outcome_select", choices = outcomes)
     updatePickerInput(session, "outcome_comparison_select", choices = outcomes)
 
   })
-  
+
   # Reactive expression to filter dataset based on the selected provider
   intervention_picker <- reactive({
-    all_annotations_restricted %>%
+    all_annotations %>%
       filter(intervention_provider == input$provider_select,
              outcome_measures %in% input$outcome_select)
   })
-  
+
   # Observe any changes in provider selection and update outcome fields
   observeEvent(input$provider_select, {
 
     interventions <- sort(unique(intervention_picker()$intervention))
-    
+
   })
-  
+
   output$outcome_overview_data_table <- DT::renderDataTable({
-    
-    outcome_table <- all_annotations_restricted %>%
+
+    outcome_table <- all_annotations %>%
       filter(intervention_provider == input$provider_select) %>%
       filter(outcome_measures == input$outcome_select)
-    
-    table_small <- all_annotations_small_restricted %>%
+
+    table_small <- all_annotations_small %>%
       filter(uid %in% outcome_table$uid)
-    
+
     outcome_table <- left_join(table_small, included_with_metadata)
-    
-    
+
+
     selected_studies <- outcome_table %>%
       mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
       arrange(desc(year))
-    
+
     selected_studies$title <- paste0("<a href='",selected_studies$link, "' target='_blank'>",selected_studies$title,"</a>")
-    
+
     selected_studies <- selected_studies %>%
       distinct() %>%
       select(uid, Year = year, Author = author, Title = title, Intervention = intervention, "Outcome Measures" = outcome_measures, Discipline = discipline)
-    
+
     dl_outcome_overview <<- selected_studies
-    
+
     DT::datatable(
       selected_studies[,2:ncol(selected_studies)],
       rownames = FALSE,
@@ -1669,19 +1669,19 @@ server <- function(input, output, session) {
               "return type === 'display' && data.length > 15 ?",
               "'<span title=\"' + data + '\">' + data.substr(0, 15) + '...</span>' : data;",
               "}")),
-          
+
           list(width = '10%', targets = "_all")
         )
       )
-      
+
     )
-    
+
   })
-  
+
   # Outcome overview - intervention provider plot -----
   output$outcome_year_plot <- renderPlotly({
-    
-    data <- all_annotations_restricted %>%
+
+    data <- all_annotations %>%
       filter(outcome_measures %in% c(input$outcome_select, input$outcome_comparison_select)) %>%
       filter(intervention_provider %in% input$provider_select) %>%
       left_join(citations_for_dl, by = "uid") %>%
@@ -1699,20 +1699,20 @@ server <- function(input, output, session) {
     } else {
       min_year <- min(data$year)
       max_year <- max(data$year)
-      
+
       all_combinations <- expand.grid(
         year = min_year:max_year,
         outcome_measures = unique(data$outcome_measures),
         intervention_provider = unique(data$intervention_provider)
       )
-      
+
       data_complete <- left_join(all_combinations, data, by = c("year", "outcome_measures", "intervention_provider")) %>%
         replace_na(list(n = 0)) %>%
         group_by(outcome_measures) %>%
         arrange(year, outcome_measures) %>%
         mutate(cumulative_n = cumsum(n)) %>%
         ungroup()
-      
+
       plot_ly(data_complete,
               x = ~year,
               type = 'bar',
@@ -1747,15 +1747,15 @@ server <- function(input, output, session) {
                       font = list(size = 12, color = "black")))
     }
   })
-  
+
   # Outcome overview - top intervention last 5 years -----
   output$top_int_five_years <- renderValueBox({
-    
+
     current_year <- 2024
     start_year <- current_year - 5
-    
+
     #browser()
-    int_out_table <- all_annotations_restricted %>%
+    int_out_table <- all_annotations %>%
       filter(outcome_measures %in% input$outcome_select) %>%
       #filter(intervention %in% input$intervention_select) %>%
       filter(intervention_provider %in% input$provider_select) %>%
@@ -1769,23 +1769,23 @@ server <- function(input, output, session) {
       ungroup() %>%
       slice_head(n = 1) %>%
       pull(intervention)
-    
+
     interventions_html <- paste(int_out_table, collapse="<br>")
-    
+
     valueBox(
       subtitle = tags$p(HTML(paste0("Intervention with the most evidence in the last 5 years")), style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
       color = "secondary",
       value = tags$p(HTML(interventions_html), style = "font-size: 150%; color: white;"),
       icon = icon("code"),
       elevation = 2
-      
+
     )
   })
-  
-  
+
+
   # Outcome overview - interventions by outcome bar -----
   output$interventions_by_outcome_bar <- renderPlotly({
-    
+
     # # Work out Multidisciplinary studies - uncomment mutate below!
     # multi_discipline <- data_for_bubble %>%
     #   filter(outcome_measures %in% input$outcome_select) %>%
@@ -1798,8 +1798,8 @@ server <- function(input, output, session) {
     #   ungroup() %>%
     #   filter(n > 1) %>%
     #   pull(uid)
-    
-    int_out_table <- all_annotations_restricted %>%
+
+    int_out_table <- all_annotations %>%
       filter(outcome_measures %in% input$outcome_select) %>%
       filter(intervention %in% input$intervention_select) %>%
       filter(intervention_provider %in% input$provider_select) %>%
@@ -1812,9 +1812,9 @@ server <- function(input, output, session) {
       #mutate(discipline = ifelse(uid %in% multi_discipline, "Multidisciplinary", discipline)) %>%
       #distinct() %>%
       arrange(n)
-    
-    
-    
+
+
+
     # Create plot
     plot <- plot_ly(data = int_out_table, x = ~n, type = 'bar', orientation = 'h',
                     y = ~factor(intervention, levels = unique(intervention)),
@@ -1838,38 +1838,38 @@ server <- function(input, output, session) {
                                 xref = 'paper', yref = 'paper', xanchor = 'right',
                                 yanchor = 'bottom', xshift = 0, yshift = 0,
                                 font = list(size = 12, color = "black")))
-    
-    
+
+
   })
-  
-  
+
+
   # Location - server -----
   scale_size <- function(num) {
     scales::rescale(num, c(3, 15))  # Adjust size range as necessary
   }
-  
+
   # Create a reactive color palette
   color_palette <- reactive({
     colorFactor(palette = "Set2", domain = ror_data$type)
   })
-  
-  
+
+
   # Location - filtered data -----
   filtered_data <- reactive({
-    
-    
+
+
     # If country is null
     if (is.null(input$country_select)) {
-      
+
       inst_locations_filter <- ror_data %>%
         filter(continent %in% input$continent_select,
                outcome_measures %in% input$inst_outcome_select,
                discipline %in% input$inst_discipline_select,
                type %in% input$inst_type_select) %>%
         distinct()
-      
+
     } else {
-      
+
       inst_locations_filter <- ror_data %>%
         filter(country %in% input$country_select,
                continent %in% input$continent_select,
@@ -1878,29 +1878,29 @@ server <- function(input, output, session) {
                type %in% input$inst_type_select) %>%
         distinct()
     }
-    
+
     if (nrow(inst_locations_filter >= 1)){
       inst_locations_filter <- inst_locations_filter %>%
         distinct()
-      
+
     } else {
-      
+
       inst_locations_filter <- ror_data %>%
         distinct()
-      
+
     }
-    
-    
+
+
     return(inst_locations_filter)
   })
-  
+
   # Location - render leaflet map -----
   output$institution_map <- renderLeaflet({
     data <- filtered_data() %>%
       group_by(name) %>%
       mutate(filter_no = n_distinct(uid)) %>%
       ungroup()
-    
+
     leaflet(data) %>%
       addProviderTiles(providers$Esri.WorldStreetMap
       ) %>%
@@ -1918,7 +1918,7 @@ server <- function(input, output, session) {
         label = ~name,
         weight = 1,
         layerId = ~name
-        
+
       ) %>%
       addLegend(
         position = "bottomleft",
@@ -1932,32 +1932,32 @@ server <- function(input, output, session) {
                 lat1 = min(filtered_data()$lat, na.rm = TRUE) - 3,
                 lng2 = max(filtered_data()$long, na.rm = TRUE) + 3,
                 lat2 = max(filtered_data()$lat, na.rm = TRUE) + 3)
-    
-    
+
+
   })
-  
+
   filtered_table_data <- reactiveVal()
-  
+
   observeEvent(input$institution_map_marker_click, {
-    
+
     click <- input$institution_map_marker_click
     #browser()
     if (!is.null(click$id)) {
-      
+
       table_data <- filtered_data() %>%
         filter(name == click$id)
-      
-      
+
+
       filtered_table_data(table_data)
-      
+
     }
-    
+
   })
-  
+
   observeEvent(input$institution_map_click, {
     filtered_table_data(NULL)
   })
-  
+
   observe({
     leafletProxy("institution_map", data = filtered_data()) %>%
       #clearShapes() %>%
@@ -1965,43 +1965,43 @@ server <- function(input, output, session) {
                 lat1 = min(filtered_data()$lat, na.rm = TRUE) - 3,
                 lng2 = max(filtered_data()$long, na.rm = TRUE) + 3,
                 lat2 = max(filtered_data()$lat, na.rm = TRUE) + 3)
-    
+
   })
-  
+
   # Location - datatable -----
   output$location_table <- DT::renderDataTable({
     #browser()
-    
+
     if (is.null(filtered_table_data()) || nrow(filtered_table_data()) == 0) {
-      
+
       table <- filtered_data()
-      
+
     }else{
-      
+
       table <- filtered_table_data()
-      
+
     }
-    
+
     table <- table %>%
       distinct(uid) %>%
       left_join(ror_data_small, by = "uid")
-    
-    
+
+
     table <- table %>%
       mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url))
-    
+
     table$title <- paste0("<a href='",table$link, "' target='_blank'>",table$title,"</a>")
-    
-    
+
+
     table$name <- paste0("<a href='",table$ror, "' target='_blank'>",table$name,"</a>")
-    
+
     table_select <- table %>%
       select(uid, Institution = name, Title = title, Country = country, "Institution Type" = type, Discipline = discipline, Outcome = outcome_measures) %>%
       distinct() %>%
       arrange(Discipline == "Unknown")
-    
+
     dl_location <<- table_select
-    
+
     DT::datatable(
       table_select[,2:ncol(table_select)],
       rownames = FALSE,
@@ -2029,15 +2029,15 @@ server <- function(input, output, session) {
               "return type === 'display' && data.length > 15 ?",
               "'<span title=\"' + data + '\">' + data.substr(0, 15) + '...</span>' : data;",
               "}")),
-          
+
           list(width = '10%', targets = "_all")
         )
       )
-      
+
     )
-    
+
   })
-  
+
 }
 
 # Run the application
