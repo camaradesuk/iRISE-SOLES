@@ -450,8 +450,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                 pickerInput(
                                                   inputId = "select_outcome",
                                                   label = tags$p("Select one or more reproducibility measures", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
-                                                  choices = sort(unique(all_annotations$outcome_measures)),
-                                                  #choices = sort(c("Type-I error reduction", "Type-II error reduction", "Effect size estimation", "Transparency of funding", "Transparency of interests", "Transparency of contributions", "Data availability and re-use", "Materials availability and re-use", "Code / analysis availability and re-use", "Reporting quality", "Transparency of evaluation", "Reporting bias", "Publication bias", "Computational reproducibility")),
+                                                  choices = sort(unique(all_annotations$outcome_measures[!all_annotations$outcome_measures %in% c("Unknown")])),
                                                   selected = c("Computational reproducibility"),
                                                   multiple = TRUE,
                                                   options = pickerOptions(noneSelectedText = "Please Select",
@@ -627,7 +626,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                            inputId = "provider_select",
                                            label = tags$p("Intervention Provider", style = "color: #47B1A3; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
                                            #choices = sort(unique(all_annotations$intervention_provider)),
-                                           choices = sort(c("Government", "Funder", "Publisher / journal", "Institution", "Students", "Researchers / Researcher Collaboration", "Learned societies", "Research support staff", "Organisation", "Unspecified")),
+                                           choices = sort(unique(all_annotations$intervention_provider[!all_annotations$intervention_provider %in% c("Unknown")])),
                                            selected = c("Institution"),
                                            multiple = FALSE,
                                            options = pickerOptions(
@@ -904,13 +903,13 @@ server <- function(input, output, session) {
   # Evidence Map - server -----
   observe({
     choices <- switch(input$legend_bubble_select,
-                      "intervention_provider" = sort(unique(all_annotations$intervention_provider)),
-                      "target_population" = sort(unique(all_annotations$target_population)),
-                      "discipline" = sort(unique(all_annotations$discipline)))
+                      "intervention_provider" = sort(unique(all_annotations$intervention_provider[!all_annotations$intervention_provider %in% c("Unknown", "Unspecified")])),
+                      "target_population" = sort(unique(all_annotations$target_population[!all_annotations$target_population %in% c("Unknown", "Unspecified")])),
+                      "discipline" = sort(unique(all_annotations$discipline[!all_annotations$discipline %in% c("Unknown", "Unspecified")])))
 
     updatePickerInput(session, "legend_bubble_specific",
                       choices = choices,
-                      selected = choices[1:4])
+                      selected = choices)
   })
 
   previous_state <- reactiveValues(
@@ -991,8 +990,9 @@ server <- function(input, output, session) {
 
   table_react <- reactive({
 
+    #browser()
     table <- all_annotations %>%
-      filter(outcome_measures %in% input$select_outcome)
+      filter(outcome_measures %in% input$select_outcome) %>% 
       filter(!!sym(input$legend_bubble_select) %in% input$legend_bubble_specific)
 
     bubble_data <- bubble_react()
@@ -1066,27 +1066,13 @@ server <- function(input, output, session) {
 
     tryCatch({
 
-      #browser()
-      # old_plot <- plot_data() %>%
-      #   ungroup() %>%
-      #   mutate(numeric_outcome = as.numeric(factor(outcome_measures))) %>%
-      #   group_by(intervention, outcome_measures) %>%
-      #   mutate(index = row_number(),  # Create an indexer within each group
-      #          jitter_base = ifelse(n() > 1, 0.15 / (n() - 1), 0),  # Jitter base depending on count
-      #          jittered_outcome = numeric_outcome + (jitter_base * n()) * ((index - 1) - (n() - 1) / 2)) %>%
-      #   ungroup() %>%
-      #   #filter(n > 2) %>%
-      #   mutate(shape = ifelse(selected_colour == TRUE, "circle-cross-open", "circle"))
-
       subcat_count <- plot_data() %>%
         ungroup() %>%
-        filter(n > 2) %>%
         distinct(!!sym(input$legend_bubble_select)) %>%
         nrow()
 
       plot <- plot_data() %>%
         ungroup() %>%
-        filter(n > 2) %>%
         mutate(numeric_outcome = as.numeric(factor(outcome_measures))) %>%
         mutate(index = as.integer(factor(!!sym(input$legend_bubble_select)))) %>%
       group_by(intervention, outcome_measures) %>%
@@ -1102,20 +1088,30 @@ server <- function(input, output, session) {
 
       max_n <- max(plot$n, na.rm = TRUE)
       sizeref_value <- 1 * (max_n/300)
+      #sizeref_value <- 1 * (max_n/40)
+      
 
       irise_colours <- c(
         dark_blue = "#1A465F",
         dot_text_green = "#64C296",
         coral = "#FF7F50",
         gold = "#FFD700",
-        lavender = "#E6E6FA",
-        slate_grey = "#708090"
+        rose_quartz = "#A799B7",
+        indian_red = "#D05353",
+        slate_grey = "#708090",
+        melon = "#DAA49A",
+        coyote = "#735F3D"
       )
 
       # Generate a named color map based on the input variable for coloring
       color_var <- plot[[input$legend_bubble_select]]
       unique_color_var <- unique(color_var)
       color_map <- setNames(irise_colours[1:length(unique_color_var)], unique_color_var)
+      
+      formatLegendText <- function(text) {
+        text <- gsub("_", " ", text)      
+        toTitleCase(text)                  
+      }
 
 
       p <- plot_ly(plot,
@@ -1136,26 +1132,31 @@ server <- function(input, output, session) {
                    textposition = "none",
                    text = ~paste0("Intervention: ", intervention,"<br>",
                                   "Outcome: ", outcome_measures,"<br>",
-                                   toTitleCase(input$legend_bubble_select),": ", get(input$legend_bubble_select), "","<br>",
+                                  formatLegendText(input$legend_bubble_select),": ", get(input$legend_bubble_select), "","<br>",
                                   "Number of Studies: ", n)) %>%
         layout(yaxis = list(title = list(text = "Intervention", standoff = 25),
-                            # tickvals = unique(plot$numeric_intervention),
-                            # ticktext = unique(plot$intervention),
                             showgrid = TRUE
         ),
         xaxis = list(
           title = list(text = "", standoff = 25),
-                     #tickangle = -20,
                      ticklen = 4,
                      tickvals = unique(plot$numeric_outcome),
                      ticktext = unique(plot$outcome_measures),
-                     # tickvals = seq(min(plot$jittered_outcome, na.rm = TRUE), max(plot$jittered_outcome, na.rm = TRUE),
-                     #     length.out = 3),
-                     showgrid = FALSE
+                     showgrid = FALSE,
+          tickfont = list(
+            size = 14,  # Increase the font size as desired
+            color = "black",
+            family = "Arial, bold"  # Specify bold here
+          )
         ),
         hoverlabel = list(bgcolor = "white",
                           font = list(size = 14)),
         showlegend = TRUE,
+        legend = list(title = list(text = formatLegendText(input$legend_bubble_select)),
+                      bordercolor = 'black',
+                      borderwidth = 2,
+                      y = 0.95,  # Adjusts the vertical position slightly down
+                      yanchor = 'top'),
         clickmode = "event + select",
         shapes =
         lapply(line_positions, function(pos) {
@@ -1250,10 +1251,12 @@ server <- function(input, output, session) {
 
   output$funding_category_box <- renderValueBox({
 
+    #browser()
     df <- funder_metadata %>%
       filter(funder_name == input$funder_select) %>%
       select(uid, funder_name, intervention) %>%
       distinct() %>%
+      filter(!intervention %in% c("Unknown", "Other")) %>% 
       group_by(intervention) %>%
       count() %>%
       ungroup() %>%
@@ -1395,8 +1398,9 @@ server <- function(input, output, session) {
   # Observe any changes in provider selection and update outcome fields
   observeEvent(input$funder_select, {
 
-    funder_interventions <- sort(unique(funder_picker()$intervention))
-
+    #funder_interventions <- sort(unique(funder_picker()$intervention))
+    funder_interventions <- sort(unique(funder_picker()$intervention[!funder_picker()$intervention %in% c("Unknown")]))
+    
     # Update the intervention selections
     updatePickerInput(session, "funder_intervention_select", choices = funder_interventions, selected = funder_interventions)
 
@@ -1473,7 +1477,7 @@ server <- function(input, output, session) {
     selected_studies <- selected_studies %>%
       distinct() %>%
       select(uid, Year = year, Author = author, Title = title, Intervention = intervention, "Outcome Measures" = outcome_measures, Discipline = discipline) %>%
-      arrange(is.na(Intervention))
+      arrange(Intervention == "Unknown")
 
     dl_funder <<- selected_studies
 
@@ -1521,10 +1525,12 @@ server <- function(input, output, session) {
     if (length(selected_outcome) > 1) {
       selected_outcome_str <- paste(selected_outcome, collapse = " and ")
 
-      selected_title <- paste0("Published articles with interventions to improve ", selected_outcome_str, " implemented by ", selected_provider)
 
+      selected_title <- paste0("Published articles with interventions from <strong>", selected_provider, "</strong> to improve <strong>", selected_outcome, "</strong>")
+      
     } else if (length(selected_outcome) == 1) {
-      selected_title <-paste0("Published articles with interventions to improve ", selected_outcome, " implemented by ", selected_provider)
+      selected_title <- paste0("Published articles with interventions from <strong>", selected_provider, "</strong> to improve <strong>", selected_outcome, "</strong>")
+      
     } else {
       selected_title <- "Interventions by Outcome"
     }
@@ -1532,7 +1538,7 @@ server <- function(input, output, session) {
     box(
       width = 12,
       height = "550px",
-      title = tags$p(HTML(selected_title), style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
+      title = HTML(selected_title), style = "color: white; font-family: KohinoorBangla, sans-serif !important;",
       status = "primary",
       solidHeader = TRUE,
       fluidRow(
@@ -1576,7 +1582,7 @@ server <- function(input, output, session) {
     box(width = 12,
         solidHeader = TRUE,
         status = "secondary",
-        title = paste0("Selected studies with interventions from ", provider_select_val, " to improve ", outcome_select_val),
+        title = HTML(paste0("Selected studies with interventions from <strong>", provider_select_val, "</strong> to improve <strong>", outcome_select_val, "</strong>")),
         download_table_UI("dl_outcome_overview"),
         DT::dataTableOutput("outcome_overview_data_table") %>% withSpinner(color="#96c296")
     )
@@ -1592,12 +1598,9 @@ server <- function(input, output, session) {
 
   # Observe any changes in provider selection and update outcome fields
   observeEvent(input$provider_select, {
-    #browser()
-    # Access the outcomes related to the selected provider
-    #outcome_categories <- sort(c("Type-I error reduction", "Type-II error reduction", "Effect size estimation", "Transparency of funding", "Transparency of interests", "Transparency of contributions", "Data availability and re-use", "Materials availability and re-use", "Code / analysis availability and re-use", "Reporting quality", "Transparency of evaluation", "Reporting bias", "Publication bias", "Computational reproducibility", "Unspecified"))
 
-    outcomes <- sort(unique(outcome_picker()$outcome_measures))
-
+    outcomes <-  sort(unique(outcome_picker()$outcome_measures[!outcome_picker()$outcome_measures %in% c("Unknown")]))
+    
     # Update the outcome selections
     updatePickerInput(session, "outcome_select", choices = outcomes)
     updatePickerInput(session, "outcome_comparison_select", choices = outcomes)
@@ -1833,7 +1836,9 @@ server <- function(input, output, session) {
                           dtick = 1,
                           tick0 = 0),
              barmode = 'stack',
-             legend = list(title = list(text = "Discipline")),
+             legend = list(title = list(text = "Discipline"),
+                           bordercolor = 'black',
+                           borderwidth = 2),
              annotations = list(x = 1, y = -0.2, text = "", showarrow = FALSE,
                                 xref = 'paper', yref = 'paper', xanchor = 'right',
                                 yanchor = 'bottom', xshift = 0, yshift = 0,

@@ -401,7 +401,6 @@ ror_data <- dbReadTable(con, "institution_location") %>%
   left_join(pico_country, by = c("institution_country_code" = "sub_category2")) %>%
   filter(doi %in% included_with_metadata$doi) %>%
   left_join(included_with_metadata, by = "doi") %>%
-  #filter(uid %in% all_annotations$uid) %>%
   left_join(all_annotations, by = "uid") %>%
   distinct() %>%
   group_by(name) %>%

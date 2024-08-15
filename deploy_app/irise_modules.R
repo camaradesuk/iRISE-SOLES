@@ -1557,16 +1557,18 @@ search_Server <- function(id,
           mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
           arrange(desc(year))
 
+        #browser()
         combined_pico_table <- unique(combined_pico_table)
         selected_studies$title <- paste0("<a href='",selected_studies$link, "' target='_blank'>",selected_studies$title,"</a>")
         selected_studies <- selected_studies %>%
           select(uid, year, author, journal, title) %>%
           left_join(combined_pico_table, by="uid") %>%
           distinct() %>% 
-          arrange(is.na(intervention))
-        ### REMOVE THIS ONCE FULLY TAGGED
-        # %>%
-        #   select(year, author, title, uid)
+          rename("Intervention" = "intervention", "Discipline" = "discipline", "Outcome Measures" = "outcome_measures") %>% 
+          arrange(Intervention == "Unknown")
+        
+        colnames(selected_studies) <- toTitleCase(colnames(selected_studies))
+        
 
         selected_studies <- as.data.frame(selected_studies) %>%
           ungroup()
