@@ -17,6 +17,11 @@ predictions_df$intervention <- gsub("Pre-registration", "Preregistration", predi
 
 rownames(predictions_df) <- NULL
 
+all_annotations_small <- predictions_df
+
+dataframes_for_app[["all_annotations_small"]] <- all_annotations_small
+
+
 # Interventions tables
 interventions_df_small <- predictions_df %>%
   select(uid, intervention) %>%
@@ -25,7 +30,9 @@ interventions_df_small <- predictions_df %>%
 interventions_df_bubble <- interventions_df_small %>%
   separate_rows(intervention, sep = ";\\s+") %>%
   mutate(method = "gpt-4o-3s-v1") %>%
-  rbind(intervention_df_human)
+  rbind(intervention_df_human) %>% 
+  mutate(intervention = trimws(intervention))
+  
 
 interventions_df <- interventions_df_bubble %>%
   rename(name = intervention)
@@ -40,7 +47,8 @@ intervention_provider_df_small <- predictions_df %>%
 intervention_provider_df_bubble <- intervention_provider_df_small %>%
   separate_rows(intervention_provider, sep = ";\\s+") %>%
   mutate(method = "gpt-4o-3s-v1") %>%
-  rbind(intervention_provider_df_human)
+  rbind(intervention_provider_df_human) %>% 
+  mutate(intervention_provider = trimws(intervention_provider))
 
 intervention_provider_df <- intervention_provider_df_bubble %>%
   rename(name = intervention_provider)
@@ -55,7 +63,9 @@ discipline_df_small <- predictions_df %>%
 discipline_df_bubble <- discipline_df_small %>%
   separate_rows(discipline, sep = ";\\s+") %>%
   mutate(method = "gpt-4o-3s-v1") %>%
-  rbind(discipline_df_human)
+  rbind(discipline_df_human) %>% 
+  mutate(discipline = trimws(discipline)) 
+
 
 discipline_df <- discipline_df_bubble %>%
   rename(name = discipline)
@@ -71,7 +81,8 @@ target_population_df_small <- predictions_df %>%
 target_population_df_bubble <- target_population_df_small %>%
   separate_rows(target_population, sep = ";\\s+") %>%
   mutate(method = "gpt-4o-3s-v1") %>%
-  rbind(target_population_df_human)
+  rbind(target_population_df_human) %>% 
+  mutate(target_population = trimws(target_population))
 
 target_population_df <- target_population_df_bubble %>%
   rename(name = target_population)
@@ -87,7 +98,8 @@ research_stage_df_small <- predictions_df %>%
 research_stage_df_bubble <- research_stage_df_small %>%
   separate_rows(research_stage, sep = ";\\s+") %>%
   mutate(method = "gpt-4o-3s-v1") %>%
-  rbind(research_stage_df_human)
+  rbind(research_stage_df_human) %>% 
+  mutate(research_stage = trimws(research_stage))
 
 research_stage_df <- research_stage_df_bubble %>%
   rename(name = research_stage)
@@ -103,7 +115,8 @@ outcome_measures_df_small <- predictions_df %>%
 outcome_measures_df_bubble <- outcome_measures_df_small %>%
   separate_rows(outcome_measures, sep = ";\\s+") %>%
   mutate(method = "gpt-4o-3s-v1") %>%
-  rbind(outcome_measures_df_human)
+  rbind(outcome_measures_df_human) %>% 
+  mutate(outcome_measures = trimws(outcome_measures))
 
 outcome_measures_df <- outcome_measures_df_bubble %>%
   rename(name = outcome_measures)
@@ -120,7 +133,8 @@ target_pop_location_df_small <- predictions_df %>%
 target_pop_location_df_bubble <- target_pop_location_df_small %>%
   separate_rows(location_pop, sep = ";\\s+") %>%
   mutate(method = "gpt-4o-3s-v1") %>%
-  rbind(location_pop_df_human)
+  rbind(location_pop_df_human) %>% 
+  mutate(location_pop = trimws(location_pop))
 
 target_pop_location_df <- target_pop_location_df_bubble %>%
   rename(name = location_pop)
@@ -146,3 +160,4 @@ all_annotations <- included_small %>%
   mutate(across(where(is.character), str_trim))
 
 dataframes_for_app[["all_annotations"]] <- all_annotations
+

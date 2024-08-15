@@ -1557,21 +1557,26 @@ search_Server <- function(id,
           mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
           arrange(desc(year))
 
-        #browser()
+        browser()
         combined_pico_table <- unique(combined_pico_table)
         selected_studies$title <- paste0("<a href='",selected_studies$link, "' target='_blank'>",selected_studies$title,"</a>")
+        
         selected_studies <- selected_studies %>%
           select(uid, year, author, journal, title) %>%
           left_join(combined_pico_table, by="uid") %>%
           distinct() %>% 
-          rename("Intervention" = "intervention", "Discipline" = "discipline", "Outcome Measures" = "outcome_measures") %>% 
-          arrange(Intervention == "Unknown")
+          arrange(intervention == "Unknown")
         
         colnames(selected_studies) <- toTitleCase(colnames(selected_studies))
         
+        
+        
 
+        #browser()
         selected_studies <- as.data.frame(selected_studies) %>%
-          ungroup()
+          ungroup() %>% 
+          rename("uid" = "Uid", "Outcome Measures" = "Outcome_measures")
+      
 
         return(selected_studies)
       })
@@ -1676,6 +1681,8 @@ search_Server <- function(id,
       # Reactive datatable showing studies and search results
       output$search_results_studies <- DT::renderDataTable({
 
+        
+        
         DT::datatable(
           filter_results()[,2:ncol(filter_results())],
           rownames = FALSE,
