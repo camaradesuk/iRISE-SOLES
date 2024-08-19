@@ -1557,7 +1557,6 @@ search_Server <- function(id,
           mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
           arrange(desc(year))
 
-        browser()
         combined_pico_table <- unique(combined_pico_table)
         selected_studies$title <- paste0("<a href='",selected_studies$link, "' target='_blank'>",selected_studies$title,"</a>")
         

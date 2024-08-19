@@ -122,18 +122,22 @@ ui <- bs4DashPage(freshTheme = mytheme,
 
                   dark = NULL,
                   help = NULL,
-                  dbHeader <- dashboardHeader(title = "iRISE-SOLES",
+                  dbHeader <- dashboardHeader(
+                    #title = HTML("iRISE-<br>SOLES"),
+                                              title = tags$h5("iRISE-SOLES", style = "color: white; text-align: center;padding-top: 10px;"),
+                                               
                                               tags$a(href= 'https://irise-project.eu/',
                                                      tags$img(src= "iRISE-lightlogo.png",
                                                               height = "50px"))
                   ),
                   dashboardSidebar(skin = "dark",
+                                   collapsed = TRUE,
                                    sidebarMenu(
                                      bs4SidebarMenuItem(tags$p("Homepage", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "home", icon = icon("home")),
                                      bs4SidebarMenuItem(tags$p("Data Collection", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "dc-main", icon = icon("database", verify_fa = FALSE)),
                                      bs4SidebarMenuItem(tags$p("Methodology", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "workflow-accordion-dc", icon = icon("question", verify_fa = FALSE)),
                                      bs4SidebarMenuItem(tags$p("Transparency Metrics", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "data-summary-transparency", icon = icon("chart-pie", verify_fa = FALSE)),
-                                     bs4SidebarMenuItem(tags$p("Evidence Map", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "evidence_map_bubble", icon = icon("users-gear", verify_fa = FALSE)),
+                                     bs4SidebarMenuItem(tags$p("Evidence Map", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "evidence_map_bubble", icon = icon("diagram-project", verify_fa = FALSE)),
                                      bs4SidebarMenuItem(tags$p("Outcome Overview", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "outcome-overview-tab", icon = icon("file-code", verify_fa = FALSE)),
                                      bs4SidebarMenuItem(tags$p("Funder", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "funder-tab", icon = icon("landmark", verify_fa = FALSE)),
                                      bs4SidebarMenuItem(tags$p("Location", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "location-tab", icon = icon("earth-americas")),
@@ -183,18 +187,18 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                   style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
                                                   "The overall aim for iRISE-SOLES is to systematically identify, synthesise and evaluate information on existing candidate interventions and tools to improve reproducibility. To do this, we have
                                                   developed an integrated workflow of automated tools to collect and tag published research articles and visualise the evidence in this interactive web application.
-                                                  We tag studies by discipline, intervention type, institution location, intervention provider, and reproducibility relevant outcomes. We also assess the transparency metrics of studies witin iRISE-SOLES e.g. their open access status and presence of data/code sharing.")),
+                                                  We tag studies by discipline, intervention, intervention provider, institution location, and reproducibility relevant outcomes. We also assess the transparency metrics of studies witin iRISE-SOLES e.g. their open access status and presence of data/code sharing.")),
 
                               fluidRow(
 
                                 column(4,
 
-                                       box(
+                                       box(height = 325,
                                          div(
                                            style = "text-align: center;",
                                            tags$a(
                                              href = 'https://osf.io/9hzcv/?view_only=d74ff8089864468cb43daa06733e0be6',
-                                             tags$img(src = "osf_logo.png", height = "300px")
+                                             tags$img(src = "osf_logo.png", height = "200px")
                                            )
                                          ),
 
@@ -209,12 +213,12 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                          status = "warning")),
 
                                 column(4,
-                                       box(
+                                       box(height = 325,
                                          div(
                                            style = "text-align: center;",
                                            tags$a(
                                              href = 'https://portlandpress.com/clinsci/article/137/10/773/233083/Systematic-online-living-evidence-summaries',
-                                             tags$img(src = "paper_screenshot.PNG", height = "300px")
+                                             tags$img(src = "paper_screenshot.PNG", height = "200px")
                                            )
                                          ),
 
@@ -229,12 +233,12 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                          status = "secondary")),
 
                                 column(4,
-                                       box(
+                                       box(height = 325,
                                          div(
                                            style = "text-align: center;",
                                            tags$a(
                                              href = 'https://irise-project.eu/',
-                                             tags$img(src = "irise_website.png", height = "300px")
+                                             tags$img(src = "irise_website.png", height = "200px")
                                            )
                                          ),
 
@@ -450,7 +454,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                 pickerInput(
                                                   inputId = "select_outcome",
                                                   label = tags$p("Select one or more reproducibility measures", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
-                                                  choices = sort(unique(all_annotations$outcome_measures[!all_annotations$outcome_measures %in% c("Unknown")])),
+                                                  choices = sort(unique(all_annotations$outcome_measures[!all_annotations$outcome_measures %in% c("Unknown", "Unspecified")])),
                                                   selected = c("Computational reproducibility"),
                                                   multiple = TRUE,
                                                   options = pickerOptions(noneSelectedText = "Please Select",
@@ -512,8 +516,6 @@ ui <- bs4DashPage(freshTheme = mytheme,
 
 
                                 DT::dataTableOutput("int_ac_dis_table") %>% withSpinner(color="#96c296")
-                                #verbatimTextOutput("error_message")
-
 
 
                               )),
@@ -544,7 +546,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
 
                                                               label = tags$p("Select a funder", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
                                                               choices = unique(sort(funder_overall_count$funder_name)),
-                                                              selected = c("National Health and Medical Research Council"),
+                                                              selected = c("National Institutes of Health"),
                                                               multiple = FALSE,
                                                               options = pickerOptions(noneSelectedText = "Please Select",
                                                                                       virtualScroll = 100,
@@ -625,9 +627,8 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                          pickerInput(
                                            inputId = "provider_select",
                                            label = tags$p("Intervention Provider", style = "color: #47B1A3; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
-                                           #choices = sort(unique(all_annotations$intervention_provider)),
-                                           choices = sort(unique(all_annotations$intervention_provider[!all_annotations$intervention_provider %in% c("Unknown")])),
-                                           selected = c("Institution"),
+                                           choices = sort(unique(all_annotations$intervention_provider[!all_annotations$intervention_provider %in% c("Unknown", "Unspecified")])),
+                                           selected = c("Researchers / Researcher Collaboration"),
                                            multiple = FALSE,
                                            options = pickerOptions(
                                              noneSelectedText = "Please Select",
@@ -641,8 +642,6 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                          pickerInput(
                                            inputId = "outcome_select",
                                            label = tags$p("Outcome measure", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
-                                           #choices = sort(c("Type-I error reduction", "Type-II error reduction", "Effect size estimation", "Transparency of funding", "Transparency of interests", "Transparency of contributions", "Data availability and re-use", "Materials availability and re-use", "Code / analysis availability and re-use", "Reporting quality", "Transparency of evaluation", "Reporting bias", "Publication bias", "Computational reproducibility", "Unspecified")),
-                                           #selected = sort(c("Type-I error reduction", "Type-II error reduction", "Effect size estimation", "Transparency of funding", "Transparency of interests", "Transparency of contributions", "Data availability and re-use", "Materials availability and re-use", "Code / analysis availability and re-use", "Reporting quality", "Transparency of evaluation", "Reporting bias", "Publication bias", "Computational reproducibility", "Unspecified")),
                                            choices = NULL,
                                            selected = NULL,
                                            multiple = FALSE,
@@ -728,10 +727,8 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                              pickerInput(
                                                inputId = "inst_outcome_select",
                                                label = tags$p("Select an Outcome", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
-                                               choices = sort(c("Type I/II error reduction", "Transparency of funding", "Transparency of interests", "Transparency of contributions", "Data availability and re-use", "Materials availability and re-use", "Code / analysis availability and re-use", "Reporting quality", "Transparency of evaluation", "Reporting bias", "Publication bias", "Computational reproducibility", "Other", "Unknown")),
-                                               selected = sort(c("Type I/II error reduction", "Transparency of funding", "Transparency of interests", "Transparency of contributions", "Data availability and re-use", "Materials availability and re-use", "Code / analysis availability and re-use", "Reporting quality", "Transparency of evaluation", "Reporting bias", "Publication bias", "Computational reproducibility", "Other", "Unknown")),
-
-                                               #selected = sort(unique(ror_data$outcome_measures)),
+                                               choices = sort(unique(ror_data$outcome_measures[!ror_data$outcome_measures %in% c("Unspecified")])),
+                                               selected = sort(unique(ror_data$outcome_measures[!ror_data$outcome_measures %in% c("Unspecified")])),
                                                multiple = TRUE,
                                                options = pickerOptions(
                                                  noneSelectedText = "Please Select",
@@ -1117,7 +1114,7 @@ server <- function(input, output, session) {
       p <- plot_ly(plot,
                    x = ~jittered_outcome, y = ~intervention, size = ~n,
                    color = as.formula(paste0("~`", input$legend_bubble_select, "`")),
-                   colors = color_map,  # Apply the custom color palette
+                   colors = color_map,
                    customdata = ~key,
                    type = 'scatter',
                    mode = 'markers',
@@ -1130,10 +1127,12 @@ server <- function(input, output, session) {
                                  legendgroup = ~as.formula(paste0("~`", input$legend_bubble_select, "`"))),
                    hoverinfo = 'text',
                    textposition = "none",
-                   text = ~paste0("Intervention: ", intervention,"<br>",
-                                  "Outcome: ", outcome_measures,"<br>",
-                                  formatLegendText(input$legend_bubble_select),": ", get(input$legend_bubble_select), "","<br>",
-                                  "Number of Studies: ", n)) %>%
+                   text = ~paste0(
+                     "<br><b>Intervention:</b> ", intervention, 
+                     "<br><b>Outcome:</b> ", outcome_measures, 
+                     "<br><b>", formatLegendText(input$legend_bubble_select),"</b>: ", get(input$legend_bubble_select),
+                     "<br><b>Number of Publications:</b> ", n
+                     )) %>% 
         layout(yaxis = list(title = list(text = "Intervention", standoff = 25),
                             showgrid = TRUE
         ),
@@ -1155,7 +1154,7 @@ server <- function(input, output, session) {
         legend = list(title = list(text = formatLegendText(input$legend_bubble_select)),
                       bordercolor = 'black',
                       borderwidth = 2,
-                      y = 0.95,  # Adjusts the vertical position slightly down
+                      y = 0.95,
                       yanchor = 'top'),
         clickmode = "event + select",
         shapes =
@@ -1268,7 +1267,7 @@ server <- function(input, output, session) {
 
     valueBox(
       width = 12,
-      value = tags$p(paste0("The top Intervention funded by ", input$funder_select, " is"), style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
+      value = tags$p(HTML(paste0("The top Intervention funded by <strong>", input$funder_select, "</strong> is")), style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
       subtitle = tags$h2(df, style = "font-size: 150%; color: white;"),
       icon = icon("university"),
       color = "primary",
@@ -1370,15 +1369,19 @@ server <- function(input, output, session) {
               hoverinfo = 'text',
               textposition = "none",
               text = ~paste(
-                "<br><b>Number of Publications:</b>", n,
-                "<br><b>Year:</b>", year)
+                "<br><b>Funder:</b>", input$funder_select,
+                "<br><b>Year:</b>", year,
+                "<br><b>Number of Publications:</b>", n
+                )
 
       ) %>%
       layout(showlegend = FALSE,
-             yaxis = list(title = 'Number of publications', showgrid = TRUE),
+             yaxis = list(title = 'Number of publications', 
+                          showgrid = TRUE, 
+                          rangemode = "tozero"),
              xaxis = list(title = "",
                           tickangle = -45, ticklen = 4, showgrid = FALSE, tickmode = "linear",
-                          tick0 = 0,           # Set the starting tick
+                          tick0 = 0,          
                           dtick = 1),
              barmode='stack',
              annotations =
@@ -1427,8 +1430,13 @@ server <- function(input, output, session) {
                     marker = list(color = '#B1E0CB', line = list(color = 'black', width = 1)),
                     hoverinfo = 'text',
                     textposition = "none",
-                    text = ~paste0("Number of Publications: ", n, "<br>",
-                                   "Intervention: ", intervention),
+                    # text = ~paste(
+                    #   "<br><b>Number of Publications:</b>", n,
+                    #   "<br><b>Year:</b>", year)
+                    text = ~paste0("<br><b>Funder: </b>", input$funder_select,
+                                   "<br><b>Intervention: </b>", intervention,
+                                   "<br><b>Number of Publications: </b>", n
+                      ),
                     hoverlabel = list(bgcolor = "white",
                                       font = list(color = "black"))) %>%
       layout(showlegend = FALSE,
@@ -1455,7 +1463,7 @@ server <- function(input, output, session) {
     box(width = 12,
         solidHeader = TRUE,
         status = "primary",
-        title = paste0("Studies Funded by ", title_value),
+        title = HTML(paste0("Studies Funded by <strong>", title_value, "</strong>")),
 
         download_table_UI("dl_funder_data"),
         DT::dataTableOutput("funder_data_table") %>% withSpinner(color="#96c296")
@@ -1545,9 +1553,9 @@ server <- function(input, output, session) {
         column(6,
                pickerInput(
                  inputId = "intervention_select",
-                 label = "Choose an Intervention:",
+                 label = "Choose an Intervention (Top 10 Selected):",
                  choices = sort(unique(intervention_picker()$intervention)),
-                 selected = sort(unique(intervention_picker()$intervention)),
+                 selected = head(intervention_picker()$intervention, 10),
                  multiple = TRUE,
                  options = pickerOptions(
                    noneSelectedText = "Please Select",
@@ -1609,9 +1617,24 @@ server <- function(input, output, session) {
 
   # Reactive expression to filter dataset based on the selected provider
   intervention_picker <- reactive({
-    all_annotations %>%
-      filter(intervention_provider == input$provider_select,
-             outcome_measures %in% input$outcome_select)
+    # all_annotations %>%
+    #   filter(intervention_provider == input$provider_select,
+    #          outcome_measures %in% input$outcome_select)
+ 
+   all_annotations %>%
+      filter(intervention_provider %in% input$provider_select) %>%
+      filter(outcome_measures %in% input$outcome_select) %>%
+      select(uid, intervention, outcome_measures, discipline) %>%
+      distinct() %>%
+      group_by(intervention, outcome_measures, discipline) %>%
+      count() %>%
+      ungroup() %>%
+      group_by(intervention) %>% 
+      mutate(total = sum(n)) %>%
+      ungroup() %>% 
+      arrange(desc(total)) %>% 
+      select(intervention) %>% 
+      distinct() 
   })
 
   # Observe any changes in provider selection and update outcome fields
@@ -1684,15 +1707,17 @@ server <- function(input, output, session) {
   # Outcome overview - intervention provider plot -----
   output$outcome_year_plot <- renderPlotly({
 
+    #browser()
     data <- all_annotations %>%
       filter(outcome_measures %in% c(input$outcome_select, input$outcome_comparison_select)) %>%
       filter(intervention_provider %in% input$provider_select) %>%
       left_join(citations_for_dl, by = "uid") %>%
-      select(year, outcome_measures, intervention_provider) %>%
+      select(uid, year, outcome_measures, intervention_provider) %>%
       distinct() %>%
       group_by(year, outcome_measures, intervention_provider) %>%
       count() %>%
       ungroup()
+    
     if (nrow(data) == 0) {
       # If no data, create an empty plot with text indicating no data available
       plot_ly() %>%
@@ -1722,24 +1747,36 @@ server <- function(input, output, session) {
               color = ~outcome_measures,
               y = ~n,
               hoverinfo = 'text',
+              marker = list(line = list(color = 'black', width = 1)),
               textposition = "none",
               text = ~paste(
+                "<br><b>Intervention Provider:</b>", intervention_provider, 
+                "<br><b>Outcome:</b>", outcome_measures, 
                 "<br><b>Number of Publications:</b>", n,
                 "<br><b>Year:</b>", year)
       ) %>%
         add_trace(data = data_complete, y = ~cumulative_n, type = 'scatter', mode = 'lines',
                   line = list(width = 2, dash = 'dot'),
+                  marker = list(line = list(color = 'black', width = 0)),
                   name = 'Cumulative Publications',
                   hoverinfo = 'text',
                   text = ~paste(
+                    "<br><b>Intervention Provider:</b>", intervention_provider, 
+                    "<br><b>Outcome:</b>", outcome_measures, 
                     "<br><b>Cumulative Publications:</b>", cumulative_n,
                     "<br><b>Year:</b>", year),
                   showlegend = FALSE) %>%
         layout(showlegend = TRUE,
-               yaxis = list(title = 'Number of publications', dtick = 1, showgrid = TRUE),
-               xaxis = list(title = "", tickangle = -45, ticklen = 4,
+               yaxis = list(title = 'Number of publications', 
+                            #dtick = 1, 
+                            rangemode = "tozero",
+                            showgrid = TRUE),
+               xaxis = list(title = "", 
+                            tickangle = -45, 
+                            ticklen = 4,
                             dtick = 1,
-                            tick0 = 0, showgrid = FALSE),
+                            tick0 = 0, 
+                            showgrid = FALSE),
                legend = list(orientation = 'h', x = 0, y = -0.2),  # Horizontal legend at the bottom
                margin = list(l = 50, r = 50, t = 50, b = 100),  # Adjust margins to maximize plot area
                barmode = 'group',
@@ -1789,8 +1826,9 @@ server <- function(input, output, session) {
   # Outcome overview - interventions by outcome bar -----
   output$interventions_by_outcome_bar <- renderPlotly({
 
+    #browser()
     # # Work out Multidisciplinary studies - uncomment mutate below!
-    # multi_discipline <- data_for_bubble %>%
+    # multi_discipline <- all_annotations %>%
     #   filter(outcome_measures %in% input$outcome_select) %>%
     #   filter(intervention %in% input$intervention_select) %>%
     #   filter(intervention_provider %in% input$provider_select) %>%
@@ -1803,18 +1841,20 @@ server <- function(input, output, session) {
     #   pull(uid)
 
     int_out_table <- all_annotations %>%
+      filter(intervention_provider %in% input$provider_select) %>%
       filter(outcome_measures %in% input$outcome_select) %>%
       filter(intervention %in% input$intervention_select) %>%
-      filter(intervention_provider %in% input$provider_select) %>%
       select(uid, intervention, outcome_measures, discipline) %>%
+      #mutate(discipline = ifelse(uid %in% multi_discipline, "Multidisciplinary", discipline)) %>%
       distinct() %>%
       #filter(!discipline == "Other") %>%
-      group_by(uid, intervention, outcome_measures, discipline) %>%
+      group_by(intervention, outcome_measures, discipline) %>%
       count() %>%
       ungroup() %>%
-      #mutate(discipline = ifelse(uid %in% multi_discipline, "Multidisciplinary", discipline)) %>%
-      #distinct() %>%
-      arrange(n)
+      group_by(intervention) %>% 
+      mutate(total = sum(n)) %>%
+      ungroup() %>% 
+      arrange(total)
 
 
 
@@ -1824,21 +1864,24 @@ server <- function(input, output, session) {
                     color = ~discipline,
                     marker = list(line = list(color = 'black', width = 1)),
                     hoverinfo = 'text',
-                    text = ~paste(" Number of Publications:", n,"<br>",
-                                  "Intervention:", intervention, "<br>",
-                                  "Outcome:", outcome_measures, "<br>",
-                                  "Discipline:", discipline),
+                    text = ~paste0("<br><b>Intervention Provider:</b> ", input$provider_select,
+                                  "<br><b>Intervention:</b> ", intervention,
+                                  "<br><b>Outcome:</b> ", outcome_measures,
+                                  "<br><b>Discipline:</b> ", discipline,
+                                  "<br><b>Number of Publications:</b> ", n),
                     textposition = "none") %>%
       layout(showlegend = TRUE,
              yaxis = list(title = '', showgrid = FALSE, ticklen = 4, standoff = 25),
              xaxis = list(title = "Number of Publications",
                           ticklen = 2,
-                          dtick = 1,
+                          #dtick = 1,
                           tick0 = 0),
              barmode = 'stack',
              legend = list(title = list(text = "Discipline"),
                            bordercolor = 'black',
-                           borderwidth = 2),
+                           borderwidth = 2,
+                           y = 0.95,
+                           yanchor = 'top'),
              annotations = list(x = 1, y = -0.2, text = "", showarrow = FALSE,
                                 xref = 'paper', yref = 'paper', xanchor = 'right',
                                 yanchor = 'bottom', xshift = 0, yshift = 0,
@@ -1975,7 +2018,6 @@ server <- function(input, output, session) {
 
   # Location - datatable -----
   output$location_table <- DT::renderDataTable({
-    #browser()
 
     if (is.null(filtered_table_data()) || nrow(filtered_table_data()) == 0) {
 
