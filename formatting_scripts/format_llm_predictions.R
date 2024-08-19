@@ -17,6 +17,20 @@ predictions_df$intervention <- gsub("Pre-registration", "Preregistration", predi
 
 rownames(predictions_df) <- NULL
 
+# Function to clean and deduplicate multiple "Other"
+clean_others <- function(other_str) {
+  others <- strsplit(other_str, ";\\s*")[[1]]
+  unique_other <- unique(others)
+  paste(unique_other, collapse = "; ")
+}
+
+# Apply the function to the dataframe
+predictions_df$outcome_measures <- sapply(predictions_df$outcome_measures, clean_others)
+predictions_df$intervention <- sapply(predictions_df$intervention, clean_others)
+predictions_df$target_population <- sapply(predictions_df$target_population, clean_others)
+
+# Showing the cleaned data
+
 all_annotations_small <- predictions_df
 
 dataframes_for_app[["all_annotations_small"]] <- all_annotations_small
