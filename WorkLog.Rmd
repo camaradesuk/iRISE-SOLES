@@ -44,6 +44,9 @@ Fold: 5
 
 - Slight improvement in ML on entire corpus. Very low specificity on folds 4 & 5 is concerning.
 
+- Mean Specificity: 0.69
+- Standard Deviation: 0.095
+
 ### Error Correction
 
 - 1168 disagreements found between human and machine
@@ -53,3 +56,32 @@ Fold: 5
 - Initial Error Correction started with 250 most extreme discrepancies.
 - 67 included, 183 excluded by humans
 - Hoping to improve specificity
+
+### **01-08-24**
+
+Specificity: 0.77
+Sensitivity: 0.95
+
+Fold 1:
+0.79
+0.95
+
+Fold 2:
+0.79
+0.96
+
+Fold 3:
+0.77
+0.95
+
+Fold 4:
+0.85
+0.95
+
+Fold 5:
+0.80
+0.95
+
+Mean Specificity: 0.80
+Standard Deviation: 0.027
+
