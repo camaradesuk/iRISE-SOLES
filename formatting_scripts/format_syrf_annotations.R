@@ -4,8 +4,6 @@ library(soles)
 library(janitor)
 library(DBI)
 
-setwd("/home/scsmith/projects/iRISE_new/")
-
 # Connect to db ----
 con <- dbConnect(RPostgres::Postgres(),
                  dbname = Sys.getenv("irise_soles_dbname"),

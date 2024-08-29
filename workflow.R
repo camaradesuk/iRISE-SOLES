@@ -37,8 +37,6 @@ library(glue)
 library(parallel)
 library(janitor)
 
-setwd("/home/scsmith/projects/iRISE_new/")
-
 # Connect to db
 con <- dbConnect(RPostgres::Postgres(),
                  dbname = Sys.getenv("irise_soles_dbname"),

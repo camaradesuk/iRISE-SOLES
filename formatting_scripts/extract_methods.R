@@ -10,8 +10,6 @@ library(purrr)
 library(dplyr)
 library(fs)
 
-# Set working directory
-setwd("/home/scsmith/projects/iRISE_new/")
 
 # Connect to db ----
 con <- dbConnect(RPostgres::Postgres(),
