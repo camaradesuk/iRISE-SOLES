@@ -277,42 +277,8 @@ transparency <- included_small %>%
 
 dataframes_for_app[["transparency"]] <- transparency
 
-#source("dummy_data_create.R")
 source("formatting_scripts/compile_annotations.R")
 source("formatting_scripts/format_llm_predictions.R")
-
-
-#dataframes_for_app[["data_for_bubble_small"]] <- data_for_bubble
-
-
-
-# data_for_bubble <- included_small %>%
-#   select(uid) %>%
-#   inner_join(interventions_df, by = "uid") %>%
-#   inner_join(intervention_provider_df, by = "uid") %>%
-#   inner_join(target_population_df, by ="uid") %>%
-#   inner_join(target_pop_location_df, by ="uid") %>%
-#   inner_join(discipline_df, by ="uid") %>%
-#   inner_join(research_stage_df, by = "uid") %>%
-#   inner_join(outcome_measures_df, by = "uid") %>%
-#   select(-starts_with("method."))
-#
-# data_for_bubble_small_test <- included_small %>%
-#   select(uid) %>%
-#   inner_join(predictions_df, by = "uid") %>%
-#   separate_rows(intervention, sep = ";") %>%
-#   separate_rows(intervention_provider, sep = ";") %>%
-#   separate_rows(target_population, sep = ";") %>%
-#   separate_rows(target_population_location, sep = ";") %>%
-#   separate_rows(discipline, sep = ";") %>%
-#   separate_rows(research_stage, sep = ";") %>%
-#   separate_rows(outcome_measures, sep = ";")
-
-
-#dataframes_for_app[["data_for_bubble"]] <- data_for_bubble
-
-#dataframes_for_app[["annotated_studies"]] <- annotated_studies
-#dataframes_for_app[["annotated_studies_small"]] <- annotated_studies_small
 
 
 # Create Funder tables
@@ -505,15 +471,6 @@ Number of new included studies: {try(nrow(included_studies))}
 
 Number of full texts retrieved: {try(post_text_found - pre_text_found)}
 
-### __Pico Tagging__
-
-Number of studies tagged by Outcome using full text: {try(nrow(post_outcome_tag) - nrow(pre_outcome_tag))}
-
-Number of studies tagged by Intervention using full text: {try(nrow(post_intervention_tag) - nrow(pre_intervention_tag))}
-
-Number of studies tagged by Model using full text: {try(nrow(post_model_tag) - nrow(pre_model_tag))}
-
-Number of studies tagged by Species using full text: {try(nrow(post_species_tag) - nrow(pre_species_tag))}
 
 ### __Open Access Tagging__
 
