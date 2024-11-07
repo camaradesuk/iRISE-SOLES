@@ -14,7 +14,7 @@ con <- dbConnect(RPostgres::Postgres(),
                  password = Sys.getenv("irise_soles_password"))
 
 
-annotated_data <- read.csv("Annotation_data_-_2024_08_05_-_Long_format_-_1059b82e-b4bb-42b2-af3d-78888c23473d_-_Investigators_Unblinded.csv") %>%
+annotated_data <- read.csv("annotation_data/Annotation_data_-_2024_08_05_-_Long_format_-_1059b82e-b4bb-42b2-af3d-78888c23473d_-_Investigators_Unblinded.csv") %>%
   clean_names() %>%
   filter(question_id %in% c("53f9bf22-4f0d-40c5-85c4-4bb227b782e3", "ce632263-f636-436a-97e8-e525f4019c48", "3a33700f-fcaa-467c-af7b-af20206bf738", "bf3d790d-8868-4745-9e42-0b63b93b436b",
                             "883eafba-d784-44ce-b0e5-7e99db451980", "5f62cc81-eda8-4863-8a1b-88ddfd3a1311", "261f8697-6539-4a06-adc9-9d0c60cf8c41", "ebb70d23-a0c8-443c-9a0f-2d9bb94f2e20",

@@ -9,7 +9,8 @@ library(janitor)
 
 
 # Bring in llm predictions and tidy
-predictions_df <- read_csv("llm_annotations_df_full_modified.csv") %>%
+predictions_df <- read_csv("annotation_data/llm_annotations_df_full_modified.csv") %>%
+  rbind(read_csv("llm_annotations_df_full_update_041124.csv")) %>% 
   clean_names()
 
 predictions_df$outcome_measures <- gsub("Pre-registration", "Preregistration", predictions_df$outcome_measures)

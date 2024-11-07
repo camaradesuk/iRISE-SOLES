@@ -33,7 +33,6 @@ library(jsonlite)
 library(tidyr)
 library(pool)
 library(dplyr)
-library(rmapshaper)
 
 source("irise_modules.R")
 
@@ -116,6 +115,14 @@ pico_elements_list <- list(
                         filter_no = 1)
 )
 
+grey_pico_elements_list <- list(
+  pico_element_1 = list(id = "dropdown_ptype",
+                        table = grey_lit_pico,
+                        label1 = "Filter by Publication Type:",
+                        column1 = "name",
+                        filter_no = 1)
+)
+  
 ui <- bs4DashPage(freshTheme = mytheme,
 
                   dark = NULL,
@@ -140,6 +147,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                      bs4SidebarMenuItem(tags$p("Outcome Overview", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "outcome-overview-tab", icon = icon("file-code", verify_fa = FALSE)),
                                      bs4SidebarMenuItem(tags$p("Funder", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "funder-tab", icon = icon("landmark", verify_fa = FALSE)),
                                      bs4SidebarMenuItem(tags$p("Location", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "location-tab", icon = icon("earth-americas")),
+                                     bs4SidebarMenuItem(tags$p("iRISE Grey Literature", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "grey_lit_database", icon = icon("book")),
                                      bs4SidebarMenuItem(tags$p("iRISE Database", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "module_search_database", icon = icon("search")),
                                      bs4SidebarMenuItem(tags$p("About", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "about", icon = icon("info"))
                                    )
@@ -183,9 +191,12 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                 theme = "danger",
                                                 div(
                                                   style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
-                                                  "The overall aim for iRISE-SOLES is to systematically identify, synthesise and evaluate information on existing candidate interventions and tools to improve reproducibility. To do this, we have
+                                                  p("The overall aim for iRISE-SOLES is to systematically identify, synthesise and evaluate information on existing candidate interventions and tools to improve reproducibility. To do this, we have
                                                   developed an integrated workflow of automated tools to collect and tag published research articles and visualise the evidence in this interactive web application.
-                                                  We tag studies by discipline, intervention, intervention provider, institution location, and reproducibility relevant outcomes. We also assess the transparency metrics of studies witin iRISE-SOLES e.g. their open access status and presence of data/code sharing.")),
+                                                  We tag studies by discipline, intervention, intervention provider, institution location, and reproducibility relevant outcomes. We also assess the transparency metrics of studies witin iRISE-SOLES e.g. their open access status and presence of data/code sharing."),
+                                                  p("To search for peer-reviewed studies in the iRISE database, go to the iRISE Database tab. If you would like to search our grey literature database for pre-prints and conference abstracts etc, go to the iRISE Grey Literature tab.")
+                                                  
+                                                )),
 
                               fluidRow(
 
@@ -448,11 +459,13 @@ ui <- bs4DashPage(freshTheme = mytheme,
       }
     '))
                                 ),
-                                tags$p("Use the map below to visualise controlled observational studies and experiments evaluating an intervention to improve reproducibility and/or related outcomes. Click a bubble to see all of the relevant evidence in the table below", style = "color: black !important;font-family: KohinoorBangla, sans-serif !important;"),
-                                fluidRow(column(width = 4,
+                                tags$p("Use the map below to visualise controlled observational studies and experiments evaluating an intervention to improve reproducibility and/or related outcomes. ",
+                                       tags$strong("By default, the selected interventions are the 20 with the highest number of publications combined with the chosen reproducibility measure."), "Click a bubble to see all of the relevant evidence in the table below.",
+                                       style = "color: black !important;font-family: KohinoorBangla, sans-serif !important;"),
+                                fluidRow(column(width = 6,
                                                 pickerInput(
                                                   inputId = "select_outcome",
-                                                  label = tags$p("Select one or more reproducibility measures", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                                  label = tags$p("Select Reproducibility Measure(s)", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
                                                   choices = sort(unique(all_annotations$outcome_measures[!all_annotations$outcome_measures %in% c("Unknown", "Unspecified")])),
                                                   selected = c("Computational reproducibility"),
                                                   multiple = TRUE,
@@ -464,10 +477,10 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                 )
                                 ),
 
-                                column(width = 4,
+                                column(width = 6,
                                        pickerInput(
                                          inputId = "legend_bubble_select",
-                                         label = tags$p("Select a subgroup", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                         label = tags$p("Select a Subgroup", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
                                          choices = c("Discipline"="discipline", "Intervention provider"="intervention_provider", "Target population"="target_population"),
                                          selected = c("discipline"),
                                          multiple = FALSE,
@@ -477,11 +490,28 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                                  size = 10
                                          )
                                        )
+                                )
+                               
                                 ),
-                                column(width = 4,
+                                fluidRow(column(width = 6,
+                                                pickerInput(
+                                                  inputId = "select_intervention",
+                                                  label = tags$p("Select Intervention(s) (20 Selections Max)", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                                  choices = sort(unique(all_annotations$intervention[!all_annotations$intervention %in% c("Unknown", "Unspecified")])),
+                                                  selected = sort(unique(all_annotations$intervention[!all_annotations$intervention %in% c("Unknown", "Unspecified")])),
+                                                  multiple = TRUE,
+                                                  options = pickerOptions(noneSelectedText = "Please Select",
+                                                                          virtualScroll = 100,
+                                                                          #maxOptions = 20,
+                                                                          actionsBox = TRUE,
+                                                                          size = 10
+                                                  )
+                                                )
+                                ),
+                                column(width = 6,
                                        pickerInput(
                                          inputId = "legend_bubble_specific",
-                                         label = tags$p("Filter subgroup options", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                         label = tags$p("Filter Subgroup", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
                                          choices = list(),
                                          selected = ,
                                          multiple = TRUE,
@@ -491,8 +521,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                                  size = 10
                                          )
                                        )
-                                )
-                                ),
+                                )),
 
 
                                 verbatimTextOutput("error_message"),
@@ -694,7 +723,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                 sidebar = c(
                                   # First sidebar with filter icon
                                   boxSidebar(
-                                    width = 30,
+                                    width = 40,
                                     background = "#64C296",
                                     id = "inst_loc_sidebar",
                                     icon = icon("info"),
@@ -724,6 +753,20 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                    virtualScroll = 100,
                                                    actionsBox = TRUE,
                                                    size = 10
+                                                 )
+                                               ),
+                                               pickerInput(
+                                                 inputId = "name_select",
+                                                 label = tags$p("Select an Institution", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
+                                                 choices = sort(unique(ror_data$inst_name)),
+                                                 selected = sort(unique(ror_data$inst_name)),
+                                                 multiple = TRUE,
+                                                 options = pickerOptions(
+                                                   noneSelectedText = "Please Select",
+                                                   virtualScroll = 100,
+                                                   actionsBox = TRUE,
+                                                   size = 10,
+                                                   liveSearch = TRUE
                                                  )
                                                ),
                                                pickerInput(
@@ -815,6 +858,15 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                         table = citations_for_dl)
 
 
+                      ),
+                      # Search Grey Literature -----
+                      tabItem(tabName = "grey_lit_database",
+                              
+                              
+                              search_UI("grey_lit_results",
+                                        table = grey_lit)
+                              
+                              
                       ),
 
                       tabItem(tabName = "about",
@@ -929,6 +981,26 @@ server <- function(input, output, session) {
                 citations_for_download = citations_for_dl,
                 project_name = "iRISE-SOLES")
 
+  observeEvent(input$sidebarmenu, {
+    if (input$sidebarmenu == "grey_lit_database"){
+      
+      shinyalert(
+        title = "Grey Literature Search",
+        text = "Use this page to search for grey literature only, such as pre-prints and conference abstracts. This database is separate from our main database containing peer-reviewed articles.",
+        type = "info",
+        size = "s",
+        animation = TRUE,
+        confirmButtonText = "OK!",
+        confirmButtonCol = "#1A465F",)
+    }
+  })
+  # Search Page - server -----
+  search_Server("grey_lit_results",
+                pico_data = grey_pico_elements_list,
+                table = grey_lit,
+                combined_pico_table = grey_lit_pico,
+                citations_for_download = grey_lit,
+                project_name = "iRISE-SOLES")
 
   download_table_Server("dl_evidence_map", table = dl_evidence_map)
 
@@ -951,6 +1023,40 @@ server <- function(input, output, session) {
                       choices = choices,
                       selected = choices)
   })
+  
+  
+  observeEvent(input$select_outcome, {
+    
+    data_filter <- all_annotations %>%
+      filter(outcome_measures %in% input$select_outcome) 
+
+    
+    citations_years <- citations_for_dl %>%
+      select(uid, year)
+    
+    data <- data_filter %>%
+      left_join(citations_years, by = "uid") %>%
+      group_by(uid, intervention, !!sym(input$legend_bubble_select), outcome_measures) %>%
+      count() %>%
+      ungroup() %>%
+      count(intervention, !!sym(input$legend_bubble_select), outcome_measures) %>%
+      arrange(!!sym(input$legend_bubble_select), outcome_measures, intervention)
+      
+    interventions <- data %>%
+      arrange(desc(n)) %>%    
+      distinct(intervention, .keep_all = TRUE) %>% 
+      pull(intervention)
+    
+    updatePickerInput(session, "select_intervention",
+                      choices = sort(interventions),
+                      selected = interventions[1:20],
+                      options = pickerOptions(noneSelectedText = "Please Select",
+                                              virtualScroll = 100,
+                                              maxOptions = 20,
+                                              actionsBox = TRUE,
+                                              size = 10
+                      )) 
+  })
 
   previous_state <- reactiveValues(
     column1 = NULL,
@@ -959,10 +1065,11 @@ server <- function(input, output, session) {
 
   bubble_react <- reactive({
 
-    req(input$select_outcome, input$legend_bubble_specific)
+    req(input$select_outcome, input$legend_bubble_specific, input$select_intervention)
 
     data_filter <- all_annotations %>%
       filter(outcome_measures %in% input$select_outcome) %>%
+      filter(intervention %in% input$select_intervention) %>% 
       filter(!!sym(input$legend_bubble_select) %in% input$legend_bubble_specific)
 
 
@@ -1032,6 +1139,7 @@ server <- function(input, output, session) {
 
     table <- all_annotations %>%
       filter(outcome_measures %in% input$select_outcome) %>%
+      filter(intervention %in% input$select_intervention) %>% 
       filter(!!sym(input$legend_bubble_select) %in% input$legend_bubble_specific)
 
     bubble_data <- bubble_react()
@@ -1105,6 +1213,7 @@ server <- function(input, output, session) {
 
     tryCatch({
 
+      #browser()
       subcat_count <- plot_data() %>%
         ungroup() %>%
         distinct(!!sym(input$legend_bubble_select)) %>%
@@ -1119,11 +1228,16 @@ server <- function(input, output, session) {
           jitter_base = ifelse(subcat_count > 1, 0.3 / (subcat_count - 1), 0),
           jittered_outcome = numeric_outcome + (index - (subcat_count + 1) / 2) * jitter_base) %>%
         ungroup() %>%
-        mutate(shape = ifelse(selected_colour == TRUE, "circle-cross-open", "circle"))
+        mutate(shape = ifelse(selected_colour == TRUE, "circle-cross-open", "circle")) 
+      # %>% 
+      #   filter(n > 1)
 
       # Calculate midpoints for line positions
       unique_outcomes <- sort(unique(plot$numeric_outcome))
       line_positions <- head(unique_outcomes, -1) + diff(unique_outcomes) / 2
+      
+       
+        
 
       max_n <- max(plot$n, na.rm = TRUE)
       sizeref_value <- 1 * (max_n/300)
@@ -1932,10 +2046,32 @@ server <- function(input, output, session) {
 
   })
 
+  observeEvent(input$name_select, {
+    
+    inst_outcomes <- ror_data %>%
+      filter(
+             inst_name %in% input$name_select,
+             discipline %in% input$inst_discipline_select,
+             type %in% input$inst_type_select) %>%
+      select(outcome_measures) %>% 
+      distinct() %>% 
+      arrange(outcome_measures) %>% 
+      pull(outcome_measures)
+    
+    updatePickerInput(session, "inst_outcome_select",
+                      choices = sort(inst_outcomes),
+                      selected = inst_outcomes,
+                      options = pickerOptions(noneSelectedText = "Please Select",
+                                              virtualScroll = 100,
+                                              maxOptions = 20,
+                                              actionsBox = TRUE,
+                                              size = 10
+                      )) 
+  })
 
   # Location - server -----
   scale_size <- function(num) {
-    scales::rescale(num, c(3, 15))  # Adjust size range as necessary
+    scales::rescale(num, c(3, 20))  # Adjust size range as necessary
   }
 
   # Create a reactive color palette
@@ -1952,7 +2088,9 @@ server <- function(input, output, session) {
     if (is.null(input$country_select)) {
 
       inst_locations_filter <- ror_data %>%
-        filter(continent %in% input$continent_select,
+        filter(
+          continent %in% input$continent_select,
+          inst_name %in% input$name_select,
                outcome_measures %in% input$inst_outcome_select,
                discipline %in% input$inst_discipline_select,
                type %in% input$inst_type_select) %>%
@@ -1963,6 +2101,7 @@ server <- function(input, output, session) {
       inst_locations_filter <- ror_data %>%
         filter(country %in% input$country_select,
                continent %in% input$continent_select,
+               inst_name %in% input$name_select,
                outcome_measures %in% input$inst_outcome_select,
                discipline %in% input$inst_discipline_select,
                type %in% input$inst_type_select) %>%
@@ -1986,8 +2125,9 @@ server <- function(input, output, session) {
 
   # Location - render leaflet map -----
   output$institution_map <- renderLeaflet({
+    #browser()
     data <- filtered_data() %>%
-      group_by(name) %>%
+      group_by(inst_name) %>%
       mutate(filter_no = n_distinct(uid)) %>%
       ungroup()
 
@@ -1995,19 +2135,21 @@ server <- function(input, output, session) {
       addProviderTiles(providers$Esri.WorldStreetMap
       ) %>%
       addCircleMarkers(
-        ~long,
-        ~lat,
-        popup = ~paste0("<b>", name, "</b><br>",
+        ~longitude,
+        ~latitude,
+        popup = ~paste0("<b>", inst_name, "</b><br>",
                         "Institution Type: ", type, "<br>",
                         "Filtered No. of Publications: ", filter_no, "<br>",
                         "Total No. of Publications: ", number_pub),
+        #data = subset(data, number_pub > 1),
+        
         radius = ~scale_size(filter_no),
         color = "black",
         fillColor = ~color_palette()(type),
         fillOpacity = 1,
-        label = ~name,
+        label = ~inst_name,
         weight = 1,
-        layerId = ~name
+        layerId = ~inst_name
 
       ) %>%
       addLegend(
@@ -2035,7 +2177,7 @@ server <- function(input, output, session) {
     if (!is.null(click$id)) {
 
       table_data <- filtered_data() %>%
-        filter(name == click$id)
+        filter(inst_name == click$id)
 
 
       filtered_table_data(table_data)
@@ -2049,6 +2191,7 @@ server <- function(input, output, session) {
   })
 
   observe({
+    
     leafletProxy("institution_map", data = filtered_data()) %>%
       #clearShapes() %>%
       fitBounds(lng1 = min(filtered_data()$long, na.rm = TRUE) - 3,
