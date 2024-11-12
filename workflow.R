@@ -187,16 +187,32 @@ dataframes_for_app <- list()
 unique_citations <- tbl(con, "unique_citations") %>%
   select(date, uid, title, journal, year, doi, uid, url, author, abstract, keywords)
 
+# Create grey literature table
+grey_lit <- tbl(con, "grey_lit_study_classification") %>% 
+  select(uid, decision) %>% 
+  filter(decision == "include") %>% 
+  left_join(tbl(con, "grey_lit_unique_citations"), by = "uid") %>%
+  mutate(year = as.numeric(year)) %>%
+  collect() %>%
+  select(-decision) %>% 
+  mutate(ptype = ifelse(grepl("pprn:", uid), "Preprint", ptype))
+
+dataframes_for_app[["grey_lit"]] <- grey_lit
+
 # Create large included studies table with metadata from unique_citations
 citations_for_dl <- tbl(con, "study_classification")  %>%
   select(uid, decision) %>%
   filter(decision == "include") %>%
   left_join(tbl(con, "unique_citations"), by = "uid") %>%
-  #select(-decision) %>%
   mutate(year = as.numeric(year)) %>%
-  collect()
+  collect() %>% 
+  filter(!uid %in% grey_lit$uid) 
 
 dataframes_for_app[["citations_for_dl"]] <- citations_for_dl
+
+retracted_embase <- unique_citations %>% 
+  filter(str_detect(title, "^Retraction|^Retracted|^Erratum: retracted:")) %>% 
+  collect()
 
 # Fix dodgy years
 # unique_years <- dbReadTable(con, "unique_citations") %>%
@@ -332,8 +348,6 @@ funder_metadata <- dbReadTable(con, "funder_grant_tag") %>%
   left_join(citations_for_dl, by = "doi") %>%
   select(uid, doi, funder_name, year, title, author, url) %>%
   left_join(all_annotations, by = "uid") %>%
-  #left_join(dummy_data_for_funder, by = "uid") %>%
-  #filter(!is.na(intervention)) %>%
   distinct()
 
 dataframes_for_app[["funder_metadata"]] <- funder_metadata
@@ -345,8 +359,6 @@ funder_metadata_small <- dbReadTable(con, "funder_grant_tag") %>%
   left_join(citations_for_dl, by = "doi") %>%
   select(uid, doi, funder_name, year, title, author, url) %>%
   left_join(all_annotations_small, by = "uid") %>%
-  #left_join(dummy_data_for_funder, by = "uid") %>%
-  #filter(!is.na(intervention)) %>%
   distinct()
 
 dataframes_for_app[["funder_metadata_small"]] <- funder_metadata_small
@@ -360,37 +372,56 @@ pico_country <- dbReadTable(con,"pico_ontology") %>%
   filter(type == "country") %>%
   dplyr::select(country = name, continent = main_category, sub_category2)
 
-ror_data <- dbReadTable(con, "institution_location") %>%
-  left_join(inst, by = "doi") %>%
+## Once ROR coords table is full use this instead of location, join by ror!
+
+ror_data <- dbReadTable(con, "ror_coords") %>%
+  left_join(inst, by = "ror") %>%
   left_join(pico_country, by = c("institution_country_code" = "sub_category2")) %>%
   filter(doi %in% included_with_metadata$doi) %>%
   left_join(included_with_metadata, by = "doi") %>%
+  select(-method) %>%
   left_join(all_annotations, by = "uid") %>%
   distinct() %>%
   group_by(name) %>%
   mutate(number_pub = n_distinct(uid)) %>%
   ungroup() %>%
-  filter(!name == "Unknown") %>%
-  mutate(lat = latitude,
-         long = longitude)
+  filter(!name == "Unknown") %>% 
+  distinct() %>%
+  select(longitude, latitude, doi, uid, inst_name = name, type, country, continent, discipline, outcome_measures, number_pub) %>% 
+  arrange(doi)
 
 dataframes_for_app[["ror_data"]] <- ror_data
 
 
-ror_data_small <- dbReadTable(con, "institution_location") %>%
-  filter(!doi == "") %>%
-  left_join(inst, by = "doi") %>%
+ror_data_small <- dbReadTable(con, "ror_coords") %>%
+  left_join(inst, by = "ror") %>%
   left_join(pico_country, by = c("institution_country_code" = "sub_category2")) %>%
   filter(doi %in% included_with_metadata$doi) %>%
   left_join(included_with_metadata, by = "doi") %>%
+  #select(-method) %>% 
   left_join(all_annotations_small, by = "uid") %>%
   distinct() %>%
   group_by(name) %>%
   mutate(number_pub = n_distinct(uid)) %>%
   ungroup() %>%
-  filter(!name == "Unknown") %>%
-  mutate(lat = latitude,
-         long = longitude)
+  filter(!name == "Unknown") %>% 
+  select(title, journal, year, author, longitude, latitude, doi, uid, name, type, country, continent, discipline, outcome_measures, number_pub) 
+  
+
+# ror_data_small <- dbReadTable(con, "institution_location") %>%
+#   filter(!doi == "") %>%
+#   left_join(inst, by = "doi") %>%
+#   left_join(pico_country, by = c("institution_country_code" = "sub_category2")) %>%
+#   filter(doi %in% included_with_metadata$doi) %>%
+#   left_join(included_with_metadata, by = "doi") %>%
+#   left_join(all_annotations_small, by = "uid") %>%
+#   distinct() %>%
+#   group_by(name) %>%
+#   mutate(number_pub = n_distinct(uid)) %>%
+#   ungroup() %>%
+#   filter(!name == "Unknown") %>%
+#   mutate(lat = latitude,
+#          long = longitude)
 
 dataframes_for_app[["ror_data_small"]] <- ror_data_small
 
@@ -399,6 +430,12 @@ pico <- all_annotations_small %>%
 
 dataframes_for_app[["pico"]] <- pico
 
+grey_lit_pico <- grey_lit %>% 
+  select(uid, doi, name = ptype) %>% 
+  mutate(name = toTitleCase(name)) %>% 
+  mutate(name = ifelse(is.na(name)|name == "", "Unknown", name))
+
+dataframes_for_app[["grey_lit_pico"]] <- grey_lit_pico
 
 # Create folder for fst_files if it does not exist
 fst_files_written <- 0

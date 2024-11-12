@@ -1481,7 +1481,7 @@ search_Server <- function(id,
 
 
       filter_results <- reactive({
-        #browser()
+        
         selected_studies <- search_results()
 
         # If reset button clicked then tidy entire table and return
@@ -1494,18 +1494,35 @@ search_Server <- function(id,
             arrange(desc(year))
 
           combined_pico_table <- unique(combined_pico_table)
-          selected_studies$title <- paste0("<a href='",selected_studies$link, "' target='_blank'>",selected_studies$title,"</a>")
+
+          if ("Intervention" %in% colnames(selected_studies)){
+            
           selected_studies <- selected_studies %>%
+            mutate(title = ifelse(!is.na(doi) & doi != "", 
+                                  paste0("<a href='", link, "' target='_blank'>", title, "</a>"), 
+                                  title)) %>%
             select(uid, year, author, journal, title) %>%
             left_join(combined_pico_table, by="uid") %>%
             distinct() %>% 
             arrange(is.na(intervention))
-          ### REMOVE THIS ONCE FULLY TAGGED
-          # %>%
-          #   select(year, author, title, uid)
 
           selected_studies <- as.data.frame(selected_studies) %>%
             ungroup()
+          
+          } else{
+            
+            selected_studies <- as.data.frame(selected_studies) %>%
+            mutate(title = ifelse(!is.na(doi) & doi != "", 
+                                  paste0("<a href='", link, "' target='_blank'>", title, "</a>"), 
+                                  title)) %>%
+              left_join(combined_pico_table, by="uid") %>%
+              distinct() %>% 
+              select(uid, Year = year, Author = author, Journal = journal, Title = title, "Publication Type" = name)
+            
+
+              
+            
+          }
 
           return(selected_studies)
 
@@ -1514,8 +1531,7 @@ search_Server <- function(id,
 
         # If apply filter button pressed, proceed to filter section
         if(values$submit_filters == "clicked") {
-
-          #if(input$submit_filters > 0){
+        
 
           input$submit_filters
 
@@ -1523,7 +1539,6 @@ search_Server <- function(id,
           if (length(pico_table_list) > 0) {
 
             for (i in (1:length(pico_table_list))){
-
               # Loop through each dataframe and filter
               new_table <- pico_table_list[[i]] %>%
                 filter(name %in% isolate(pico_element_list[[i]]())) %>%
@@ -1557,32 +1572,52 @@ search_Server <- function(id,
           mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
           arrange(desc(year))
 
+        if (!is.null(combined_pico_table)){
+          
+            
         combined_pico_table <- unique(combined_pico_table)
-        selected_studies$title <- paste0("<a href='",selected_studies$link, "' target='_blank'>",selected_studies$title,"</a>")
-        
-        selected_studies <- selected_studies %>%
+
+          selected_studies <- selected_studies %>% 
+          mutate(title = ifelse(!is.na(doi) & doi != "", 
+                                paste0("<a href='", link, "' target='_blank'>", title, "</a>"), 
+                                title)) %>%
           select(uid, year, author, journal, title) %>%
           left_join(combined_pico_table, by="uid") %>%
-          distinct() %>% 
-          arrange(intervention == "Unknown")
-        
+          distinct()
+          
         colnames(selected_studies) <- toTitleCase(colnames(selected_studies))
         
-        
-        
-
-        #browser()
+        if ("Intervention" %in% colnames(selected_studies)){
+          
         selected_studies <- as.data.frame(selected_studies) %>%
-          ungroup() %>% 
+          ungroup() %>%
+          arrange(Intervention == "Unknown") %>% 
           rename("uid" = "Uid", "Outcome Measures" = "Outcome_measures")
-      
+        
+          } else {
+            
+            selected_studies <- as.data.frame(selected_studies) %>%
+              ungroup() %>% 
+              select(uid = Uid, Year, Author, Journal, Title, "Publication Type" = Name) %>%
+              distinct()
+              
+          }
+        } else {
+          
+          selected_studies <- selected_studies %>% 
+            mutate(title = ifelse(!is.na(doi) & doi != "", 
+                                  paste0("<a href='", link, "' target='_blank'>", title, "</a>"), 
+                                  title)) %>%
+            select(uid, Year = year, Author = author, Journal = journal, Title = title) %>%
+            distinct()
+
+        }
 
         return(selected_studies)
       })
 
 
       output$search_results_text <- renderText({
-
 
         # If there is no query and no filters
         if(values$search_query == "" & values$submit_filters == ""){
@@ -1679,9 +1714,7 @@ search_Server <- function(id,
 
       # Reactive datatable showing studies and search results
       output$search_results_studies <- DT::renderDataTable({
-
-        
-        
+       
         DT::datatable(
           filter_results()[,2:ncol(filter_results())],
           rownames = FALSE,
