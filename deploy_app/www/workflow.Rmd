@@ -18,13 +18,17 @@ body, h1, h2, h3, h4, h5, h6, p {
 
 </style>
 ```
-## Identifying relevant evidence
+## Identifying relevant published evidence
 
 Guided by a pre-registered [protocol](https://osf.io/2vufx/?view_only=d74ff8089864468cb43daa06733e0be6), we performed a wide-ranging search in January 2024 spanning multiple databases to identify research of interest. Our full search strategy is available [here](https://osf.io/kawfz/?view_only=d74ff8089864468cb43daa06733e0be6).
 
 In total, we identified 123,916 articles. We used the Automated Systematic Search Deduplicator [(ASySD)](https://bmcbiol.biomedcentral.com/articles/10.1186/s12915-023-01686-z) to identify and remove duplicates automatically. After deduplication, we had 68,995 articles.
 
 We are now planning to use application programming interfaces (APIs) to automatically retrieve studies on an ongoing basis from PubMed, Web of Science, and Scopus. We are currently investigating ways to automate retrieval from other sources.
+
+## Identifying relevant grey literature
+
+On our iRISE Grey Literature page, we have an additional set of non-peer reviewed research artifacts which are stored separately from our published evidence. Note that these are not captured anywhere else on the iRISE-SOLES platform and that we don't perform automated categorisation on them. The iRISE grey literature search strategy is available [here](https://osf.io/kawfz/?view_only=d74ff8089864468cb43daa06733e0be6) and our guiding protocol for adding these into iRISE-SOLES is available here [here](https://osf.io/kawfz/?view_only=d74ff8089864468cb43daa06733e0be6).
 
 ## Screening for inclusion
 
