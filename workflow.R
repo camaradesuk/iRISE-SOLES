@@ -1,7 +1,9 @@
+#library(tidyr)
+library(dplyr)
+library(soles)
 library(sf)
 library(rmapshaper)
 library(lubridate)
-library(soles)
 library(shiny)
 library(pool)
 library(RPostgres)
@@ -12,7 +14,6 @@ library(shinyalert)
 library(fst)
 library(shinyWidgets)
 library(ggplot2)
-library(dplyr)
 library(shinyjs)
 library(shinycssloaders)
 library(plotly)
@@ -30,12 +31,14 @@ library(htmlwidgets)
 library(lubridate)
 library(stringr)
 library(readr)
-library(jsonlite)
-library(tidyr)
+#library(jsonlite)
 library(blastula)
 library(glue)
 library(parallel)
 library(janitor)
+
+# Set working directory
+setwd("/home/scsmith/projects/iRISE-SOLES/")
 
 # Connect to db
 con <- dbConnect(RPostgres::Postgres(),
@@ -45,8 +48,10 @@ con <- dbConnect(RPostgres::Postgres(),
                  user = Sys.getenv("irise_soles_user"),
                  password = Sys.getenv("irise_soles_password"))
 
+
 workflow <- try({
 
+  # Search databases and bring in results
   source("search_strategy.R")
 
   # Update retrieved citations with new search results, checking the uid doesn't already exist in the table
@@ -69,13 +74,15 @@ workflow <- try({
 
 
   # Append new citations to unique citations table
-  #try(dbWriteTable(con, "unique_citations", new_citations_unique, append = TRUE))
-
-  # Screening and Machine Learning
-  #source("functions/get_screening_decisions.R")
-
-  try(screening_decisions <- get_screening_decisions(con, review_id = "iRISE-SOLES-screening"))
-
+  try(dbWriteTable(con, "unique_citations", new_citations_unique, append = TRUE))
+  
+  screening_decisions <- read_csv("screening/validation/labelled_data_assigned_iteration_26-02-2025.csv") %>%
+    filter(iteration == 16) %>%
+    filter(!Cat == "Validate") %>%
+    select(ITEM_ID, LABEL, TITLE, ABSTRACT, Cat, KEYWORDS, REVIEW_ID) %>%
+    mutate(Cat = ifelse(Cat == "Calibrate", "Test", Cat)) %>% 
+    mutate(Cat = ifelse(!Cat == "Test", "Train", Cat))
+  
 
   try(unscreened_set <- get_studies_to_screen(con,
                                               classify_NA = TRUE,
@@ -86,12 +93,60 @@ workflow <- try({
              classifier_name = "irise",
              screening_decisions,
              unscreened_set))
+  
+  try(screened_studies <- dbReadTable(con, "study_classification") %>%
+        filter(date == Sys.Date()))
+  
+  try(included_studies <- screened_studies %>%
+        filter(date == Sys.Date(),
+               decision == "include"))
+  
+  ## Update Grey Literature ----
+  # Search databases and bring in results
+  source("grey_lit_search_strategy.R")
+  
+  # Update retrieved citations with new search results, checking the uid doesn't already exist in the table
+  try(grey_new_citations <- check_if_retrieved(con, combined_grey_lit))
+  
+  # Find additional DOI's
+  try(grey_new_citations <- get_missing_dois(grey_new_citations))
+  
+  # Find additional abstracts
+  try(grey_new_citations <- get_missing_abstracts(grey_new_citations))
+  
+  # Bring in functions to find new unique grey literature
+  source("functions/grey_lit_get_unique.R")
+  
+  # Remove duplicate citations
+  try(grey_new_citations_unique <- grey_lit_get_new_unique(con, grey_new_citations))
+  
+  # Pull date for email update
+  try(date_update <- grey_new_citations_unique %>%
+        distinct(date) %>%
+        mutate(date = dmy(date)) %>%
+        pull())
+  
+  # Append new citations to unique citations table
+  try(dbWriteTable(con, "grey_lit_unique_citations", grey_new_citations_unique, append = TRUE))
+  
+  # Bring in functions for grey literature screening
+  source("functions/screen_grey_lit.R")
+  
+  try(unscreened_set <- grey_lit_get_studies_to_screen(con,
+                                              classify_NA = TRUE,
+                                              project_name = "iRISE-SOLES",
+                                              classifier_name = "irise"))
+  
+  try(grey_lit_run_ml(con, project_name = "iRISE-SOLES",
+             classifier_name = "irise",
+             screening_decisions,
+             unscreened_set))
 
-  try(screened_studies <- tbl(con, "study_classification") %>%
+  try(grey_lit_screened_studies <- tbl(con, "grey_lit_study_classification") %>%
         collect() %>%
         filter(date == Sys.Date()))
 
-  try(included_studies <- screened_studies %>%
+  try(grey_lit_included_studies <- grey_lit_screened_studies %>%
         filter(date == Sys.Date(),
                decision == "include"))
 
@@ -104,11 +159,19 @@ workflow <- try({
         nrow())
 
   try(get_ft(con, path = "full_texts"))
+  try(get_ft(con, path = "full_texts"))
+  try(get_ft(con, path = "full_texts", check_failed = TRUE))
+  
 
   try(post_text_found <- tbl(con, "full_texts") %>%
         collect() %>%
         filter(status == "found") %>%
         nrow())
+  
+  # Convert pdfs to txt using autoannotation within pico_tag
+  complete_pico_tag(con, 
+                    tag_method = "fulltext",
+                    tag_type = "sex")
 
   # Open access status tagging
   pre_open_access <- tbl(con, "oa_tag") %>%
@@ -134,7 +197,6 @@ workflow <- try({
 
   post_institute_tag <- dbReadTable(con, "institution_tag") %>%
     distinct(doi)
-
 
   # Open data and code availability
   pre_ods_tag <- tbl(con, "open_data_tag") %>%
@@ -204,9 +266,10 @@ citations_for_dl <- tbl(con, "study_classification")  %>%
   select(uid, decision) %>%
   filter(decision == "include") %>%
   left_join(tbl(con, "unique_citations"), by = "uid") %>%
+  mutate(year = ifelse(year == "", NA_character_, year)) %>% 
   mutate(year = as.numeric(year)) %>%
   collect() %>% 
-  filter(!uid %in% grey_lit$uid) 
+  filter(!uid %in% grey_lit$uid)
 
 dataframes_for_app[["citations_for_dl"]] <- citations_for_dl
 
@@ -225,6 +288,11 @@ retracted_embase <- unique_citations %>%
 #          year = ifelse(uid == "medline-27534954", "2016", year)
 #   )
 
+# fix_years <- dbReadTable(con, "unique_citations") %>% 
+#   mutate(year = ifelse(uid == "embase-51668480", 2012, year)) %>% 
+#   mutate(year = ifelse(uid == "embase-52948227", 2014, year)) %>% 
+#   mutate(year = ifelse(uid == "unknown-1026", 1981, year)) %>% 
+#   mutate(year = ifelse(uid == "unknown-1329", 2023, year))
 
 # Create included tbl
 included_with_metadata <- citations_for_dl  %>%
@@ -293,8 +361,9 @@ transparency <- included_small %>%
 
 dataframes_for_app[["transparency"]] <- transparency
 
-source("formatting_scripts/compile_annotations.R")
-source("formatting_scripts/format_llm_predictions.R")
+#source("formatting_scripts/compile_annotations.R")
+source("update_scripts/llm_update_script.R")
+source("formatting_scripts/format_all_annotations.R")
 
 
 # Create Funder tables
@@ -305,7 +374,6 @@ funder <- dbReadTable(con, "funder_grant_tag") %>%
   mutate(status = "found")
 
 dataframes_for_app[["funder"]] <- funder
-
 
 citations_small <- citations_for_dl %>%
   select(doi, year)
@@ -363,7 +431,6 @@ funder_metadata_small <- dbReadTable(con, "funder_grant_tag") %>%
 
 dataframes_for_app[["funder_metadata_small"]] <- funder_metadata_small
 
-
 ## REMINDER, make institution type titlecase in workflow (change it in function?)
 inst <- dbReadTable(con, "institution_tag") %>%
   mutate(type = tools::toTitleCase(type))
@@ -406,27 +473,11 @@ ror_data_small <- dbReadTable(con, "ror_coords") %>%
   ungroup() %>%
   filter(!name == "Unknown") %>% 
   select(title, journal, year, author, longitude, latitude, doi, uid, name, type, country, continent, discipline, outcome_measures, number_pub) 
-  
-
-# ror_data_small <- dbReadTable(con, "institution_location") %>%
-#   filter(!doi == "") %>%
-#   left_join(inst, by = "doi") %>%
-#   left_join(pico_country, by = c("institution_country_code" = "sub_category2")) %>%
-#   filter(doi %in% included_with_metadata$doi) %>%
-#   left_join(included_with_metadata, by = "doi") %>%
-#   left_join(all_annotations_small, by = "uid") %>%
-#   distinct() %>%
-#   group_by(name) %>%
-#   mutate(number_pub = n_distinct(uid)) %>%
-#   ungroup() %>%
-#   filter(!name == "Unknown") %>%
-#   mutate(lat = latitude,
-#          long = longitude)
 
 dataframes_for_app[["ror_data_small"]] <- ror_data_small
 
 pico <- all_annotations_small %>%
-  select(uid, intervention, discipline, outcome_measures)
+  select(uid, intervention, discipline, outcome_measures, intervention_provider)
 
 dataframes_for_app[["pico"]] <- pico
 
@@ -504,10 +555,15 @@ Number of citations screened: {try(nrow(screened_studies))}
 
 Number of new included studies: {try(nrow(included_studies))}
 
+### __Grey Literature__
+
+Number of citations screened: {try(nrow(grey_lit_screened_studies))}
+
+Number of new included studies: {try(nrow(grey_lit_included_studies))}
+
 ### __Get Full Texts__
 
 Number of full texts retrieved: {try(post_text_found - pre_text_found)}
-
 
 ### __Open Access Tagging__
 
@@ -516,6 +572,20 @@ Number of studies tagged for Open Access: {try(nrow(post_open_access) - nrow(pre
 ### __Open Data Tagging__
 
 Number of studies tagged for Open Data and Code Availability: {try(nrow(post_ods_tag) - nrow(pre_ods_tag))}
+
+### __Evidence Type__
+
+Run GPT-4o-mini on evidence type: {try(evidence_type_message)}
+
+Number of Aim1/Controlled studies found: {try(nrow(evidence_type_predictions_new %>% filter(type == 'controlled')))}
+
+Number of Aim2/Uncontrolled studies found: {try(nrow(evidence_type_predictions_new %>% filter(type == 'uncontrolled')))}
+
+### __LLM Annotation__
+
+Run GPT-4o on Aim1/Controlled studies for full annotation: {try(annotation_result_message)}
+
+Number of Aim1/Controlled studies annotated: {try(nrow(combined_df))}
 
 ### __Write Data__
 

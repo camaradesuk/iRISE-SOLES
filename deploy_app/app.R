@@ -1213,7 +1213,6 @@ server <- function(input, output, session) {
 
     tryCatch({
 
-      #browser()
       subcat_count <- plot_data() %>%
         ungroup() %>%
         distinct(!!sym(input$legend_bubble_select)) %>%
@@ -2125,7 +2124,7 @@ server <- function(input, output, session) {
 
   # Location - render leaflet map -----
   output$institution_map <- renderLeaflet({
-    #browser()
+    
     data <- filtered_data() %>%
       group_by(inst_name) %>%
       mutate(filter_no = n_distinct(uid)) %>%

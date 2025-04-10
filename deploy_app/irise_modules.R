@@ -1488,34 +1488,37 @@ search_Server <- function(id,
         if(values$reset_button == "reset"){
 
           selected_studies <- as.data.frame(selected_studies)
+          
+          combined_pico_table <- unique(combined_pico_table)
 
           selected_studies <- selected_studies %>%
             mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
             arrange(desc(year))
-
-          combined_pico_table <- unique(combined_pico_table)
-
-          if ("Intervention" %in% colnames(selected_studies)){
-            
+          
           selected_studies <- selected_studies %>%
-            mutate(title = ifelse(!is.na(doi) & doi != "", 
-                                  paste0("<a href='", link, "' target='_blank'>", title, "</a>"), 
+            mutate(title = ifelse(!is.na(doi) & doi != "",
+                                  paste0("<a href='", link, "' target='_blank'>", title, "</a>"),
                                   title)) %>%
             select(uid, year, author, journal, title) %>%
             left_join(combined_pico_table, by="uid") %>%
-            distinct() %>% 
-            arrange(is.na(intervention))
+            distinct()
+
+          if ("intervention" %in% colnames(selected_studies)){
+          
+          selected_studies <- selected_studies %>%
+            distinct() 
 
           selected_studies <- as.data.frame(selected_studies) %>%
-            ungroup()
+            ungroup() %>% 
+            select(uid, Year = year, Author = author, Journal = journal, Title = title, Intervention = intervention,
+                   Discipline = discipline, "Outcome Measures" = outcome_measures) %>% 
+            arrange(is.na(Intervention))
+          
           
           } else{
             
-            selected_studies <- as.data.frame(selected_studies) %>%
-            mutate(title = ifelse(!is.na(doi) & doi != "", 
-                                  paste0("<a href='", link, "' target='_blank'>", title, "</a>"), 
-                                  title)) %>%
-              left_join(combined_pico_table, by="uid") %>%
+            
+             selected_studies <- as.data.frame(selected_studies) %>%
               distinct() %>% 
               select(uid, Year = year, Author = author, Journal = journal, Title = title, "Publication Type" = name)
             
@@ -1539,7 +1542,8 @@ search_Server <- function(id,
           if (length(pico_table_list) > 0) {
 
             for (i in (1:length(pico_table_list))){
-              # Loop through each dataframe and filter
+         
+               # Loop through each dataframe and filter
               new_table <- pico_table_list[[i]] %>%
                 filter(name %in% isolate(pico_element_list[[i]]())) %>%
                 select(uid)
@@ -1547,6 +1551,7 @@ search_Server <- function(id,
               # Only keep the rows that have a matching "uid"
               selected_studies <- selected_studies %>%
                 semi_join(new_table, by = "uid")
+   
             }
           }
 
@@ -1592,7 +1597,7 @@ search_Server <- function(id,
         selected_studies <- as.data.frame(selected_studies) %>%
           ungroup() %>%
           arrange(Intervention == "Unknown") %>% 
-          rename("uid" = "Uid", "Outcome Measures" = "Outcome_measures")
+          rename("uid" = "Uid", "Outcome Measures" = "Outcome_measures", "Intervention Provider" = "Intervention_provider")
         
           } else {
             
@@ -1714,7 +1719,8 @@ search_Server <- function(id,
 
       # Reactive datatable showing studies and search results
       output$search_results_studies <- DT::renderDataTable({
-       
+    
+        
         DT::datatable(
           filter_results()[,2:ncol(filter_results())],
           rownames = FALSE,
@@ -1803,7 +1809,7 @@ search_Server <- function(id,
         results <- citations_for_download %>%
           filter(uid %in% !!filter_results()$uid)
         
-        rresults <- results %>%
+        results <- results %>%
           rename(Authors = author,
                  Title = title,
                  Abstract = abstract,
