@@ -1,4 +1,3 @@
-#library(tidyr)
 library(dplyr)
 library(soles)
 library(sf)
@@ -27,11 +26,9 @@ library(readr)
 library(odbc)
 library(DBI)
 library(fresh)
-library(htmlwidgets)
 library(lubridate)
 library(stringr)
 library(readr)
-#library(jsonlite)
 library(blastula)
 library(glue)
 library(parallel)
@@ -47,7 +44,6 @@ con <- dbConnect(RPostgres::Postgres(),
                  port = 5432,
                  user = Sys.getenv("irise_soles_user"),
                  password = Sys.getenv("irise_soles_password"))
-
 
 workflow <- try({
 
@@ -188,6 +184,10 @@ workflow <- try({
 
   try(get_openalex_metadata(con))
 
+  try(get_ror_coords(con))
+  try(get_ror_coords(con))
+  
+  
   post_open_access <- tbl(con, "oa_tag") %>%
     select(doi) %>%
     collect()
@@ -276,23 +276,6 @@ dataframes_for_app[["citations_for_dl"]] <- citations_for_dl
 retracted_embase <- unique_citations %>% 
   filter(str_detect(title, "^Retraction|^Retracted|^Erratum: retracted:")) %>% 
   collect()
-
-# Fix dodgy years
-# unique_years <- dbReadTable(con, "unique_citations") %>%
-#   mutate(year = ifelse(uid == "medline-28336799", "2016", year),
-#          year = ifelse(uid == "medline-28855368", "2017", year),
-#          year = ifelse(uid == "medline-30082302", "2018", year),
-#          year = ifelse(uid == "medline-28336792", "2016", year),
-#          year = ifelse(uid == "medline-28336800", "2016", year),
-#          year = ifelse(uid == "medline-27092246", "2016", year),
-#          year = ifelse(uid == "medline-27534954", "2016", year)
-#   )
-
-# fix_years <- dbReadTable(con, "unique_citations") %>% 
-#   mutate(year = ifelse(uid == "embase-51668480", 2012, year)) %>% 
-#   mutate(year = ifelse(uid == "embase-52948227", 2014, year)) %>% 
-#   mutate(year = ifelse(uid == "unknown-1026", 1981, year)) %>% 
-#   mutate(year = ifelse(uid == "unknown-1329", 2023, year))
 
 # Create included tbl
 included_with_metadata <- citations_for_dl  %>%
@@ -440,7 +423,6 @@ pico_country <- dbReadTable(con,"pico_ontology") %>%
   dplyr::select(country = name, continent = main_category, sub_category2)
 
 ## Once ROR coords table is full use this instead of location, join by ror!
-
 ror_data <- dbReadTable(con, "ror_coords") %>%
   left_join(inst, by = "ror") %>%
   left_join(pico_country, by = c("institution_country_code" = "sub_category2")) %>%
@@ -477,7 +459,7 @@ ror_data_small <- dbReadTable(con, "ror_coords") %>%
 dataframes_for_app[["ror_data_small"]] <- ror_data_small
 
 pico <- all_annotations_small %>%
-  select(uid, intervention, discipline, outcome_measures, intervention_provider)
+  select(uid, intervention, discipline, outcome_measures, intervention_provider, research_stage, location = target_population_location, target_population)
 
 dataframes_for_app[["pico"]] <- pico
 
@@ -501,6 +483,13 @@ for (name in names(dataframes_for_app)) {
   fst_files_written <- fst_files_written + 1
 }
 
+# Write all of the dataframes required to fst files
+# for (name in names(dataframes_for_app)) {
+#   dataframe <- dataframes_for_app[[name]]
+#   write_fst(dataframe, paste0("dev_deploy_app/fst_files/", name, ".fst"))
+#   fst_files_written <- fst_files_written + 1
+# }
+
 
 # Redeploy the app
 app_deploy <- try({
@@ -509,6 +498,8 @@ app_deploy <- try({
     appFiles = c("app.R",
                  "irise_modules.R",
                  "fst_files/",
+                 ".Renviron",
+                 "google-analytics.html",
                  "www/",
                  "helpfiles/"),
     account = "camarades",
@@ -517,6 +508,24 @@ app_deploy <- try({
     launch.browser = F,
     forceUpdate = T)
 })
+
+# Redeploy the dev app
+# app_deploy <- try({
+#   rsconnect::deployApp(
+#     appDir = "dev_deploy_app",
+#     appFiles = c("app.R",
+#                  "irise_modules.R",
+#                  ".Renviron",
+#                  "fst_files/",
+#                  "www/",
+#                  "google-analytics.html",
+#                  "helpfiles/"),
+#     account = "camarades",
+#     appName  = "dev-irise-soles",
+#     logLevel = "verbose",
+#     launch.browser = F,
+#     forceUpdate = T)
+# })
 
 try({
   if (inherits(app_deploy, "try-error")) {
@@ -626,5 +635,18 @@ Task Incomplete
   ) %>% add_attachment(file = "workflow.log",
                        filename = "workflow.log"
   )
+
+# Create folder if it doesn't exist
+if (!file.exists("workflow_logs")) {
+  dir.create("workflow_logs")
+}
+
+# Add current workflow to workflow_logs folder, this should overwrite each week
+file.copy(from = "workflow.log",
+          to = "workflow_logs/",
+          overwrite = TRUE)
+
+# Remove workflow log file from wd
+file.remove("workflow.log")
 
 dbDisconnect(con)

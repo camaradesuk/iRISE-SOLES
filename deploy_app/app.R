@@ -33,8 +33,17 @@ library(jsonlite)
 library(tidyr)
 library(pool)
 library(dplyr)
+library(DT)
 
 source("irise_modules.R")
+
+# Connect to db
+con <- dbConnect(RPostgres::Postgres(),
+                 dbname = Sys.getenv("irise_soles_dbname"),
+                 host = Sys.getenv("irise_soles_host"),
+                 port = 5432,
+                 user = Sys.getenv("irise_soles_user"),
+                 password = Sys.getenv("irise_soles_password"))
 
 irise_colours <- list(
   c(dark_blue = "#1A465F",
@@ -95,22 +104,37 @@ for (file in all_files) {
 pico_elements_list <- list(
   pico_element_1 = list(id = "dropdown_interventions",
                         table = interventions_df,
-                        label1 = "Filter by intervention:",
+                        label1 = "Intervention:",
                         column1 = "name",
                         filter_no = 1),
   pico_element_2 = list(id = "dropdown_provider",
                         table = intervention_provider_df,
-                        label1 = "Filter by intervention provider:",
+                        label1 = "Intervention Provider:",
                         column1 = "name",
                         filter_no = 1),
   pico_element_3 = list(id = "dropdown_discipline",
                         table = discipline_df,
-                        label1 = "Filter by discipline:",
+                        label1 = "Discipline:",
                         column1 = "name",
                         filter_no = 1),
   pico_element_4 = list(id = "dropdown_outcomes",
                         table = outcome_measures_df,
-                        label1 = "Filter by outcome:",
+                        label1 = "Outcome:",
+                        column1 = "name",
+                        filter_no = 1),
+  pico_element_5 = list(id = "dropdown_target_population",
+                        table = target_population_df,
+                        label1 = "Target Population:",
+                        column1 = "name",
+                        filter_no = 1),
+  pico_element_6 = list(id = "dropdown_research_stage",
+                        table = research_stage_df,
+                        label1 = "Research Stage:",
+                        column1 = "name",
+                        filter_no = 1),
+  pico_element_7 = list(id = "dropdown_target_pop_location",
+                        table = target_pop_location_df,
+                        label1 = "Target Population Location:",
                         column1 = "name",
                         filter_no = 1)
 )
@@ -122,13 +146,12 @@ grey_pico_elements_list <- list(
                         column1 = "name",
                         filter_no = 1)
 )
-  
+
 ui <- bs4DashPage(freshTheme = mytheme,
 
                   dark = NULL,
                   help = NULL,
                   dbHeader <- dashboardHeader(
-                    #title = HTML("iRISE-<br>SOLES"),
                     title = tags$h5("iRISE-SOLES", style = "color: white; text-align: center;padding-top: 10px;"),
 
                     tags$a(href= 'https://irise-project.eu/',
@@ -136,19 +159,81 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                     height = "50px"))
                   ),
                   dashboardSidebar(skin = "dark",
-                                   collapsed = TRUE,
+                                   # collapsed = TRUE,
                                    sidebarMenu(
                                      id = "sidebarmenu",
                                      bs4SidebarMenuItem(tags$p("Homepage", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "home", icon = icon("home")),
                                      bs4SidebarMenuItem(tags$p("Data Collection", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "dc-main", icon = icon("database", verify_fa = FALSE)),
                                      bs4SidebarMenuItem(tags$p("Methodology", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "workflow-accordion-dc", icon = icon("question", verify_fa = FALSE)),
-                                     bs4SidebarMenuItem(tags$p("Transparency Metrics", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "data-summary-transparency", icon = icon("chart-pie", verify_fa = FALSE)),
+                                     bs4SidebarMenuItem(tags$p("Search Database", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "search_database", icon = icon("search"),
+                                                        bs4SidebarMenuSubItem(tabName = "module_search_database",
+                                                                              tagList(
+                                                                                tags$span("Published literature", style = "font-family: KohinoorBangla, sans-serif !important;"),
+                                                                                tags$span(icon("file-lines"), style = "margin-left: 8px;")
+                                                                              )),
+                                                        bs4SidebarMenuSubItem(tabName = "grey_lit_database",
+                                                                              tagList(
+                                                                                tags$span("Grey literature", style = "font-family: KohinoorBangla, sans-serif !important;"),
+                                                                                tags$span(icon("book"), style = "margin-left: 8px;")
+                                                                              ))),
                                      bs4SidebarMenuItem(tags$p("Evidence Map", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "evidence_map_bubble", icon = icon("diagram-project", verify_fa = FALSE)),
-                                     bs4SidebarMenuItem(tags$p("Outcome Overview", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "outcome-overview-tab", icon = icon("file-code", verify_fa = FALSE)),
-                                     bs4SidebarMenuItem(tags$p("Funder", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "funder-tab", icon = icon("landmark", verify_fa = FALSE)),
-                                     bs4SidebarMenuItem(tags$p("Location", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "location-tab", icon = icon("earth-americas")),
-                                     bs4SidebarMenuItem(tags$p("iRISE Grey Literature", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "grey_lit_database", icon = icon("book")),
-                                     bs4SidebarMenuItem(tags$p("iRISE Database", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "module_search_database", icon = icon("search")),
+                                     bs4SidebarMenuItem(
+                                       tags$p("Visual Summaries", style = "font-family: KohinoorBangla, sans-serif !important"),
+                                       tabName = "visual_summaries", icon = icon("chart-bar"),
+
+                                       bs4SidebarMenuSubItem(
+                                         tagList(
+                                           tags$span("Transparency Metrics", style = "font-family: KohinoorBangla, sans-serif !important;"),
+                                           tags$span(icon("chart-pie"), style = "margin-left: 8px;")
+                                         ),
+                                         tabName = "data-summary-transparency"
+                                       ),
+
+                                       bs4SidebarMenuSubItem(
+                                         tagList(
+                                           tags$span("Outcome Overview", style = "font-family: KohinoorBangla, sans-serif !important;"),
+                                           tags$span(icon("file-code"), style = "margin-left: 8px;")
+                                         ),
+                                         tabName = "outcome-overview-tab"
+                                       ),
+
+                                       bs4SidebarMenuSubItem(
+                                         tagList(
+                                           tags$span("By Funder", style = "font-family: KohinoorBangla, sans-serif !important;"),
+                                           tags$span(icon("landmark"), style = "margin-left: 8px;")
+                                         ),
+                                         tabName = "funder-tab"
+                                       ),
+
+                                       bs4SidebarMenuSubItem(
+                                         tagList(
+                                           tags$span("By Location", style = "font-family: KohinoorBangla, sans-serif !important;"),
+                                           tags$span(icon("earth-americas"), style = "margin-left: 8px;")
+                                         ),
+                                         tabName = "location-tab"
+                                       )
+                                     ),
+                                     bs4SidebarMenuItem(tags$p("Edit Database", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "edit_database", icon = icon("edit"),
+                                                        bs4SidebarMenuSubItem(tagList(
+                                                          tags$span("Add Study", style = "font-family: KohinoorBangla, sans-serif !important;"),
+                                                          tags$span(icon("plus"), style = "margin-left: 8px;")
+                                                        ),
+                                                        tabName = "add-study-tab"),
+                                                        bs4SidebarMenuSubItem(tagList(
+                                                          tags$span("Remove Study", style = "font-family: KohinoorBangla, sans-serif !important;"),
+                                                          tags$span(icon("trash"), style = "margin-left: 8px;")
+                                                        ),
+                                                        tabName = "remove-study-tab"),
+                                                        bs4SidebarMenuSubItem(tagList(
+                                                          tags$span("Edit Study", style = "font-family: KohinoorBangla, sans-serif !important;"),
+                                                          tags$span(icon("edit"), style = "margin-left: 8px;")
+                                                        ),
+                                                        tabName = "edit-study-tab"),
+                                                        bs4SidebarMenuSubItem(tagList(
+                                                          tags$span("Review Study", style = "font-family: KohinoorBangla, sans-serif !important;"),
+                                                          tags$span(icon("user-check"), style = "margin-left: 8px;")
+                                                        ),
+                                                        tabName = "review-study-tab")),
                                      bs4SidebarMenuItem(tags$p("About", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "about", icon = icon("info"))
                                    )
                   ),
@@ -160,108 +245,250 @@ ui <- bs4DashPage(freshTheme = mytheme,
                     useShinyjs(),
 
 
-                    tabItems(
-                      tabItem(tabName = "home",
+                  tags$head(
+                      if (file.exists("google-analytics.html")) {
+                        includeHTML("google-analytics.html")
+                      }
+                    ),
 
-                              box(
-                                div(
-                                  style = "text-align: center;",
-                                  tags$a(
-                                    href = 'https://irise-project.eu/',
-                                    tags$img(src = "iRISE_logo_dark_round.png", height = "300px")
-                                  )
-                                ),
+                  tabItems(
+                    tabItem(tabName = "home", class = "tab-pane home-tab",
 
-                                tags$br(),
-                                div(
+                            # Set full-page dark blue background and floating logo
+                            tags$head(
+                              tags$style(HTML("
 
-                                  style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
-                                  "Taking an integrated approach to understanding, investigating and guiding strategies to address irreproducibility"
-                                ),
+/* Default background for all content wrappers = white */
+.content-wrapper {
+  background-color: white !important;
+}
+
+/* Home tab content wrapper gets dark blue */
+.home-tab {
+  background-color: #18465F !important;
+  min-height: 100vh;  /* ensure full height */
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+/* Make sure the inner content of home tab also inherits dark bg */
+.home-tab .content {
+  background-color: #18465F !important;
+}
+    .irise-logo {
+      top: 40px;
+      height: 385px;
+      z-index: 1000;
+    }
+    .feature-box ul {
+      list-style-type: none;
+      padding-left: 0;
+      margin-top: 20px;
+      font-size: 20px;
+      line-height: 2;
+      # height: 300px;
+      color: white;
+    }
+    .feature-box i {
+      margin-right: 10px;
+      color: #64C296;
+    }
+
+.custom-card-primary {
+  background-color: #64C296;
+  border-radius: 12px;
+  height: 300px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.custom-card-warning {
+  background-color: #89CB93;
+  border-radius: 12px;
+  height: 300px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.custom-card-info {
+  background-color: #47B1A3;
+  border-radius: 12px;
+  height: 300px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.custom-card-text {
+  font-size: 20px;
+  color: white;
+}
+  "))
+),
+
+fluidRow(
+  column(6,
+         # Floating logo
+         tags$img(src = "irise_soles_logo.png", class = "irise-logo")
+  ),
+  
+  column(6,
+         div(
+           class = "feature-box",
+           style = "color: white;",  
+           tags$br(),
+           h2("Welcome to iRISE-SOLES", style = "color: #ffffff; font-weight: bold;"),
+           h5("A continuously updated, curated summary of interventions to improve reproducibility",
+              style = "color: #ffffff; font-style: italic;"),
+           HTML("<ul>
+            <li><i class='fas fa-file-alt'></i> Quickly summarise the evidence behind interventions </li>
+<li><i class='fas fa-search'></i> Search and filter to find relevant published and unpublished studies </li>
+<li><i class='fas fa-chart-pie'></i> Visualise evidence across outcomes, disciplines, and target groups </li>
+<li><i class='fas fa-arrow-trend-up'></i> Explore trends in the literature </li>
+<li><i class='fas fa-globe'></i> See the geographic spread of researchers working in this space</li>
+
+          </ul>")
+         )
+  )
+),
+
+    # Row with three link boxes
+fluidRow(
+  column(4,
+       div(class = "custom-card-primary",
+           tags$a(href = 'https://osf.io/9hzcv/?view_only=d74ff8089864468cb43daa06733e0be6',
+                  tags$img(src = "osf_logo.png", height = "140px")),
+           div(class = "custom-card-text",
+               "Read our protocol for the iRISE-SOLES project on the Open Science Framework")
+       )
+),
+column(4,
+       div(class = "custom-card-warning",
+           tags$a(href = 'https://portlandpress.com/clinsci/article/137/10/773/233083/Systematic-online-living-evidence-summaries',
+                  tags$img(src = "paper_screenshot.PNG", height = "140px")),
+           div(class = "custom-card-text",
+               "Read our SOLES paper")
+       )
+),
+column(4,
+       div(class = "custom-card-info",
+           tags$a(href = 'https://irise-project.eu/',
+                  tags$img(src = "irise_website.png", height = "140px")),
+           div(class = "custom-card-text",
+               "Visit the iRISE project website")
+       )
+)
+                    )),
 
 
-                                background = "primary",
-                                width = 12,
-                                solidHeader = TRUE,
-                                title = "",
-                                status = "primary"),
 
-                              plot_interpret_UI(id = "home_info",
-                                                title = "",
-                                                theme = "danger",
-                                                div(
-                                                  style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
-                                                  p("The overall aim for iRISE-SOLES is to systematically identify, synthesise and evaluate information on existing candidate interventions and tools to improve reproducibility. To do this, we have
-                                                  developed an integrated workflow of automated tools to collect and tag published research articles and visualise the evidence in this interactive web application.
-                                                  We tag studies by discipline, intervention, intervention provider, institution location, and reproducibility relevant outcomes. We also assess the transparency metrics of studies witin iRISE-SOLES e.g. their open access status and presence of data/code sharing."),
-                                                  p("To search for peer-reviewed studies in the iRISE database, go to the iRISE Database tab. If you would like to search our grey literature database for pre-prints and conference abstracts etc, go to the iRISE Grey Literature tab.")
-                                                  
-                                                )),
-
-                              fluidRow(
-
-                                column(4,
-
-                                       box(height = 350,
-                                           div(
-                                             style = "text-align: center;",
-                                             tags$a(
-                                               href = 'https://osf.io/9hzcv/?view_only=d74ff8089864468cb43daa06733e0be6',
-                                               tags$img(src = "osf_logo.png", height = "200px")
-                                             )
-                                           ),
-
-                                           tags$br(),
-                                           div(
-                                             style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
-                                             "Read our iRISE-SOLES protocol on the Open Science Framework"),
-                                           background = "warning",
-                                           width = NULL,
-                                           solidHeader = TRUE,
-                                           title = "",
-                                           status = "warning")),
-
-                                column(4,
-                                       box(height = 350,
-                                           div(
-                                             style = "text-align: center;",
-                                             tags$a(
-                                               href = 'https://portlandpress.com/clinsci/article/137/10/773/233083/Systematic-online-living-evidence-summaries',
-                                               tags$img(src = "paper_screenshot.PNG", height = "200px")
-                                             )
-                                           ),
-
-                                           tags$br(),
-                                           div(
-                                             style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
-                                             "Read our SOLES paper to learn more about our workflow"),
-                                           background = "secondary",
-                                           width = NULL,
-                                           solidHeader = TRUE,
-                                           title = "",
-                                           status = "secondary")),
-
-                                column(4,
-                                       box(height = 350,
-                                           div(
-                                             style = "text-align: center;",
-                                             tags$a(
-                                               href = 'https://irise-project.eu/',
-                                               tags$img(src = "irise_website.png", height = "200px")
-                                             )
-                                           ),
-
-                                           tags$br(),
-                                           div(
-                                             style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
-                                             "Go to the iRISE website to learn more about the other work packages and wider project"),
-                                           background = "info",
-                                           width = NULL,
-                                           solidHeader = TRUE,
-                                           title = "",
-                                           status = "info")
-
-                                ))),
+                    #   tabItem(tabName = "home",
+                    #
+                    #           box(
+                    #             div(
+                    #               style = "text-align: center;",
+                    #               tags$a(
+                    #                 href = 'https://irise-project.eu/',
+                    #                 tags$img(src = "iRISE_logo_dark_round.png", height = "300px")
+                    #               )
+                    #             ),
+                    #
+                    #             tags$br(),
+                    #             div(
+                    #
+                    #               style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
+                    #               "Taking an integrated approach to understanding, investigating and guiding strategies to address irreproducibility"
+                    #             ),
+                    #
+                    #
+                    #             background = "primary",
+                    #             width = 12,
+                    #             solidHeader = TRUE,
+                    #             title = "",
+                    #             status = "primary"),
+                    #
+                    #           plot_interpret_UI(id = "home_info",
+                    #                             title = "",
+                    #                             theme = "danger",
+                    #                             div(
+                    #                               style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
+                    #                               p("The overall aim for iRISE-SOLES is to systematically identify, synthesise and evaluate information on existing candidate interventions and tools to improve reproducibility. To do this, we have
+                    #                               developed an integrated workflow of automated tools to collect and tag published research articles and visualise the evidence in this interactive web application.
+                    #                               We tag studies by discipline, intervention, intervention provider, institution location, and reproducibility relevant outcomes. We also assess the transparency metrics of studies witin iRISE-SOLES e.g. their open access status and presence of data/code sharing."),
+                    #                               p("To search for peer-reviewed studies in the iRISE database, go to the iRISE Database tab. If you would like to search our grey literature database for pre-prints and conference abstracts etc, go to the iRISE Grey Literature tab.")
+                    #
+                    #                             )),
+                    #
+                    #           fluidRow(
+                    #
+                    #             column(4,
+                    #
+                    #                    box(height = 350,
+                    #                        div(
+                    #                          style = "text-align: center;",
+                    #                          tags$a(
+                    #                            href = 'https://osf.io/9hzcv/?view_only=d74ff8089864468cb43daa06733e0be6',
+                    #                            tags$img(src = "osf_logo.png", height = "200px")
+                    #                          )
+                    #                        ),
+                    #
+                    #                        tags$br(),
+                    #                        div(
+                    #                          style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
+                    #                          "Read our iRISE-SOLES protocol on the Open Science Framework"),
+                    #                        background = "warning",
+                    #                        width = NULL,
+                    #                        solidHeader = TRUE,
+                    #                        title = "",
+                    #                        status = "warning")),
+                    #
+                    #             column(4,
+                    #                    box(height = 350,
+                    #                        div(
+                    #                          style = "text-align: center;",
+                    #                          tags$a(
+                    #                            href = 'https://portlandpress.com/clinsci/article/137/10/773/233083/Systematic-online-living-evidence-summaries',
+                    #                            tags$img(src = "paper_screenshot.PNG", height = "200px")
+                    #                          )
+                    #                        ),
+                    #
+                    #                        tags$br(),
+                    #                        div(
+                    #                          style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
+                    #                          "Read our SOLES paper to learn more about our workflow"),
+                    #                        background = "secondary",
+                    #                        width = NULL,
+                    #                        solidHeader = TRUE,
+                    #                        title = "",
+                    #                        status = "secondary")),
+                    #
+                    #             column(4,
+                    #                    box(height = 350,
+                    #                        div(
+                    #                          style = "text-align: center;",
+                    #                          tags$a(
+                    #                            href = 'https://irise-project.eu/',
+                    #                            tags$img(src = "irise_website.png", height = "200px")
+                    #                          )
+                    #                        ),
+                    #
+                    #                        tags$br(),
+                    #                        div(
+                    #                          style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
+                    #                          "Go to the iRISE website to learn more about the other work packages and wider project"),
+                    #                        background = "info",
+                    #                        width = NULL,
+                    #                        solidHeader = TRUE,
+                    #                        title = "",
+                    #                        status = "info")
+                    #
+                    #             ))),
 
                       # Data collection - ui -----
                       tabItem(tabName = "dc-main",
@@ -491,7 +718,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                          )
                                        )
                                 )
-                               
+
                                 ),
                                 fluidRow(column(width = 6,
                                                 pickerInput(
@@ -723,7 +950,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                 sidebar = c(
                                   # First sidebar with filter icon
                                   boxSidebar(
-                                    width = 40,
+                                    width = 50,
                                     background = "#64C296",
                                     id = "inst_loc_sidebar",
                                     icon = icon("info"),
@@ -823,8 +1050,8 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                       tags$p("Use the map below to visualize evidence on interventions to improve different types of reproducibility and related outcomes. This visualization contains all articles which have been classified as controlled, primary research studies evaluating an intervention to improve reproducibility. Click a bubble to see all the relevant evidence in the table below."),
                                       tags$p("You can select multiple outcome measures and subgroups to filter the data. The bubbles represent the number of studies, with larger bubbles indicating more studies.")
                                     )
-                                )
-                              ),
+                                  )
+                                ),
                                 fluidRow(
                                   column(width = 12,
                                          leafletOutput("institution_map", height = 500) %>% withSpinner(color="#96c296") ),
@@ -861,21 +1088,322 @@ ui <- bs4DashPage(freshTheme = mytheme,
                       ),
                       # Search Grey Literature -----
                       tabItem(tabName = "grey_lit_database",
-                              
-                              
+
+
                               search_UI("grey_lit_results",
                                         table = grey_lit)
-                              
-                              
+
+
                       ),
 
-                      tabItem(tabName = "about",
+                      # Add Study Tab Content
+                      tabItem(tabName = "add-study-tab",
+                              tags$head(
+                                tags$style(HTML("
 
+
+    #clear_form {
+      background-color: #47B1A3 !important;   /* Green */
+      color: white !important;
+      border: none;
+        }
+
+    #submit_study {
+      background-color: #89CB93 !important;   /* Green */
+      color: white !important;
+      border: none;
+    }
+
+    #submit_study:enabled {
+      background-color: #47B1A3 !important;   /* Darker green */
+    }
+
+    #submit_study:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+
+  "))
+                              ),
+                              fluidRow(
+                                
+                                column(
+                                  width = 9,
+                                  
+                                  tagList(
+                                    box(
+                                      title = "Adding a Study to iRISE-SOLES",
+                                      status = "warning",
+                                      width = 12,
+                                      solidHeader = TRUE,
+                                      p(
+                                        "We aim for iRISE-SOLES to be as inclusive as possible, but we may have missed certain keywords or literature sources. 
+                                        If you have noticed a study which is missing in IRISE-SOLES, please suggest that we add it using the form below. Please ensure the study fits our inclusion 
+                                        criteria and that a valid DOI has been input. All suggestions will be sent to the team and reviewed before an addition is made. This usually happens within 1-2 weeks.",
+                                        style = "color: #1A465F; font-family: KohinoorBangla, sans-serif;"
+                                      )
+                                      
+                                    ) ,
+                                    box(
+                                      title = "Suggest Study to Add",
+                                      width = 12,
+                                      solidHeader = TRUE,
+                                      status = "info",
+                                      tags$div(
+                                        style = "font-family: KohinoorBangla, sans-serif !important; color: #47B1A3;",
+                                        fluidRow(
+                                          column(9, textInput("study_title", "Title", placeholder = "required")),
+                                          column(3, textInput("study_doi", "DOI", placeholder = "required"))
+                                        ),
+                                        textInput("reason", "Reason", placeholder = "required"),
+                                        br(),
+                                        fluidRow(
+                                          column(6, textInput("email", "Your Email", placeholder = "required")),
+                                          column(6, textInput("orcid", "Your ORCiD"))
+                                        ),
+                                        br(),
+                                        hr(),
+                                        br(),
+                                        fluidRow(
+                                          column(6, actionButton("submit_study", "Submit", class = "btn-block", disabled = TRUE)),
+                                          column(6, actionButton("clear_form", "Clear Form", class = "btn-primary btn-block"))
+                                        )
+                                      )
+                                    )
+                                  )
+                                ),
+                                
+                                
+                                column(
+                                  width = 3,
+                                  box(
+                                    title = "Inclusion/Exclusion Criteria",
+                                    width = 12,
+                                    solidHeader = TRUE,
+                                    status = "warning",
+                                    tags$div(
+                                      style = "font-family: KohinoorBangla, sans-serif !important;",
+                                      
+                                      p(tags$strong("Inclusion Criteria:"), style = "color: #47B1A3;"),
+                                      
+                                      tags$ul(
+                                        tags$li(style = "color: #47B1A3;", "Research which evaluates the effectiveness of an intervention on reproducibility or reproducibility-proxies (RPs)."),
+                                        tags$li(style = "color: #47B1A3;", "Research which suggests or promotes interventions to improve reproducibility or RPs."),
+                                        tags$li(style = "color: #47B1A3;", "Research which evaluates other aspects of the intervention suggested to improve reproducibility or RPs.")
+                                      ),
+                                      
+                                      br(),
+                                      
+                                      p(tags$strong("Exclusion Criteria:"), style = "color: #1A465F;"),
+                                      
+                                      tags$ul(
+                                        tags$li(style = "color: #1A465F;", "Research which does not meet any of the three aims in the inclusion criteria."),
+                                        # tags$li(style = "color: #1A465F;", "Conference abstracts, review articles, editorials, opinion pieces are excluded.")
+                                      ),
+                                      
+                                      br(),
+                                      
+                                      # Link to OSF protocol with logo
+                                      div(
+                                        class = "text-center",
+                                        tags$a(
+                                          href = "https://osf.io/2vufx",
+                                          target = "_blank",
+                                          tags$img(src = "osf_logo.png", height = "40px", alt = "OSF Logo"),
+                                          style = "display: inline-block;"
+                                        ),
+                                        br(),
+                                        tags$a(
+                                          href = "https://osf.io/2vufx",
+                                          "View Full Protocol on OSF",
+                                          target = "_blank",
+                                          style = "color: #1A465F; text-decoration: underline;"
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              )
+                      ),
+
+                      tabItem(tabName = "remove-study-tab",
+                              fluidRow(
+                                column(
+                                  width = 9,
+                                  tagList(
+                                    box(
+                                      title = "Removing a Study from iRISE-SOLES",
+                                      status = "warning",
+                                      width = 12,
+                                      solidHeader = TRUE,
+                                      p(
+                                        "iRISE-SOLES uses machine learning classifiers to help us identify the most relevant research (see Methodology page). 
+                                        However, in some cases, we will incorrectly retain irrelevant studies. If you have noticed a study which shouldn't be in our platform, 
+                                        please suggest that we remove it using the form below. You can find a study by using the search box or by filtering the studies, using the filter icon on the right hand side. 
+                                        All suggestions will be sent to the team and reviewed before a study is removed from the platform. 
+                                        This usually happens within 1-2 weeks.",
+                                        style = "color: #1A465F; font-family: KohinoorBangla, sans-serif;"
+                                      )
+                                    ),
+                                    box(
+                                      title = "Suggest Study to Remove",
+                                      width = 12,
+                                      #height = "520px",
+                                      solidHeader = TRUE,
+                                      status = "info",
+                                      sidebar = boxSidebar(
+                                        id = "remove_filter_sidebar",
+                                        background = "#1A465F",
+                                        icon = icon("filter"),
+                                        tags$h3("Filter Studies"),
+                                        shinyjs::useShinyjs(),
+                                        fluidRow(column(11,
+                                                        uiOutput("dynamic_dropdowns_remove"),
+                                                        br(),
+                                                        actionBttn(
+                                                          inputId = "submit_filters_remove",
+                                                          label = "Apply filters",
+                                                          style = "jelly",
+                                                          color = "danger"
+                                                        )
+                                        ))),
+
+                                      DTOutput("study_remove_table"),
+                                      br(),
+                                      actionButton("remove_study_btn",
+                                                   "Submit Removal Suggestion",
+                                                   size = "sm",
+                                                   icon = icon("trash"),
+                                                   class = "btn-block",
+                                                   style = "background-color: #47B1A3; color: white;margin-left: auto; margin-right: auto;",
+                                                   width = "33%",
+                                                   disabled = TRUE)
+
+                                    )
+                                  )),
+                                column(
+                                  width = 3,
+                                  box(
+                                    title = "Inclusion/Exclusion Criteria",
+                                    width = 12,
+                                    solidHeader = TRUE,
+                                    status = "warning",
+                                    tags$div(
+                                      style = "font-family: KohinoorBangla, sans-serif !important;",
+
+                                      p(tags$strong("Inclusion Criteria:"), style = "color: #47B1A3;"),
+
+                                      tags$ul(
+                                        tags$li(style = "color: #47B1A3;", "Research which evaluates the effectiveness of an intervention on reproducibility or reproducibility-proxies (RPs)."),
+                                        tags$li(style = "color: #47B1A3;", "Research which suggests or promotes interventions to improve reproducibility or RPs."),
+                                        tags$li(style = "color: #47B1A3;", "Research which evaluates other aspects of the intervention suggested to improve reproducibility or RPs.")
+                                      ),
+
+                                      br(),
+
+                                      p(tags$strong("Exclusion Criteria:"), style = "color: #1A465F;"),
+
+                                      tags$ul(
+                                        tags$li(style = "color: #1A465F;", "Research which does not meet any of the three aims in the inclusion criteria.")
+                                        # tags$li(style = "color: #1A465F;", "Conference abstracts, review articles, editorials, opinion pieces are excluded.")
+                                      ),
+
+                                      br(),
+
+                                      # Link to OSF protocol with logo
+                                      div(
+                                        class = "text-center",
+                                        tags$a(
+                                          href = "https://osf.io/2vufx",
+                                          target = "_blank",
+                                          tags$img(src = "osf_logo.png", height = "40px", alt = "OSF Logo"),
+                                          style = "display: inline-block;"
+                                        ),
+                                        br(),
+                                        tags$a(
+                                          href = "https://osf.io/2vufx",
+                                          "View Full Protocol on OSF",
+                                          target = "_blank",
+                                          style = "color: #1A465F; text-decoration: underline;"
+                                        )
+                                      )
+                                    )
+                                  )
+
+                                )
+
+                              )
+                      ),
+                      tabItem(tabName = "edit-study-tab",
+                              fluidRow(
+                                column(
+                                  width = 12,
+                                  box(
+                                    title = "Suggesting Changes to Study Annotations",
+                                    status = "warning",
+                                    width = 12,
+                                    solidHeader = TRUE,
+                                    p(
+                                      "iRISE-SOLES uses artificial intelligence (specifically, large-language models) to help us annotate research articles with key study characteristics 
+                                      (see Methodology page). In some instances, this can differ from how a human would classify a study. If you disagree with any study classification, 
+                                      you can suggest changes by clicking on a row in the table below and clicking 'Submit Annotation Suggestion'. This will bring up a form for you to fill in, 
+                                      highlighting the changes. You will also have the option to say whether or not you agree with the LLM annotation. Once complete, all suggestions will be 
+                                      sent to the team and reviewed before a change is made to the platform. This usually happens within 1-2 weeks. ",
+                                      style = "color: #1A465F; font-family: KohinoorBangla, sans-serif;"
+                                    )
+                                  ),
+                                  box(
+                                    title = "Suggest Study Annotation to Edit",
+                                    width = 12,
+                                    solidHeader = TRUE,
+                                    status = "info",
+                                    collapsible = TRUE,
+                                    sidebar = boxSidebar(
+                                      id = "edit_filter_sidebar",
+                                      background = "#1A465F",
+                                      icon = icon("filter"),
+                                      tags$h3("Filter Studies"),
+                                      shinyjs::useShinyjs(),
+                                      fluidRow(column(11,
+                                                      uiOutput("dynamic_dropdowns_edit"),
+                                                      br(),
+                                                      actionBttn(
+                                                        inputId = "submit_filters_edit",
+                                                        label = "Apply filters",
+                                                        style = "jelly",
+                                                        color = "danger"
+                                                      )
+                                      ))),
+                                    DTOutput("study_edit_table"),
+                                    br(),
+                                    actionButton(
+                                      "edit_study_btn",
+                                      "Submit Annotation Suggestion",
+                                      size = "sm",
+                                      icon = icon("edit"),
+                                      class = "btn-block",
+                                      style = "background-color: #47B1A3; color: white; margin-left: auto; margin-right: auto;",
+                                      width = "33%",
+                                      disabled = TRUE
+                                    )
+                                  )
+                                )
+
+                              )
+
+                      ),
+                      tabItem(tabName = "review-study-tab",
+                              fluidRow(column(12,
+                                              uiOutput("review_study_ui")
+                              ))
+                      ),
+                      tabItem(tabName = "about",
 
                               fluidRow(
 
                                 box(width = 5,
-                                    title = "Funding",
+                                    title = tagList(icon("hand-holding-dollar"), "Funding"),
                                     background="danger",
                                     solidHeader = T,
                                     status="danger",
@@ -883,40 +1411,54 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                       Views and opinions expressed are however those of the author(s) only and do not necessarily reflect those of the European Union or the
                                       European Research Executive Agency (ERA). Neither the European Union nor the ERA can be held responsible for them."),
                                     tags$div(
-                                      style = "text-align: center;",  # This applies the center alignment to the content
-                                      tags$img(src = "european_union_logo.jpg", height = "50px")
+                                      style = "text-align: center;",
+                                      tags$img(src = "european_union_logo.jpg", height = "100px")
                                     )),
 
                                 box(width = 7,
-                                    title = "Using iRISE-SOLES data",
-                                    background="warning",
-                                    solidHeader = T,
+                                    title = tagList(icon("database"), "Using iRISE-SOLES data"),
+                                    background = "warning",
+                                    solidHeader = TRUE,
                                     status = "warning",
-                                    p("We license all data and information provided under a
-                      Creative Commons Attribution 4.0 International license (CC BY 4.0)"),
-                                    p("If you have used the iRISE-SOLES data for a research project or review, please cite our protocol:
-                      Kaitlyn Hair, Sean Smith, Ivan Buljan, Carlijn R. Hooijmans, Malcolm R. Macleod, Ana Marušić, Dora Pejdo, Torsten Rackoll, Kimberley E. Wever, Sarah Wendt,
-                      Sarah McCann, and Emily S. Sena on behalf of the iRISE consortium (2023), A protocol for a systematic online living evidence summary of the interventions to improve reproducibility (iRISE-SOLES),
-                                      Open Science Framework. https://doi.org/10.31222/osf.io/nbe5q"))
+                                    p("We license all data and information provided under a Creative Commons Attribution 4.0 International license (CC BY 4.0)."),
+
+                                    tags$div(
+                                      style = "background-color: #fff3cd; border-left: 6px solid #ffa500; padding: 15px; margin-top: 15px; border-radius: 6px; color:black;",
+                                     strong("Please cite the iRISE-SOLES project as:"), br(),
+                                             "Hair, K, Smith S., Buljan, I, Hooijmans, C.R., Macleod, M. R., Marušić, a., Pejdo, D., Rackoll, T., Wever, K.E., Wendt, S., McCann, S. K., and Sena, E. S. on behalf of the iRISE consortium. (2023).
+                                            A protocol for a systematic online living evidence summary of the interventions to improve reproducibility (iRISE-SOLES),",
+                                           "Open Science Framework. ",
+                                             tags$a(href = "https://doi.org/10.31222/osf.io/nbe5q",
+                                                    "https://doi.org/10.31222/osf.io/nbe5q",
+                                                    target = "_blank"))
+                                      )
+
+
                               ),
 
                               fluidRow(
 
                                 box(width = 12,
-                                    title = "Development",
+                                    title = tagList(icon("laptop-code"), "Development"),
                                     status="info",
                                     solidHeader = T,
                                     background="info",
-                                    p("iRISE-SOLES was developed as part of Work Package 2 in the iRISE project. The main developer behind the platform
-                                      is Sean Smith."),
-                                    p("If you have any questions about the iRISE-SOLES project, please contact:",
-                                      strong(tags$a(href="mailto:kaitlyn@ed.ac.uk", "kaitlyn.hair@ed.ac.uk", style="color: #1A465F;")))))
-                      )
-                    ))
-)
+                                    p("This platform was developed as part of a task within the iRISE project, led by ", strong("Kaitlyn Hair"), "(Task Lead).",
+                                      "The iRISE-SOLES app was developed by ", strong("Sean Smith"), "(Developer).",
+                                      "The platform was developed in collaboration with members of Work Package 2 and the wider iRISE consortium, which is led by ", strong("Sarah McCann and Emily Sena"), "(Project Leads)."),
 
-
-
+                                    p("For any questions about the iRISE-SOLES project, please contact: ",
+                                      strong(tags$a(href = "mailto:sean.smith@ed.ac.uk",
+                                                    "sean.smith@ed.ac.uk",
+                                                    style = "color: #1A465F;"),
+                                             "or",
+                                      strong(tags$a(href = "mailto:kaitlyn@ucl.ac.uk",
+                                                    "kaitlyn.hair@ucl.ac.uk",
+                                                    style = "color: #1A465F;")))
+                                )))
+                              )
+                  )
+))
 
 
 server <- function(input, output, session) {
@@ -934,31 +1476,31 @@ server <- function(input, output, session) {
 
 
 
-  shinyalert(
-    title="Welcome!",
-    text="iRISE-SOLES is a living evidence summary dashboard
-  summarising the evidence on interventions to improve reproducibility.",
-    type = "info",
-    size = "s",
-    animation = TRUE,
-    confirmButtonText = "Enter iRISE-SOLES",
-    confirmButtonCol = "#1A465F")
+  # shinyalert(
+  #   title="Welcome!",
+  #   text="iRISE-SOLES is a living evidence summary dashboard
+  # summarising the evidence on interventions to improve reproducibility.",
+  #   type = "info",
+  #   size = "s",
+  #   animation = TRUE,
+  #   confirmButtonText = "Enter iRISE-SOLES",
+  #   confirmButtonCol = "#1A465F")
 
 
   observeEvent(input$sidebarmenu, {
     if (input$sidebarmenu == "evidence_map_bubble"){
 
-  shinyalert(
-  title="Need more information?",
-  text="Look for information icons on each box as you navigate through the dashboard.
+      shinyalert(
+        title="Need more information?",
+        text="Look for information icons on each box as you navigate through the dashboard.
   Head to our methodology page for more detailed information.",
-             type = "info",
-             size = "s",
-             animation = TRUE,
-             confirmButtonText = "OK!",
-             confirmButtonCol = "#1A465F",)
+        type = "info",
+        size = "s",
+        animation = TRUE,
+        confirmButtonText = "OK!",
+        confirmButtonCol = "#1A465F",)
     }
-})
+  })
 
   yearBarServer_included_only("included_studies_over_time_bar",
                               table=n_included_per_year_plot_data,
@@ -983,7 +1525,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$sidebarmenu, {
     if (input$sidebarmenu == "grey_lit_database"){
-      
+
       shinyalert(
         title = "Grey Literature Search",
         text = "Use this page to search for grey literature only, such as pre-prints and conference abstracts. This database is separate from our main database containing peer-reviewed articles.",
@@ -994,6 +1536,7 @@ server <- function(input, output, session) {
         confirmButtonCol = "#1A465F",)
     }
   })
+  
   # Search Page - server -----
   search_Server("grey_lit_results",
                 pico_data = grey_pico_elements_list,
@@ -1023,17 +1566,17 @@ server <- function(input, output, session) {
                       choices = choices,
                       selected = choices)
   })
-  
-  
-  observeEvent(input$select_outcome, {
-    
-    data_filter <- all_annotations %>%
-      filter(outcome_measures %in% input$select_outcome) 
 
-    
+
+  observeEvent(input$select_outcome, {
+
+    data_filter <- all_annotations %>%
+      filter(outcome_measures %in% input$select_outcome)
+
+
     citations_years <- citations_for_dl %>%
       select(uid, year)
-    
+
     data <- data_filter %>%
       left_join(citations_years, by = "uid") %>%
       group_by(uid, intervention, !!sym(input$legend_bubble_select), outcome_measures) %>%
@@ -1041,12 +1584,12 @@ server <- function(input, output, session) {
       ungroup() %>%
       count(intervention, !!sym(input$legend_bubble_select), outcome_measures) %>%
       arrange(!!sym(input$legend_bubble_select), outcome_measures, intervention)
-      
+
     interventions <- data %>%
-      arrange(desc(n)) %>%    
-      distinct(intervention, .keep_all = TRUE) %>% 
+      arrange(desc(n)) %>%
+      distinct(intervention, .keep_all = TRUE) %>%
       pull(intervention)
-    
+
     updatePickerInput(session, "select_intervention",
                       choices = sort(interventions),
                       selected = interventions[1:20],
@@ -1055,7 +1598,7 @@ server <- function(input, output, session) {
                                               maxOptions = 20,
                                               actionsBox = TRUE,
                                               size = 10
-                      )) 
+                      ))
   })
 
   previous_state <- reactiveValues(
@@ -1069,7 +1612,7 @@ server <- function(input, output, session) {
 
     data_filter <- all_annotations %>%
       filter(outcome_measures %in% input$select_outcome) %>%
-      filter(intervention %in% input$select_intervention) %>% 
+      filter(intervention %in% input$select_intervention) %>%
       filter(!!sym(input$legend_bubble_select) %in% input$legend_bubble_specific)
 
 
@@ -1097,10 +1640,25 @@ server <- function(input, output, session) {
       bubble_react_new$selected_colour <- data$key %in% click_data$customdata
 
       if (exists("col_vector")){
-
-        bubble_react_new$col <- col_vector
+        
+        if (length(col_vector) == length(bubble_react_new$col)){
+          
+          bubble_react_new$col <- col_vector
+          
+        } else {
+          
+          data$col <- "#266080"
+          
+          bubble_react_new <- data %>%
+            mutate(selected_colour = FALSE)
+          
+          assign("col_vector", bubble_react_new$col, envir = .GlobalEnv)
+          
+          return(bubble_react_new)
+          
+        }      
       }
-
+      
       selected_row <- which(rownames(bubble_react_new) %in% click_data$customdata)
 
       if (!bubble_react_new$col[selected_row] == "#47B1A3"){
@@ -1139,7 +1697,7 @@ server <- function(input, output, session) {
 
     table <- all_annotations %>%
       filter(outcome_measures %in% input$select_outcome) %>%
-      filter(intervention %in% input$select_intervention) %>% 
+      filter(intervention %in% input$select_intervention) %>%
       filter(!!sym(input$legend_bubble_select) %in% input$legend_bubble_specific)
 
     bubble_data <- bubble_react()
@@ -1227,16 +1785,16 @@ server <- function(input, output, session) {
           jitter_base = ifelse(subcat_count > 1, 0.3 / (subcat_count - 1), 0),
           jittered_outcome = numeric_outcome + (index - (subcat_count + 1) / 2) * jitter_base) %>%
         ungroup() %>%
-        mutate(shape = ifelse(selected_colour == TRUE, "circle-cross-open", "circle")) 
-      # %>% 
+        mutate(shape = ifelse(selected_colour == TRUE, "circle-cross-open", "circle"))
+      # %>%
       #   filter(n > 1)
 
       # Calculate midpoints for line positions
       unique_outcomes <- sort(unique(plot$numeric_outcome))
       line_positions <- head(unique_outcomes, -1) + diff(unique_outcomes) / 2
-      
-       
-        
+
+
+
 
       max_n <- max(plot$n, na.rm = TRUE)
       sizeref_value <- 1 * (max_n/300)
@@ -2046,17 +2604,17 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$name_select, {
-    
+
     inst_outcomes <- ror_data %>%
       filter(
-             inst_name %in% input$name_select,
-             discipline %in% input$inst_discipline_select,
-             type %in% input$inst_type_select) %>%
-      select(outcome_measures) %>% 
-      distinct() %>% 
-      arrange(outcome_measures) %>% 
+        inst_name %in% input$name_select,
+        discipline %in% input$inst_discipline_select,
+        type %in% input$inst_type_select) %>%
+      select(outcome_measures) %>%
+      distinct() %>%
+      arrange(outcome_measures) %>%
       pull(outcome_measures)
-    
+
     updatePickerInput(session, "inst_outcome_select",
                       choices = sort(inst_outcomes),
                       selected = inst_outcomes,
@@ -2065,7 +2623,7 @@ server <- function(input, output, session) {
                                               maxOptions = 20,
                                               actionsBox = TRUE,
                                               size = 10
-                      )) 
+                      ))
   })
 
   # Location - server -----
@@ -2082,7 +2640,6 @@ server <- function(input, output, session) {
   # Location - filtered data -----
   filtered_data <- reactive({
 
-
     # If country is null
     if (is.null(input$country_select)) {
 
@@ -2090,9 +2647,9 @@ server <- function(input, output, session) {
         filter(
           continent %in% input$continent_select,
           inst_name %in% input$name_select,
-               outcome_measures %in% input$inst_outcome_select,
-               discipline %in% input$inst_discipline_select,
-               type %in% input$inst_type_select) %>%
+          outcome_measures %in% input$inst_outcome_select,
+          discipline %in% input$inst_discipline_select,
+          type %in% input$inst_type_select) %>%
         distinct()
 
     } else {
@@ -2124,7 +2681,7 @@ server <- function(input, output, session) {
 
   # Location - render leaflet map -----
   output$institution_map <- renderLeaflet({
-    
+
     data <- filtered_data() %>%
       group_by(inst_name) %>%
       mutate(filter_no = n_distinct(uid)) %>%
@@ -2141,7 +2698,7 @@ server <- function(input, output, session) {
                         "Filtered No. of Publications: ", filter_no, "<br>",
                         "Total No. of Publications: ", number_pub),
         #data = subset(data, number_pub > 1),
-        
+
         radius = ~scale_size(filter_no),
         color = "black",
         fillColor = ~color_palette()(type),
@@ -2190,7 +2747,7 @@ server <- function(input, output, session) {
   })
 
   observe({
-    
+
     leafletProxy("institution_map", data = filtered_data()) %>%
       #clearShapes() %>%
       fitBounds(lng1 = min(filtered_data()$long, na.rm = TRUE) - 3,
@@ -2269,7 +2826,2369 @@ server <- function(input, output, session) {
 
   })
 
-}
 
+
+  ### Feedback Loop start
+  selected_study <- reactiveVal(NULL)  # Store selected study row
+
+  remove_table <- reactive({
+
+    included_with_metadata %>%
+      mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
+      select(year, title, journal, author, uid, link, doi) %>%
+      left_join(pico, by = "uid") %>%
+      # mutate(title = ifelse(!is.na(doi) & doi != "",
+      #                       paste0("<a href='", link, "' target='_blank'>", title, "</a>"),
+      #                       title)) %>%
+      select(uid, link, doi, year, title, journal, author, intervention, outcome = outcome_measures, discipline, provider = intervention_provider) %>%
+      distinct() %>%
+      filter(uid %in% filter_studies_remove()$uid)
+
+  })
+
+  edit_table <- reactive({
+
+    included_with_metadata %>%
+      mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
+      select(year, title, journal, author, uid, link, doi) %>%
+      # mutate(title = ifelse(!is.na(doi) & doi != "",
+      #                       paste0("<a href='", link, "' target='_blank'>", title, "</a>"),
+      #                       title)) %>%
+      left_join(pico, by = "uid") %>%
+      select(uid, link, doi, year, title, journal, author, intervention, outcome = outcome_measures, discipline, provider = intervention_provider, research_stage, target_population, target_pop_location = location) %>%
+      distinct() %>%
+      filter(uid %in% filter_studies_edit()$uid)
+
+  })
+
+  output$study_remove_table <- renderDT({
+
+    # remove_table_final <- remove_table() %>%
+    #   mutate(title = ifelse(!is.na(doi) & doi != "",
+    #                         paste0("<a href='", link, "' target='_blank'>", title, "</a>"),
+    #                         title)) %>%
+    #   select(Year = year, Title = title, Journal = journal, Author = author)
+    
+    remove_table_final <- remove_table() %>%
+      mutate(title = ifelse(!is.na(doi) & doi != "",
+                            paste0("<a href='", link, "' target='_blank' title='Click to view study'>", title, "</a>"),
+                            title)) %>%
+      select(Year = year, Title = title, Journal = journal, Author = author)
+
+    datatable(
+      remove_table_final,
+      selection = "single",
+      options = list(
+        pageLength = 5,
+        dom = '<"top"f>t<"bottom"ip>',
+        initComplete = JS("
+      function(settings, json) {
+        $('.dataTables_filter').css({
+          'float': 'left',
+          'text-align': 'left',
+          'margin-bottom': '10px'
+        });
+        $('.dataTables_filter input')
+          .css({
+            'width': '300px',
+            'display': 'inline-block'
+          })
+          .attr('placeholder', 'Search...');
+      }
+    "),
+        columnDefs = list(
+          list(targets = 0, visible = FALSE),
+          list(
+            targets = c(1, 3, 4),
+            render = JS("
+          function(data, type, row, meta) {
+            if (type === 'display' && data.length > 30) {
+              return '<span title=\"' + data + '\">' + data.substr(0, 30) + '...' + '</span>';
+            } else {
+              return data;
+            }
+          }
+        ")
+          )
+        )
+      ),
+      escape = FALSE
+    )
+
+  })
+
+  # Enable "Remove Study" button when row is selected
+  observeEvent(input$study_remove_table_rows_selected, ignoreNULL = FALSE, {
+
+
+    if (length(input$study_remove_table_rows_selected) > 0) {
+
+      updateActionButton(session, "remove_study_btn", disabled = FALSE)
+
+    } else {
+
+      updateActionButton(session, "remove_study_btn", disabled = TRUE)
+
+    }
+  })
+
+  # Capture selected study and show removal form
+  observeEvent(input$remove_study_btn, {
+
+    row_selected <- input$study_remove_table_rows_selected
+    if (length(row_selected) == 0) return()
+
+    selected_study(remove_table()[row_selected, ])
+
+    showModal(modalDialog(
+      tags$head(
+        tags$style(HTML("
+
+    #submit_removal {
+      background-color: #FF0000 !important;
+      color: white !important;
+      border: none;
+    }
+
+    #submit_removal:enabled {
+      background-color: #FF0000 !important;
+    }
+
+    #submit_removal:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+
+  "))
+      ),
+
+      title = tags$div("Suggest Study to Remove", style = "font-family: KohinoorBangla, sans-serif !important; color: #1A465F;"),
+      size = "xl",
+      easyClose = FALSE,
+      fade = TRUE,
+      footer = tagList(
+        modalButton("Close"),
+        actionButton("submit_removal", "Submit Removal Suggestion", class = "btn-danger", disabled = TRUE)
+      ),
+      tags$div(style = "font-family: KohinoorBangla, sans-serif !important; color: #1A465F;",
+
+               fluidRow(
+                 tags$head(
+                   tags$style(HTML("
+    .link-box {
+      border: 1px solid #ccc;
+      padding: 8px;
+      background-color: #f8f9fa;
+      width: 100%;
+      border-radius: 8px;
+      transition: background-color 0.3s ease, text-decoration 0.3s ease;
+      text-decoration: none;
+    }
+
+    .link-box:hover {
+      background-color: #e2e6ea;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  "))
+                 ),
+                 column(8,
+                        tags$div(
+                          tags$strong("Title:", style = "display: block; margin-bottom: 8px;"),
+                          tags$div(
+                            selected_study()$title,
+                            style = "border: 1px solid #ccc; padding: 8px; background-color: #f8f9fa; width: 100%; border-radius: 8px;"
+                          )
+                        )
+                 ),
+
+                 column(4,
+                        tags$div(
+                          tags$strong("DOI:", style = "display: block; margin-bottom: 8px;"),
+                          tags$a(
+                            href = selected_study()$link,
+                            target = "_blank",
+                            style = "text-decoration: none; color: inherit;",
+                            tags$div(
+                              class = "link-box",
+                              tags$span(selected_study()$doi),
+                              tags$i(class = "fas fa-link", style = "margin-left: 8px;")
+                            )
+                          )
+                        )
+                 )
+               ),
+
+
+               br(),
+               fluidRow(
+                 column(12, textInput("remove_study_reason", "Reason",
+                                      width = "100%"))),
+               fluidRow(
+                 column(6, textInput("remove_email", "Your Email", placeholder = "required",
+                                     width = "100%")),
+                 column(6, textInput("remove_orcid", "Your ORCiD",
+                                     width = "100%"))
+               )
+      )
+    )
+    )
+
+
+  })
+
+
+  # Define a reactive expression to check validity
+  is_submit_form_valid <- reactive({
+
+    str_detect(input$email, "@") && trimws(input$study_title) != "" && trimws(input$reason) != ""
+  })
+
+  # Observe changes and update the button
+  observe({
+    updateActionButton(session, "submit_study", disabled = !is_submit_form_valid())
+  })
+
+  # Observe Submit Button Click
+  observeEvent(input$submit_study, {
+
+    withProgress(message = "Submitting suggestion for review...", value = 0, {
+
+      incProgress(0.2)
+
+      date <- format(Sys.Date(), "%d%m%Y")
+
+
+      latest_suggester_session_id <- dbReadTable(con, "suggester_session") %>%
+        pull(session_id) %>%
+        max()
+
+      suggester_session <- data.frame(session_id = latest_suggester_session_id + 1,
+                                      email = input$email,
+                                      orcid = input$orcid,
+                                      date_added = date,
+                                      stringsAsFactors = FALSE
+      )
+
+      dbWriteTable(con, "suggester_session", suggester_session, append = TRUE, row.names = FALSE)
+      incProgress(0.4)
+
+      latest_suggestion_id <- dbReadTable(con, "feedback_review") %>%
+        pull(suggestion_id) %>%
+        max()
+
+      add_study <- data.frame(
+        suggester_session_id = suggester_session$session_id,
+        suggestion_id = latest_suggestion_id + 1,
+        title = input$study_title,
+        doi = trimws(input$study_doi),
+        reason = input$reason,
+        stringsAsFactors = FALSE
+      )
+
+
+      dbWriteTable(con, "add_study_test", add_study, append = TRUE, row.names = FALSE)
+      incProgress(0.6)
+
+      latest_review_id <- dbReadTable(con, "feedback_review") %>%
+        pull(review_session_id) %>%
+        max()
+
+      feedback_review <- data.frame(review_session_id = latest_review_id + 1,
+                                    suggestion_id = add_study$suggestion_id,
+                                    review_status = "incomplete",
+                                    reviewer_notes = "",
+                                    stringsAsFactors = FALSE
+
+      )
+
+      dbWriteTable(con, "feedback_review", feedback_review, append = TRUE, row.names = FALSE)
+      incProgress(0.8)
+
+    })
+
+    # Confirmation message
+    showModal(modalDialog(
+      title = HTML('<i class="fa fa-thumbs-up fa-beat" style="color: #1A465F; margin-right: 10px;"></i> Success!'),
+      fade = TRUE,
+      HTML('<div style="color: #1A465F;">
+          Study has been submitted for review.<br><br>
+          This will now be reviewed by our team before changes are made to the database and app.<br><br>
+          Thanks for your submission!
+        </div>'),
+      easyClose = TRUE
+    ))
+
+
+    # Clear input fields after submission
+    updateTextInput(session, "study_title", value = "")
+    updateTextInput(session, "study_doi", value = "")
+    updateTextInput(session, "reason", value = "")
+    updateTextInput(session, "email", value = "")
+    updateTextInput(session, "orcid", value = "")
+
+  })
+
+
+  observeEvent(input$clear_form, {
+
+    # Clear input fields after submission
+    updateTextInput(session, "study_title", value = "")
+    updateTextInput(session, "study_doi", value = "")
+    updateTextInput(session, "reason", value = "")
+    updateTextInput(session, "email", value = "")
+    updateTextInput(session, "orcid", value = "")
+
+
+  })
+
+  ### Remove Study Server
+
+
+  # Define a reactive expression to check validity
+  is_remove_form_valid <- reactive({
+
+    !is.null(input$remove_email) && str_detect(input$remove_email, "@")
+
+  })
+
+  # Observe changes and update the button
+  observe({
+    updateActionButton(session, "submit_removal", disabled = !is_remove_form_valid())
+  })
+
+
+  # Observe Submit Removal Button Click
+  observeEvent(input$submit_removal, {
+
+
+    withProgress(message = "Submitting removal suggestion for review...", value = 0, {
+
+      incProgress(0.2)
+
+      date <- format(Sys.Date(), "%d%m%Y")
+      study <- selected_study()
+
+      latest_suggester_session_id <- dbReadTable(con, "suggester_session") %>%
+        pull(session_id) %>%
+        max()
+
+      suggester_session <- data.frame(session_id = latest_suggester_session_id + 1,
+                                      email = input$remove_email,
+                                      orcid = input$remove_orcid,
+                                      date_added = date,
+                                      stringsAsFactors = FALSE
+      )
+
+      dbWriteTable(con, "suggester_session", suggester_session, append = TRUE, row.names = FALSE)
+      incProgress(0.4)
+
+      latest_suggestion_id <- dbReadTable(con, "feedback_review") %>%
+        pull(suggestion_id) %>%
+        max()
+
+      suggestions_table <- data.frame(
+        type = "relevance",
+        suggestion = "exclude",
+        uid = study$uid,
+        session_id = suggester_session$session_id,
+        id = latest_suggestion_id + 1,
+        reason = input$remove_study_reason,
+        stringsAsFactors = FALSE
+
+      )
+
+
+      dbWriteTable(con, "suggestions_table", suggestions_table, append = TRUE, row.names = FALSE)
+      incProgress(0.6)
+
+      latest_review_id <- dbReadTable(con, "feedback_review") %>%
+        pull(review_session_id) %>%
+        max()
+
+      feedback_review <- data.frame(review_session_id = latest_review_id + 1,
+                                    suggestion_id = suggestions_table$id,
+                                    review_status = "incomplete",
+                                    reviewer_notes = "",
+                                    stringsAsFactors = FALSE
+
+      )
+
+      dbWriteTable(con, "feedback_review", feedback_review, append = TRUE, row.names = FALSE)
+      incProgress(0.8)
+
+
+      incProgress(1)
+
+    })
+
+    # Confirmation message
+    showModal(modalDialog(
+      title = HTML('<i class="fa fa-thumbs-up fa-beat" style="color: #1A465F; margin-right: 10px;"></i> Success!'),
+      fade = TRUE,
+      HTML('<div style="color: #1A465F;">
+          Study removal has been submitted for review.<br><br>
+          This will now be reviewed by our team before changes are made to the database and app.<br><br>
+          Thanks for your submission!
+        </div>'),
+      easyClose = TRUE
+    ))
+
+    # Clear input fields after submission
+    updateTextInput(session, "remove_study_reason", value = "")
+    updateTextInput(session, "remove_email", value = "")
+    updateTextInput(session, "remove_orcid", value = "")
+
+  })
+
+
+  #### Edit Study Server
+  # Render edit study DataTable
+  output$study_edit_table <- renderDT({
+
+    # edit_final <- edit_table() %>%
+    #   mutate(title = ifelse(!is.na(doi) & doi != "",
+    #                         paste0("<a href='", link, "' target='_blank'>", title, "</a>"),
+    #                         title)) %>%
+    #   select(-uid, -link, -doi)
+    
+    edit_final <- edit_table() %>%
+      mutate(title = ifelse(!is.na(doi) & doi != "",
+                            paste0("<a href='", link, "' target='_blank' title='Click to view study'>", title, "</a>"),
+                            title)) %>%
+      select(-uid, -link, -doi)
+    
+
+    colnames(edit_final) <- str_to_title(str_replace_all(colnames(edit_final), "_", " "))
+
+    datatable(
+      edit_final,
+      selection = "single",
+      options = list(
+        pageLength = 5,
+        dom = '<"top"f>t<"bottom"ip>',
+        initComplete = JS("
+      function(settings, json) {
+        $('.dataTables_filter').css({
+          'float': 'left',
+          'text-align': 'left',
+          'margin-bottom': '10px'
+        });
+        $('.dataTables_filter input')
+          .css({
+            'width': '300px',
+            'display': 'inline-block'
+          })
+          .attr('placeholder', 'Search...');
+      }
+    "),
+        columnDefs = list(
+          list(targets = 0, visible = FALSE),
+          list(
+            targets = c(1, 3, 4),
+            render = JS("
+          function(data, type, row, meta) {
+            if (type === 'display' && data.length > 30) {
+              return '<span title=\"' + data + '\">' + data.substr(0, 30) + '...' + '</span>';
+            } else {
+              return data;
+            }
+          }
+        ")
+          )
+        )
+      ),
+      escape = FALSE
+    )
+
+  })
+
+  # Enable "Edit Study" button when row is selected, ignoreNULL allows this to work for de-selection
+  observeEvent(input$study_edit_table_rows_selected, ignoreNULL = FALSE, {
+
+    if (length(input$study_edit_table_rows_selected) > 0) {
+
+      updateActionButton(session, "edit_study_btn", disabled = FALSE)
+
+    } else {
+
+      updateActionButton(session, "edit_study_btn", disabled = TRUE)
+
+    }
+  })
+
+  edit_study_modal <- function(study) {
+
+
+    intervention_result        <- create_comparison_box_ui(study, "intervention", "annotate_intervention")
+    outcome_result             <- create_comparison_box_ui(study, "outcome", "annotate_outcome")
+    discipline_result          <- create_comparison_box_ui(study, "discipline", "annotate_discipline")
+    provider_result            <- create_comparison_box_ui(study, "provider", "annotate_provider")
+    target_population_result   <- create_comparison_box_ui(study, "target_population", "annotate_target_population")
+    research_stage_result      <- create_comparison_box_ui(study, "research_stage", "annotate_research_stage")
+    target_pop_location_result <- create_comparison_box_ui(study, "target_pop_location", "annotate_target_pop_location")
+
+
+    create_matrix_row <- function(row_label, predicted, selectize_id, choices_df, changes_ui_id, checkbox_id, has_changed = FALSE) {
+
+      fluidRow(
+        column(2,
+               tags$strong(row_label, style = "line-height: 80px; display: block;")
+        ),
+        column(3,
+               tags$div(predicted,
+                        style = "border: 1px solid #ccc; padding: 8px; background-color: #f8f9fa; height: 80px; overflow-y: auto;")
+        ),
+        column(3,
+               selectizeInput(selectize_id,
+                              label = NULL,
+                              choices = choices_df %>%
+                                distinct(name) %>%
+                                arrange(name) %>%
+                                pull(name),
+                              selected = study %>%
+                                select(uid) %>%
+                                left_join(choices_df, by = "uid") %>%
+                                pull(name),
+                              multiple = TRUE,
+                              width = "100%",
+                              options = list(
+                                create = TRUE,
+                                placeholder = "Please Select",
+                                maxOptions = 100,
+                                plugins = list("remove_button")
+                              )
+               )
+        ),
+
+
+        column(3,
+               uiOutput(changes_ui_id)
+        ),
+        column(
+          width = 1,
+          div(
+            style = "display: flex; align-items: center; justify-content: center; height: 100%;",
+            tags$div(
+              style = "transform: scale(1.5); transform-origin: center;",
+              checkboxInput(checkbox_id, label = NULL, value = FALSE, width = "20px")
+            )
+          )
+        )
+
+
+
+
+      )
+    }
+
+    showModal(
+      modalDialog(
+        tags$head(
+          tags$style(HTML("
+          #submit_edit {
+            background-color: #1A465F !important;
+            color: white !important;
+            border: none;
+          }
+          #submit_edit:enabled {
+            background-color: #1A465F !important;
+          }
+          #submit_edit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
+          .link-box {
+            border: 1px solid #ccc;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, text-decoration 0.3s ease;
+            text-decoration: none;
+          }
+          .link-box:hover {
+            background-color: #e2e6ea;
+            cursor: pointer;
+            text-decoration: underline;
+          }
+        "))
+        ),
+        title = tags$div(
+          "Suggest Annotation to Edit",
+          style = "font-family: KohinoorBangla, sans-serif !important; color: #1A465F;"
+        ),
+        size = "xl",
+        easyClose = FALSE,
+        fade = TRUE,
+        footer = tagList(
+          br(),
+          modalButton("Close"),
+          actionButton("submit_edit", "Submit Annotation Suggestion", class = "btn-danger", disabled = TRUE)
+        ),
+        tags$div(style = "font-family: KohinoorBangla, sans-serif !important; color: #1A465F;",
+
+                 fluidRow(
+                   column(8,
+                          tags$div(
+                            tags$strong("Title:", style = "display: block; margin-bottom: 8px;"),
+                            tags$div(
+                              study$title,
+                              style = "border: 1px solid #ccc; padding: 8px; background-color: #f8f9fa; width: 100%; border-radius: 8px;"
+                            )
+                          )
+                   ),
+
+                   column(4,
+                          tags$div(
+                            tags$strong("DOI:", style = "display: block; margin-bottom: 8px;"),
+                            tags$a(
+                              href = study$link,
+                              target = "_blank",
+                              style = "text-decoration: none; color: inherit;",
+                              tags$div(
+                                class = "link-box",
+                                tags$span(study$doi),
+                                tags$i(class = "fas fa-link", style = "margin-left: 8px;")
+                              )
+                            )
+                          )
+                   )
+                 ),
+                 hr(),
+                 fluidRow(
+                   column(2, ""),
+                   column(3,
+                          div(style = "text-align: center;",
+                              icon("robot", class = "fa-2x"),
+                              br(),
+                              tags$strong("LLM Prediction")
+                          )
+                   ),
+
+                   column(3,
+                          div(style = "text-align: center;",
+                              icon("user-secret", class = "fa-2x"),
+                              br(),
+                              tags$strong("User Suggestion")
+                          )
+                   ),
+
+
+                   column(3,
+                          div(style = "text-align: center;",
+                              icon("user-pen", class = "fa-2x"),
+                              br(),
+                              tags$strong("Changes")
+                          )
+                   ),
+                   column(1,
+                          div(style = "text-align: center;",
+                              icon("handshake", class = "fa-2x"),
+                              br(),
+                              tags$strong("Agree with LLM")
+                          )
+                   )
+
+
+
+                 ),
+                 hr(),
+
+                 # Annotation rows
+                 create_matrix_row("Intervention", study$intervention, "annotate_intervention", interventions_df, "intervention_display", "agree_intervention", has_changed = intervention_result$has_changed),
+                 hr(),
+                 create_matrix_row("Outcome Measure", study$outcome, "annotate_outcome", outcome_measures_df, "outcome_display", "agree_outcome", has_changed = outcome_result$has_changed),
+                 hr(),
+                 create_matrix_row("Discipline", study$discipline, "annotate_discipline", discipline_df, "discipline_display", "agree_discipline", has_changed = discipline_result$has_changed),
+                 hr(),
+                 create_matrix_row("Intervention Provider", study$provider, "annotate_provider", intervention_provider_df, "provider_display", "agree_provider", has_changed = provider_result$has_changed),
+                 hr(),
+                 create_matrix_row("Target Population", study$target_population, "annotate_target_population", target_population_df, "target_population_display", "agree_target_population", has_changed = target_population_result$has_changed),
+                 hr(),
+                 create_matrix_row("Research Stage", study$research_stage, "annotate_research_stage", research_stage_df, "research_stage_display", "agree_research_stage", has_changed = research_stage_result$has_changed),
+                 hr(),
+                 create_matrix_row("Target Pop Location", study$target_pop_location, "annotate_target_pop_location", target_pop_location_df, "target_pop_location_display", "agree_target_pop_location", has_changed = target_pop_location_result$has_changed),
+                 hr(),
+                 br(),
+                 fluidRow(
+                   column(6, textInput("edit_email", "Your Email", placeholder = "required", width = "100%")),
+                   column(6, textInput("edit_orcid", "Your ORCiD", width = "100%"))
+                 )
+        )
+      )
+    )
+  }
+
+  observe_checkbox_toggle <- function(field) {
+    observe({
+      req(input[[paste0("annotate_", field)]])
+      original <- sort(trimws(unlist(strsplit(selected_study()[[field]], ";"))))
+      suggested <- sort(trimws(input[[paste0("annotate_", field)]]))
+      has_changed <- !setequal(original, suggested)
+      checkbox_id <- paste0("agree_", field)
+
+      if (has_changed) {
+        updateCheckboxInput(session, checkbox_id, value = FALSE)
+        shinyjs::disable(checkbox_id)
+
+      } else {
+        shinyjs::enable(checkbox_id)
+
+        }
+    })
+  }
+
+  fields <- c(
+    "intervention",
+    "outcome",
+    "discipline",
+    "provider",
+    "target_population",
+    "research_stage",
+    "target_pop_location"
+  )
+
+  lapply(fields, observe_checkbox_toggle)
+
+
+
+
+  create_comparison_box_ui <- function(study, column, input_id) {
+
+    original_split <- sort(trimws(unlist(strsplit(study[[column]], ";"))))
+    original <- paste(original_split, collapse = "; ")
+
+    suggested <- if (is.null(input[[input_id]]) || length(input[[input_id]]) == 0) {
+      
+      ""
+    } else {
+      sort(trimws(paste(input[[input_id]], collapse = "; ")))
+      
+      suggested_split <- sort(trimws(unlist(strsplit(paste(input[[input_id]], collapse = ";"), ";"))))
+      paste(suggested_split, collapse = "; ")
+
+    }
+
+    has_changed <- !setequal(original, suggested)
+
+
+     ui <- tags$div(
+        style = "
+        padding: 12px;
+        background-color: #ffffff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 100%;
+        font-family: KohinoorBangla, sans-serif !important;
+        color: #1A465F;
+      ",
+        if (has_changed) {
+          tagList(
+            span("Was: ", style = "font-weight: bold; color: red;"),
+            span(original, style = "color: red;"),
+            tags$br(),
+            span("Now: ", style = "font-weight: bold; color: #47B1A3;"),
+            span(suggested, style = "color: #47B1A3;")
+          )
+
+
+        } else {
+          span("No changes", style = "color: #47B1A3; font-weight: bold;")
+        }
+      )
+     return(list(ui = ui, has_changed = has_changed))
+
+  }
+
+  output$intervention_display <- renderUI({
+
+    study <- selected_study()
+    result <- create_comparison_box_ui(study, "intervention", "annotate_intervention")
+    result$ui
+
+  })
+
+  output$discipline_display <- renderUI({
+    study <- selected_study()
+    result <- create_comparison_box_ui(study, "discipline", "annotate_discipline")
+    result$ui
+  })
+
+  output$outcome_display <- renderUI({
+    study <- selected_study()
+    result <- create_comparison_box_ui(study, "outcome", "annotate_outcome")
+    result$ui
+  })
+
+  output$provider_display <- renderUI({
+
+    study <- selected_study()
+    result <- create_comparison_box_ui(study, "provider", "annotate_provider")
+    result$ui
+  })
+
+  output$research_stage_display <- renderUI({
+
+    study <- selected_study()
+    result <- create_comparison_box_ui(study, "research_stage", "annotate_research_stage")
+    result$ui
+  })
+
+  output$target_population_display <- renderUI({
+
+    study <- selected_study()
+    result <- create_comparison_box_ui(study, "target_population", "annotate_target_population")
+    result$ui
+    })
+
+  output$target_pop_location_display <- renderUI({
+
+    study <- selected_study()
+    result <- create_comparison_box_ui(study, "target_pop_location", "annotate_target_pop_location")
+    result$ui
+  })
+
+
+  edit_study <- reactiveVal(NULL)
+
+  observe({
+
+
+    edit_study(list(
+      intervention = input$annotate_intervention,
+      discipline = input$annotate_discipline,
+      outcome = input$annotate_outcome,
+      intervention_provider = input$annotate_provider,
+      target_population = input$annotate_target_population,
+      research_stage = input$annotate_research_stage,
+      target_pop_location = input$annotate_target_pop_location
+
+    ))
+
+
+  })
+
+
+
+  # Capture selected study and show removal form
+  observeEvent(input$edit_study_btn, {
+
+    row_selected <- input$study_edit_table_rows_selected
+    if (length(row_selected) == 0) return()
+
+    # study <- annotation_table[row_selected, ]
+    study <- edit_table()[row_selected, ]
+    selected_study(study)
+
+    edit_study_modal(study)
+
+
+  })
+
+  # Define a reactive expression to check validity
+  is_edit_form_valid <- reactive({
+
+    str_detect(input$edit_email, "@") && !is.null(input$edit_email)
+  })
+
+  # Observe changes and update the button
+  observe({
+    updateActionButton(session, "submit_edit", disabled = !is_edit_form_valid())
+  })
+
+
+  # Observe Submit Removal Button Click
+  observeEvent(input$submit_edit, {
+
+    withProgress(message = "Submitting edit suggestions for review...", value = 0, {
+
+      date <- format(Sys.Date(), "%d%m%Y")
+      incProgress(0.2)
+      study <- selected_study()
+
+      latest_suggester_session_id <- dbReadTable(con, "suggester_session") %>%
+        pull(session_id) %>%
+        max()
+
+      suggester_session <- data.frame(session_id = latest_suggester_session_id + 1,
+                                      email = input$edit_email,
+                                      orcid = input$edit_orcid,
+                                      date_added = date,
+                                      stringsAsFactors = FALSE
+      )
+
+      dbWriteTable(con, "suggester_session", suggester_session, append = TRUE, row.names = FALSE)
+      incProgress(0.4)
+
+      agree_with_llm_flags <- list(
+        intervention        = input$agree_intervention,
+        discipline          = input$agree_discipline,
+        outcome             = input$agree_outcome,
+        provider            = input$agree_provider,
+        target_population   = input$agree_target_population,
+        research_stage      = input$agree_research_stage,
+        target_pop_location = input$agree_target_pop_location
+      )
+
+
+      suggestions_table <- data.frame(
+        intervention = paste(edit_study()$intervention, collapse = "; "),
+        discipline = paste(edit_study()$discipline, collapse = "; "),
+        outcome = paste(edit_study()$outcome, collapse = "; "),
+        provider = paste(edit_study()$intervention_provider, collapse = "; "),
+        target_population = paste(edit_study()$target_population, collapse = "; "),
+        research_stage = paste(edit_study()$research_stage, collapse = "; "),
+        target_pop_location = paste(edit_study()$target_pop_location, collapse = "; "),
+
+
+        session_id = suggester_session$session_id,
+        stringsAsFactors = FALSE
+
+      )
+      edit <- edit_study()
+      latest_suggestion_id <- dbReadTable(con, "feedback_review") %>%
+        pull(suggestion_id) %>%
+        max()
+
+      # suggestions_long <- suggestions_table %>%
+      #   pivot_longer(cols = c("intervention", "discipline", "outcome", "provider", "target_population", "research_stage", "target_pop_location"), names_to = "type", values_to = "suggestion" ) %>%
+      #   mutate(reason = "") %>%
+      #   mutate(id = latest_suggestion_id + row_number()) %>%
+      #   mutate(reason = "",
+      #          uid = study$uid)
+
+
+      # Reshape the table from wide to long format
+      suggestions_long <- suggestions_table %>%
+        pivot_longer(
+          cols = names(agree_with_llm_flags),
+          names_to = "type",
+          values_to = "suggestion"
+        ) %>%
+        mutate(
+          # For each row, lookup the corresponding LLM agreement flag
+          agree_with_llm = sapply(type, function(t) agree_with_llm_flags[[t]]),
+          reason = "",
+          id = latest_suggestion_id + row_number(),
+          uid = study$uid
+        )
+
+      dbWriteTable(con, "suggestions_table", suggestions_long, append = TRUE, row.names = FALSE)
+      incProgress(0.6)
+
+      latest_review_id <- dbReadTable(con, "feedback_review") %>%
+        pull(review_session_id) %>%
+        max()
+
+      feedback_review <- data.frame(review_session_id = latest_review_id + 1,
+                                    suggestion_id = suggestions_long$id,
+                                    review_status = "incomplete",
+                                    reviewer_notes = "",
+                                    stringsAsFactors = FALSE
+
+      )
+
+      dbWriteTable(con, "feedback_review", feedback_review, append = TRUE, row.names = FALSE)
+      incProgress(0.8)
+
+      incProgress(1)
+
+
+    })
+    # Confirmation message
+    showModal(modalDialog(
+      title = HTML('<i class="fa fa-thumbs-up fa-beat" style="color: #1A465F; margin-right: 10px;"></i> Success!'),
+      fade = TRUE,
+      HTML('<div style="color: #1A465F;">
+          Study annotation suggestions have been submitted for review.<br><br>
+          These will now be reviewed by our team before changes are made to the database and app.<br><br>
+          Thanks for your submission!
+        </div>'),
+      easyClose = TRUE
+    ))
+
+  })
+
+  # Creates list for dropdown menus
+  dynamic_dropdowns <- list()
+  output$dynamic_dropdowns_remove <- renderUI({
+
+    dynamic_dropdowns <- lapply(pico_elements_list, function(item) {
+      pico_dropdown_UI(
+        id = item$id,
+        label1 = item$label1,
+        label2 = item$label2,
+        label3 = item$label3,
+        label4 = item$ilabel4,
+        column1 = item$table[[item$column1]],
+        column2 = item$table[[item$column2]],
+        column3 = item$table[[item$column3]],
+        column4 = item$table[[item$column4]],
+        filter_no = item$filter_no
+      )
+    })
+    do.call(tagList, dynamic_dropdowns)
+  })
+
+  output$dynamic_dropdowns_edit <- renderUI({
+
+    dynamic_dropdowns <- lapply(pico_elements_list, function(item) {
+      pico_dropdown_UI(
+        id = item$id,
+        label1 = item$label1,
+        label2 = item$label2,
+        label3 = item$label3,
+        label4 = item$ilabel4,
+        column1 = item$table[[item$column1]],
+        column2 = item$table[[item$column2]],
+        column3 = item$table[[item$column3]],
+        column4 = item$table[[item$column4]],
+        filter_no = item$filter_no
+      )
+    })
+    do.call(tagList, dynamic_dropdowns)
+  })
+
+  # Creates list for dropdown menus reactivity
+  pico_element_list <- list()
+  pico_element_list <- lapply(pico_elements_list, function(pico_item) {
+
+    pico_dropdown_Server(
+      id = pico_item$id,
+      table = pico_item$table,
+      column1 = pico_item$column1,
+      column2 = pico_item$column2,
+      column3 = pico_item$column3,
+      column4 = pico_item$column4,
+      filter_no = pico_item$filter_no
+
+    )
+  })
+
+  # Creates table list for filtering data
+  pico_table_list <- list()
+  pico_table_list <- lapply(pico_elements_list, function(element) element$table)
+
+  # Define selected_studies as a reactiveVal
+  filter_studies_remove <- reactiveVal(included_with_metadata)
+  filter_studies_edit <- reactiveVal(included_with_metadata)
+
+
+  observeEvent(input$submit_filters_edit, {
+
+    # If number of pico dataframes for dropdowns is > 0 then...
+    if (length(pico_table_list) > 0) {
+      selected_studies <- included_with_metadata
+      for (i in (1:length(pico_table_list))){
+
+        # Loop through each dataframe and filter
+        new_table <- pico_table_list[[i]] %>%
+          filter(name %in% isolate(pico_element_list[[i]]())) %>%
+          select(uid)
+
+        # Only keep the rows that have a matching "uid"
+        selected_studies <- selected_studies %>%
+          semi_join(new_table, by = "uid")
+
+      }
+      filter_studies_edit(selected_studies)
+
+    }
+
+  })
+
+  observeEvent(input$submit_filters_remove, {
+
+    # If number of pico dataframes for dropdowns is > 0 then...
+    if (length(pico_table_list) > 0) {
+      selected_studies <- included_with_metadata
+      for (i in (1:length(pico_table_list))){
+
+        # Loop through each dataframe and filter
+        new_table <- pico_table_list[[i]] %>%
+          filter(name %in% isolate(pico_element_list[[i]]())) %>%
+          select(uid)
+
+        # Only keep the rows that have a matching "uid"
+        selected_studies <- selected_studies %>%
+          semi_join(new_table, by = "uid")
+
+      }
+      filter_studies_remove(selected_studies)
+
+    }
+
+  })
+
+  # Review study server -----
+  credentials <- reactiveValues(authenticated = NULL)
+  reviewer_name <- reactiveValues(name = NULL)
+  add_study_refresh_trigger <- reactiveVal(0)
+  remove_study_refresh_trigger <- reactiveVal(0)
+  edit_study_refresh_trigger <- reactiveVal(0)
+  edit_study_table_refresh_trigger <- reactiveVal(0)
+
+
+  observeEvent(input$login_button, {
+
+
+    credentials_df <- read.csv("www/credentials.csv", stringsAsFactors = FALSE)
+
+    user_row <- credentials_df[credentials_df$user == input$username, ]
+
+    if (nrow(user_row) == 1 && input$username == user_row$username && input$password == user_row$password) {
+
+      credentials$authenticated <- TRUE
+      reviewer_name$name <- input$username
+    } else {
+      credentials$authenticated <- FALSE
+
+    }
+  })
+
+
+  output$review_study_ui <- renderUI({
+
+    if (is.null(credentials$authenticated)) {
+
+      tabItem(tabName = "review-study-tab",
+              div(style = "color: #1A465F;",
+                  h3("Login Required"),
+                  textInput("username", "Username"),
+                  passwordInput("password", "Password"),
+                  actionButton("login_button", "Login",   icon = icon("right-to-bracket"))
+              )
+      )
+
+    } else if (credentials$authenticated == FALSE) {
+
+      tabItem(tabName = "review-study-tab",
+              div(style = "color: #1A465F;",
+                  h3("Login Required"),
+                  textInput("username", "Username"),
+                  passwordInput("password", "Password"),
+                  actionButton("login_button", "Login"),
+                  p("Incorrect password! Please try again")
+              )
+      )
+
+
+    } else if (credentials$authenticated == TRUE){
+
+      add_study_data <- dbReadTable(con, "add_study_test")
+      remove_study_data <- dbReadTable(con, "remove_study_test")
+      edit_study_data <- dbReadTable(con, "edit_study_test")
+
+
+
+      tabItem(tabName = "review-study-tab",
+              tags$style(HTML("
+    .center-toast {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      z-index: 9999;
+    }
+
+    .big-toast {
+      font-size: 1.4rem;
+      padding: 1.2rem 2rem;
+    }
+
+    .big-toast .toast-header {
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    .big-toast .toast-body {
+      font-size: 1.2rem;
+    }
+
+    .big-toast .bi {
+      font-size: 1.4rem;
+    }
+  ")),
+              fluidRow(
+                column(9,
+
+                       accordion(
+                         id = "reviewAccordion",
+                         accordionItem(
+                           title = div(
+                             icon("plus", class = "fa-2x"),
+                             br(),
+                             hr(),
+                             p(paste0("Review suggested studies to be added. Number to be reviewed: ", nrow(add_study_review())))
+                           ),
+
+                           status = "info",
+                           withSpinner(DTOutput("add_study_table")),
+                           br(),
+                           actionButton("review_add_btn",
+                                        "Review",
+                                        size = "sm",
+                                        icon = icon("plus"),
+                                        class = "btn-block",
+                                        style = "background-color: #266080; color: white;margin-left: auto; margin-right: auto;",
+                                        width = "33%",
+                                        disabled = TRUE)
+
+                         ),
+                         accordionItem(
+                           title = div(
+                             icon("trash", class = "fa-2x"),
+                             br(),
+                             hr(),
+                             p(paste0("Review suggested studies to be removed. Number to be reviewed: ", nrow(remove_study_review())))
+                           ),
+
+                           status = "primary",
+                           withSpinner(DTOutput("remove_study_table")),
+                           br(),
+                           actionButton("review_remove_btn",
+                                        "Review",
+                                        size = "sm",
+                                        icon = icon("trash"),
+                                        class = "btn-block",
+                                        style = "background-color: #266080; color: white;margin-left: auto; margin-right: auto;",
+                                        width = "33%",
+                                        disabled = TRUE)
+                         ),
+                         accordionItem(
+                           title = div(
+                             icon("edit", class = "fa-2x"),
+                             br(),
+                             hr(),
+                             p(paste0("Review suggested changes to annotations. Number to be reviewed: ", nrow(edit_study_review_table())))
+                           ),
+                           status = "secondary",
+                           withSpinner(DTOutput("edit_study_table")),
+                           br(),
+                           actionButton("review_edit_btn",
+                                        "Review",
+                                        size = "sm",
+                                        icon = icon("edit"),
+                                        class = "btn-block",
+                                        style = "background-color: #266080; color: white;margin-left: auto; margin-right: auto;",
+                                        width = "33%",
+                                        disabled = TRUE)
+                         )
+                       ),
+
+                       toast(
+                         title = "Login Success",
+                         body = "Welcome, authorised reviewer!",
+                         options = list(
+                           autohide = TRUE,
+                           icon = "fas fa-home",
+                           close = FALSE,
+                           class = "center-toast big-toast"
+                         )
+                       )
+
+                ),
+                column(
+                  width = 3,
+                  box(
+                    title = "Inclusion/Exclusion Criteria",
+                    width = 12,
+                    solidHeader = TRUE,
+                    status = "warning",
+                    tags$div(
+                      style = "font-family: KohinoorBangla, sans-serif !important;",
+
+                      p(tags$strong("Inclusion Criteria:"), style = "color: #47B1A3;"),
+
+                      tags$ul(
+                        tags$li(style = "color: #47B1A3;", "Research which evaluates the effectiveness of an intervention on reproducibility or reproducibility-proxies (RPs)."),
+                        tags$li(style = "color: #47B1A3;", "Research which suggests or promotes interventions to improve reproducibility or RPs."),
+                        tags$li(style = "color: #47B1A3;", "Research which evaluates other aspects of the intervention suggested to improve reproducibility or RPs.")
+                      ),
+
+                      br(),
+
+                      p(tags$strong("Exclusion Criteria:"), style = "color: #1A465F;"),
+
+                      tags$ul(
+                        tags$li(style = "color: #1A465F;", "Research which does not meet any of the three aims in the inclusion criteria."),
+                        # tags$li(style = "color: #1A465F;", "Conference abstracts, review articles, editorials, opinion pieces are excluded.")
+                      ),
+
+                      br(),
+
+                      # Link to OSF protocol with logo
+                      div(
+                        class = "text-center",
+                        tags$a(
+                          href = "https://osf.io/2vufx",
+                          target = "_blank",
+                          tags$img(src = "osf_logo.png", height = "40px", alt = "OSF Logo"),
+                          style = "display: inline-block;"
+                        ),
+                        br(),
+                        tags$a(
+                          href = "https://osf.io/2vufx",
+                          "View Full Protocol on OSF",
+                          target = "_blank",
+                          style = "color: #1A465F; text-decoration: underline;"
+                        )
+                      )
+                    ),
+                    hr(),
+                    actionButton("logout_button", "Logout", icon = icon("sign-out-alt"), class = "btn-danger")
+
+                  )
+                )
+              )
+
+      )
+
+    }
+  })
+
+  observeEvent(input$logout_button, {
+    credentials$authenticated <- NULL
+    reviewer_name$name <- ""
+    updateTextInput(session, "username", value = "")
+    updateTextInput(session, "password", value = "")
+  })
+
+
+  add_study_review <- reactive({
+
+    add_study_refresh_trigger()
+
+   dbReadTable(con, "add_study_test") %>%
+      left_join(dbReadTable(con, "feedback_review"), by = "suggestion_id") %>%
+      filter(review_status == "incomplete")
+
+  })
+
+  remove_study_review <- reactive({
+
+    remove_study_refresh_trigger()
+
+    dbReadTable(con, "suggestions_table") %>%
+      left_join(dbReadTable(con, "feedback_review"), by = c("id" = "suggestion_id")) %>%
+      filter(type == "relevance") %>%
+      filter(review_status == "incomplete")
+  })
+
+  edit_study_review <- reactive({
+
+    edit_study_refresh_trigger()
+
+    dbReadTable(con, "suggestions_table") %>%
+      left_join(dbReadTable(con, "feedback_review"), by = c("id" = "suggestion_id")) %>%
+      filter(!type == "relevance") %>%
+      filter(review_status == "incomplete")
+
+  })
+
+  edit_study_review_table <- reactive({
+
+    edit_study_table_refresh_trigger()
+
+    dbReadTable(con, "suggestions_table") %>%
+      left_join(dbReadTable(con, "feedback_review"), by = c("id" = "suggestion_id")) %>%
+      filter(!type == "relevance") %>%
+      filter(review_status == "incomplete") %>%
+      distinct(uid)
+
+  })
+
+
+  output$add_study_table <- renderDT({
+
+    datatable(
+      add_study_review() %>%
+        select(Title = title, DOI = doi),
+      selection = "single",
+      options = list(
+        pageLength = 10,
+        dom = 'tip',
+
+        columnDefs = list(
+          list(targets = 0, visible = FALSE)
+
+        )
+      ),
+      escape = FALSE
+    )
+  })
+
+  output$remove_study_table <- renderDT({
+
+    datatable(
+      remove_study_review() %>% left_join(included_with_metadata, by = "uid") %>%
+        select(Title = title, DOI = doi),
+      selection = "single",
+      options = list(
+        pageLength = 10,
+        dom = 'tip',
+
+        columnDefs = list(
+          list(targets = 0, visible = FALSE)
+
+        )
+      ),
+      escape = FALSE
+    )
+  })
+
+  output$edit_study_table <- renderDT({
+
+    datatable(
+      edit_study_review_table() %>% left_join(included_with_metadata, by = "uid") %>%
+        select(Title = title) %>% distinct(),
+      selection = "single",
+      options = list(
+        pageLength = 10,
+        dom = 'tip',
+
+        columnDefs = list(
+          list(targets = 0, visible = FALSE)
+
+        )
+      ),
+      escape = FALSE
+    )
+  })
+
+
+  # Enable "Add Study" button when row is selected, ignoreNULL allows this to work for de-selection
+  observeEvent(input$add_study_table_rows_selected, ignoreNULL = FALSE, {
+
+    if (length(input$add_study_table_rows_selected) > 0) {
+
+      updateActionButton(session, "review_add_btn", disabled = FALSE)
+
+    } else {
+
+      updateActionButton(session, "review_add_btn", disabled = TRUE)
+
+    }
+  })
+
+  # Capture selected study and show removal form
+  observeEvent(input$review_add_btn, {
+
+
+    row_selected <- input$add_study_table_rows_selected
+    if (length(row_selected) == 0) return()
+
+    study <- add_study_review()[row_selected, ] %>%
+      mutate(link = paste0("https://doi.org/", doi))
+
+    selected_study(study)
+
+
+    showModal(modalDialog(
+      tags$head(
+        tags$style(HTML("
+
+    #study_add_confirm {
+      background-color: #89CB93 !important;
+      color: white !important;
+      border: none;
+    }
+
+    #study_add_confirm:enabled {
+      background-color: #89CB93 !important;
+    }
+
+    #study_add_confirm:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #study_add_reject {
+      background-color: #FF0000 !important;
+      color: white !important;
+      border: none;
+    }
+
+    #study_add_reject:enabled {
+      background-color: #FF0000 !important;
+    }
+
+    #study_add_reject:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+  "))
+      ),
+
+      title = tags$div("Review Suggested Study to Add", style = "font-family: KohinoorBangla, sans-serif !important; color: #1A465F;"),
+      size = "xl",
+      easyClose = FALSE,
+      fade = TRUE,
+      footer = tagList(
+        modalButton("Close"),
+        actionButton("study_add_reject", "Reject Suggestion", class = "btn-danger", disabled = TRUE),
+        actionButton("study_add_confirm", "Confirm Suggestion", class = "btn-danger", disabled = TRUE)
+
+      ),
+      tags$div(style = "font-family: KohinoorBangla, sans-serif !important; color: #1A465F;",
+
+               fluidRow(
+                 tags$head(
+                   tags$style(HTML("
+    .link-box {
+      border: 1px solid #ccc;
+      padding: 8px;
+      background-color: #f8f9fa;
+      width: 100%;
+      border-radius: 8px;
+      transition: background-color 0.3s ease, text-decoration 0.3s ease;
+      text-decoration: none;
+    }
+
+    .link-box:hover {
+      background-color: #e2e6ea;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  "))
+                 ),
+                 column(8,
+
+                        tags$div(
+                          tags$strong("Title:", style = "display: block; margin-bottom: 8px;"),
+                          tags$div(
+                            selected_study()$title,
+                            style = "border: 1px solid #ccc; padding: 8px; background-color: #f8f9fa; width: 100%; border-radius: 8px;"
+                          )
+                        )
+                 ),
+
+                 column(4,
+                        tags$div(
+                          tags$strong("DOI:", style = "display: block; margin-bottom: 8px;"),
+                          tags$a(
+                            href = selected_study()$link,
+                            target = "_blank",
+                            style = "text-decoration: none; color: inherit;",
+                            tags$div(
+                              class = "link-box",
+                              tags$span(selected_study()$doi),
+                              tags$i(class = "fas fa-link", style = "margin-left: 8px;")                            )
+                          )
+                        )
+                 )),
+               br(),
+               fluidRow(
+                 column(12,
+                        tags$div(
+                          tags$strong("Reason:", style = "display: block; margin-bottom: 8px;"),
+                          tags$div(
+                            selected_study()$reason,
+                            style = "border: 1px solid #ccc; padding: 8px; background-color: #f8f9fa; width: 100%; border-radius: 8px;"
+                          )
+                        )
+                 )
+               ),
+               hr(),
+               fluidRow(
+                 column(12, textInput("add_study_review_notes", "Review Notes", placeholder = "required",
+                                      width = "100%"))),
+               br()
+      )
+    )
+    )
+  })
+
+  # Define a reactive expression to check validity
+  add_form_valid <- reactive({
+
+    !is.null(input$add_study_review_notes) &&
+      nchar(trimws(input$add_study_review_notes)) > 0
+
+  })
+
+  # Observe changes and update the button
+  observe({
+    updateActionButton(session, "study_add_confirm", disabled = !add_form_valid())
+    updateActionButton(session, "study_add_reject", disabled = !add_form_valid())
+
+  })
+
+  # Observe Submit Button Click
+  observeEvent(input$study_add_confirm, {
+
+    withProgress(message = "Submitting review...", value = 0, {
+      incProgress(0.2)
+
+    date <- format(Sys.Date(), "%d%m%Y")
+    study <- selected_study()
+    name <- reviewer_name$name
+
+    feedback_review_approve <- dbReadTable(con, "feedback_review") %>%
+      filter(suggestion_id == study$suggestion_id) %>%
+      mutate(review_status = "approve",
+             reviewer_notes = input$add_study_review_notes)
+
+    incProgress(0.4)
+
+    feedback_review_update <- dbReadTable(con, "feedback_review") %>%
+      filter(!suggestion_id == study$suggestion_id) %>%
+      rbind(feedback_review_approve)
+
+    dbWriteTable(con, "feedback_review", feedback_review_update, overwrite = T)
+
+    incProgress(0.6)
+
+    review_session <- data.frame(
+      review_session_id = feedback_review_approve$review_session_id,
+      reviewer_email = name,
+      date_added = date
+    )
+
+
+    dbWriteTable(con, "reviewer_session", review_session, append = T)
+
+    incProgress(0.8)
+
+    # Update the datatable
+    add_study_refresh_trigger(add_study_refresh_trigger() + 1)
+
+    })
+
+    # Confirmation message
+    showModal(modalDialog(
+      title = HTML('<i class="fa fa-thumbs-up fa-beat" style="color: #1A465F; margin-right: 10px;"></i> Success!'),
+      fade = TRUE,
+      HTML('<div style="color: #1A465F;">
+          Review Complete - Study Added.<br><br>
+          Changes will be made to the database and app in the next weekly update.<br><br>
+          Thank you for reviewing!
+        </div>'),
+      easyClose = TRUE
+    ))
+
+  })
+
+  # Observe Submit Button Click
+  observeEvent(input$study_add_reject, {
+
+    withProgress(message = "Submitting review...", value = 0, {
+      incProgress(0.2)
+
+    date <- format(Sys.Date(), "%d%m%Y")
+    study <- selected_study()
+    name <- reviewer_name$name
+
+    feedback_review_approve <- dbReadTable(con, "feedback_review") %>%
+      filter(suggestion_id == study$suggestion_id) %>%
+      mutate(review_status = "reject",
+             reviewer_notes = input$add_study_review_notes)
+
+    feedback_review_update <- dbReadTable(con, "feedback_review") %>%
+      filter(!suggestion_id == study$suggestion_id) %>%
+      rbind(feedback_review_approve)
+
+    incProgress(0.4)
+
+    dbWriteTable(con, "feedback_review", feedback_review_update, overwrite = T)
+
+    review_session <- data.frame(
+      review_session_id = feedback_review_approve$review_session_id,
+      reviewer_email = name,
+      date_added = date
+    )
+
+    incProgress(0.6)
+
+    dbWriteTable(con, "reviewer_session", review_session, append = T)
+
+    # Update the datatable
+    add_study_refresh_trigger(add_study_refresh_trigger() + 1)
+
+    incProgress(0.8)
+
+    })
+    # Confirmation message
+    showModal(modalDialog(
+      title = HTML('<i class="fa fa-thumbs-up fa-beat" style="color: #1A465F; margin-right: 10px;"></i> Success!'),
+      fade = TRUE,
+      HTML('<div style="color: #1A465F;">
+          Review Complete - Study Not Added.<br><br>
+          Changes will be made to the database and app in the next weekly update.<br><br>
+          Thank you for reviewing!
+        </div>'),
+      easyClose = TRUE
+    ))
+
+  })
+
+  observeEvent(input$remove_study_table_rows_selected, ignoreNULL = FALSE, {
+
+    if (length(input$remove_study_table_rows_selected) > 0) {
+
+      updateActionButton(session, "review_remove_btn", disabled = FALSE)
+
+    } else {
+
+      updateActionButton(session, "review_remove_btn", disabled = TRUE)
+
+    }
+  })
+
+  # Capture selected study and show removal form
+  observeEvent(input$review_remove_btn, {
+
+    row_selected <- input$remove_study_table_rows_selected
+    if (length(row_selected) == 0) return()
+
+    selected_study(remove_study_review()[row_selected, ])
+
+    study_tiab <- included_with_metadata %>%
+      filter(uid %in% selected_study()$uid) %>%
+      mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url))
+
+    showModal(modalDialog(
+      tags$head(
+        tags$style(HTML("
+
+    #study_remove_confirm {
+      background-color: #89CB93 !important;
+      color: white !important;
+      border: none;
+    }
+
+    #study_remove_confirm:enabled {
+      background-color: #89CB93 !important;
+    }
+
+    #study_remove_confirm:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #study_remove_reject {
+      background-color: #266080 !important;
+      color: white !important;
+      border: none;
+    }
+
+    #study_remove_reject:enabled {
+      background-color: #266080 !important;
+    }
+
+    #study_remove_reject:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+  "))
+      ),
+
+      title = tags$div("Review Suggested Study to Remove", style = "font-family: KohinoorBangla, sans-serif !important; color: #1A465F;"),
+      size = "xl",
+      easyClose = FALSE,
+      fade = TRUE,
+      footer = tagList(
+        modalButton("Close"),
+        actionButton("study_remove_reject", "Keep Study", class = "btn-danger", disabled = TRUE),
+        actionButton("study_remove_confirm", "Remove Study", class = "btn-danger", disabled = FALSE)
+
+      ),
+      tags$div(style = "font-family: KohinoorBangla, sans-serif !important; color: #1A465F;",
+
+               fluidRow(
+                 tags$head(
+                   tags$style(HTML("
+    .link-box {
+      border: 1px solid #ccc;
+      padding: 8px;
+      background-color: #f8f9fa;
+      width: 100%;
+      border-radius: 8px;
+      transition: background-color 0.3s ease, text-decoration 0.3s ease;
+      text-decoration: none;
+    }
+
+    .link-box:hover {
+      background-color: #e2e6ea;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  "))
+                 ),
+                 column(8,
+                        tags$div(
+                          tags$strong("Title:", style = "display: block; margin-bottom: 8px;"),
+                          tags$div(
+                            study_tiab$title,
+                            style = "border: 1px solid #ccc; padding: 8px; background-color: #f8f9fa; width: 100%; border-radius: 8px;"
+                          )
+                        )
+                 ),
+
+                 column(4,
+                        tags$div(
+                          tags$strong("DOI:", style = "display: block; margin-bottom: 8px;"),
+                          tags$a(
+                            href = study_tiab$link,
+                            target = "_blank",
+                            style = "text-decoration: none; color: inherit;",
+                            tags$div(
+                              class = "link-box",
+                              tags$span(study_tiab$doi),
+                              tags$i(class = "fas fa-link", style = "margin-left: 8px;")                            )
+                          )
+                        )
+                 )),
+               br(),
+               fluidRow(
+                 column(12,
+                        tags$div(
+                          tags$strong("Abstract:", style = "display: block; margin-bottom: 8px;"),
+                          tags$div(
+                            study_tiab$abstract,
+                            style = "border: 1px solid #ccc; padding: 8px; background-color: #f8f9fa; width: 100%; border-radius: 8px;"
+                          )
+                        )
+                 )
+               ),
+               br(),
+               fluidRow(
+                 column(12,
+                        tags$div(
+                          tags$strong("Reason:", style = "display: block; margin-bottom: 8px;"),
+                          tags$div(
+                            selected_study()$reason,
+                            style = "border: 1px solid #ccc; padding: 8px; background-color: #f8f9fa; width: 100%; border-radius: 8px;"
+                          )
+                        )
+                 )
+               ),
+               hr(),
+               fluidRow(
+                 column(12, textInput("remove_study_review_notes", "Review Notes", placeholder = "required",
+                                      width = "100%"))),
+               br()
+      )
+    )
+    )
+  })
+
+  # Define a reactive expression to check validity
+  remove_form_valid <- reactive({
+
+    !is.null(input$remove_study_review_notes) &&
+      nchar(trimws(input$remove_study_review_notes)) > 0
+
+  })
+
+  # Observe changes and update the button
+  observe({
+    updateActionButton(session, "study_remove_confirm", disabled = !remove_form_valid())
+    updateActionButton(session, "study_remove_reject", disabled = !remove_form_valid())
+  })
+
+
+
+  # Observe Submit Button Click
+  observeEvent(input$study_remove_confirm, {
+
+    withProgress(message = "Submitting review...", value = 0, {
+      incProgress(0.2)
+
+    date <- format(Sys.Date(), "%d%m%Y")
+    study <- selected_study()
+    name <- reviewer_name$name
+
+    feedback_review_agree <- dbReadTable(con, "feedback_review") %>%
+      filter(suggestion_id == study$id) %>%
+      mutate(review_status = "remove",
+             reviewer_notes = input$remove_study_review_notes)
+
+    feedback_review_update <- dbReadTable(con, "feedback_review") %>%
+      filter(!suggestion_id == study$id) %>%
+      rbind(feedback_review_agree)
+
+    incProgress(0.4)
+
+    dbWriteTable(con, "feedback_review", feedback_review_update, overwrite = T)
+
+    review_session <- data.frame(
+      review_session_id = feedback_review_agree$review_session_id,
+      reviewer_email = name,
+      date_added = date
+    )
+    incProgress(0.6)
+
+    dbWriteTable(con, "reviewer_session", review_session, append = T)
+
+    # Update the datatable
+    remove_study_refresh_trigger(remove_study_refresh_trigger() + 1)
+    incProgress(0.8)
+
+    })
+    # Confirmation message
+    showModal(modalDialog(
+      title = HTML('<i class="fa fa-thumbs-up fa-beat" style="color: #1A465F; margin-right: 10px;"></i> Success!'),
+      fade = TRUE,
+      HTML('<div style="color: #1A465F;">
+          Review Complete - Study Removed.<br><br>
+          Changes will be made to the database and app in the next weekly update.<br><br>
+          Thank you for reviewing!
+        </div>'),
+      easyClose = TRUE
+    ))
+
+  })
+
+
+  # Observe Submit Button Click
+  observeEvent(input$study_remove_reject, {
+
+    withProgress(message = "Submitting review...", value = 0, {
+
+      incProgress(0.2)
+
+    date <- format(Sys.Date(), "%d%m%Y")
+    study <- selected_study()
+    name <- reviewer_name$name
+
+    feedback_review_disagree <- dbReadTable(con, "feedback_review") %>%
+      filter(suggestion_id == study$id) %>%
+      mutate(review_status = "keep in db",
+             reviewer_notes = input$remove_study_review_notes)
+
+    incProgress(0.4)
+
+    feedback_review_update <- dbReadTable(con, "feedback_review") %>%
+      filter(!suggestion_id == study$id) %>%
+      rbind(feedback_review_disagree)
+
+    dbWriteTable(con, "feedback_review", feedback_review_update, overwrite = T)
+
+    incProgress(0.6)
+
+    review_session <- data.frame(
+      review_session_id = feedback_review_disagree$review_session_id,
+      reviewer_email = name,
+      date_added = date
+    )
+
+    dbWriteTable(con, "reviewer_session", review_session, append = T)
+    incProgress(0.8)
+
+    # Update the datatable
+    remove_study_refresh_trigger(remove_study_refresh_trigger() + 1)
+
+    })
+    # Confirmation message
+    showModal(modalDialog(
+      title = HTML('<i class="fa fa-thumbs-up fa-beat" style="color: #1A465F; margin-right: 10px;"></i> Success!'),
+      fade = TRUE,
+      HTML('<div style="color: #1A465F;">
+          Review Complete - Study Not Removed.<br><br>
+          Changes will be made to the database and app in the next weekly update.<br><br>
+          Thank you for reviewing!
+        </div>'),
+      easyClose = TRUE
+    ))
+
+  })
+
+  # Enable "Add Study" button when row is selected, ignoreNULL allows this to work for de-selection
+  observeEvent(input$edit_study_table_rows_selected, ignoreNULL = FALSE, {
+
+    if (length(input$edit_study_table_rows_selected) > 0) {
+
+      updateActionButton(session, "review_edit_btn", disabled = FALSE)
+
+    } else {
+
+      updateActionButton(session, "review_edit_btn", disabled = TRUE)
+
+    }
+  })
+
+
+  predicted_labels <- reactiveVal(NULL)  # Store selected study row
+
+  # Capture selected study and show removal form
+  observeEvent(input$review_edit_btn, {
+
+    row_selected <- input$edit_study_table_rows_selected
+    if (length(row_selected) == 0) return()
+
+    study_uid <- edit_study_review_table()[row_selected, ]
+    review_study <- edit_study_review()
+
+    study_check <- edit_study_review() %>%
+      filter(uid %in% study_uid) %>%
+      distinct(session_id) %>%
+      pull(session_id)
+
+    # Check for when a study has been annotated more than once
+    if (length(study_check) > 1) {
+
+      study <- edit_study_review() %>%
+        filter(uid %in% study_uid) %>%
+        filter(session_id == min(study_check))
+
+    } else {
+
+      study <- edit_study_review() %>%
+      filter(uid %in% study_uid)
+    }
+    selected_study(study)
+
+    predict_labels <- edit_table() %>%
+      filter(uid %in% study_uid)
+
+    predicted_labels(predict_labels)
+    review_edit_study_modal(study, predict_labels)
+
+  })
+
+  review_edit_study_modal <- function(study, predict_labels) {
+
+    intervention_result <- create_review_comparison_box_ui(predict_labels, study, "intervention")
+    outcome_result <- create_review_comparison_box_ui(predict_labels, study, "outcome")
+    discipline_result <- create_review_comparison_box_ui(predict_labels, study, "discipline")
+    provider_result <- create_review_comparison_box_ui(predict_labels, study, "provider")
+    target_population_result <- create_review_comparison_box_ui(predict_labels, study, "target_population")
+    research_stage_result <- create_review_comparison_box_ui(predict_labels, study, "research_stage")
+    target_pop_location_result <- create_review_comparison_box_ui(predict_labels, study, "target_pop_location")
+
+
+    create_matrix_row <- function(row_label, predicted, suggested, changes_ui_id, agree_id, has_changed = FALSE) {
+
+      fluidRow(
+        column(2,
+               tags$strong(row_label, style = "line-height: 80px; display: block;")
+        ),
+        column(3,
+               tags$div(predicted,
+                        style = "border: 1px solid #ccc; padding: 8px; background-color: #f8f9fa; height: 80px; overflow-y: auto;")
+        ),
+        column(3,
+               tags$div(suggested,
+                        style = "border: 1px solid #ccc; padding: 8px; background-color: #f8f9fa; height: 80px; overflow-y: auto;")
+        ),
+        column(3,
+               uiOutput(changes_ui_id)
+        ),
+        column(1,
+               div(
+                 style = "display: flex; justify-content: center; align-items: center; height: 80px;",
+                 switchInput(agree_id, onLabel = "Yes", offLabel = "No", onStatus = "success", disabled = !has_changed, value = !has_changed)
+               )        )
+      )
+    }
+
+    showModal(
+      modalDialog(
+        title = tags$div(
+          "Review Suggested Annotation",
+          style = "font-family: KohinoorBangla, sans-serif !important; color: #1A465F;"
+        ),
+        size = "xl",
+        easyClose = FALSE,
+        fade = TRUE,
+        footer = tagList(
+          br(),
+          modalButton("Close"),
+          actionButton("review_submit_edit_btn", "Submit Annotation Review")
+        ),
+        tags$div(style = "font-family: KohinoorBangla, sans-serif !important; color: #1A465F;",
+                 fluidRow(
+                   tags$head(
+                     tags$style(HTML("
+          #review_submit_edit_btn {
+            background-color: #1A465F !important;
+            color: white !important;
+            border: none;
+          }
+          #review_submit_edit_btn:enabled {
+            background-color: #1A465F !important;
+          }
+          #review_submit_edit_btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
+    .link-box {
+      border: 1px solid #ccc;
+      padding: 8px;
+      background-color: #f8f9fa;
+      width: 100%;
+      border-radius: 8px;
+      transition: background-color 0.3s ease, text-decoration 0.3s ease;
+      text-decoration: none;
+    }
+
+    .link-box:hover {
+      background-color: #e2e6ea;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  "))
+                   ),
+                   column(8,
+                          tags$div(
+                            tags$strong("Title:", style = "display: block; margin-bottom: 8px;"),
+                            tags$div(
+                              predict_labels$title,
+                              style = "border: 1px solid #ccc; padding: 8px; background-color: #f8f9fa; width: 100%; border-radius: 8px;"
+                            )
+                          )
+                   ),
+
+                   column(4,
+                          tags$div(
+                            tags$strong("DOI:", style = "display: block; margin-bottom: 8px;"),
+                            tags$a(
+                              href = predict_labels$link,
+                              target = "_blank",
+                              style = "text-decoration: none; color: inherit;",
+                              tags$div(
+                                class = "link-box",
+                                tags$span(predict_labels$doi),
+                                tags$i(class = "fas fa-link", style = "margin-left: 8px;")
+                              )
+                            )
+                          )
+                   )
+                 ),
+                 hr(),
+                 fluidRow(
+                   column(2, ""),
+
+                   column(3,
+                          div(class = "text-center",
+                              icon("robot", class = "fa-2x"),
+                              br(),
+                              tags$strong("LLM Prediction")
+
+                          )
+                   ),
+
+                   column(3,
+                          div(class = "text-center",
+                              icon("user-secret", class = "fa-2x"),
+                              br(),
+                              tags$strong("User Suggestion")
+                          )
+                   ),
+
+                   column(3,
+                          div(class = "text-center",
+                              icon("user-pen", class = "fa-2x"),
+                              br(),
+                              tags$strong("Changes")
+                          )
+                   ),
+
+                   column(1,
+                          div(class = "text-center",
+                              icon("house-circle-check", class = "fa-2x"),
+                              br(),
+                              tags$strong("Approve")
+                          )
+                   )
+                 ),
+
+                 hr(),
+                 # Data rows
+                 create_matrix_row("Intervention", predict_labels$intervention,
+                                   study %>% filter(type == "intervention") %>% pull(suggestion),
+                                   "intervention_review_display", "agree_intervention",
+                                   has_changed = intervention_result$has_changed),
+                 hr(),
+                 create_matrix_row("Outcome Measure", predict_labels$outcome,
+                                   study %>% filter(type == "outcome") %>% pull(suggestion),
+                                   "outcome_review_display", "agree_outcome",
+                                   has_changed = outcome_result$has_changed),
+                 hr(),
+                 create_matrix_row("Discipline", predict_labels$discipline,
+                                   study %>% filter(type == "discipline") %>% pull(suggestion),
+                                   "discipline_review_display", "agree_discipline",
+                                   has_changed = discipline_result$has_changed),
+                 hr(),
+                 create_matrix_row("Intervention Provider", predict_labels$provider,
+                                   study %>% filter(type == "provider") %>% pull(suggestion),
+                                   "provider_review_display", "agree_provider",
+                                   has_changed = provider_result$has_changed),
+                 hr(),
+                 create_matrix_row("Target Population", predict_labels$target_population,
+                                   study %>% filter(type == "target_population") %>% pull(suggestion),
+                                   "target_population_review_display", "agree_target_population",
+                                   has_changed = target_population_result$has_changed),
+                 hr(),
+                 create_matrix_row("Research Stage", predict_labels$research_stage,
+                                   study %>% filter(type == "research_stage") %>% pull(suggestion),
+                                   "research_stage_review_display", "agree_research_stage",
+                                   has_changed = research_stage_result$has_changed),
+                 hr(),
+                 create_matrix_row("Target Pop Location", predict_labels$target_pop_location,
+                                   study %>% filter(type == "target_pop_location") %>% pull(suggestion),
+                                   "target_pop_location_review_display", "agree_target_pop_location",
+                                   has_changed = target_pop_location_result$has_changed)
+        )
+      )
+    )
+  }
+
+
+  create_review_comparison_box_ui <- function(original_data, suggested_data, column) {
+
+
+    original_split <- sort(trimws(unlist(strsplit(original_data[[column]], ";"))))
+    original <- paste(original_split, collapse = "; ")
+
+    #suggested_split <- sort(trimws(unlist(strsplit(suggested_data[[column]], ";"))))
+    suggested_split <- sort(trimws(unlist(strsplit(suggested_data %>% filter(type == column) %>% pull(suggestion), ";"))))
+
+    suggested <- paste(suggested_split, collapse = "; ")
+
+    has_changed <- !setequal(original, suggested)
+
+    ui <- tags$div(
+      style = "
+        padding: 12px;
+        background-color: #ffffff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 100%;
+        font-family: KohinoorBangla, sans-serif !important;
+        color: #1A465F;
+      ",
+      if (has_changed) {
+        tagList(
+          span("Was: ", style = "font-weight: bold; color: red;"),
+          span(original, style = "color: red;"),
+          tags$br(),
+          span("Now: ", style = "font-weight: bold; color: #47B1A3;"),
+          span(suggested, style = "color: #47B1A3;")
+        )
+      } else {
+        span("No changes", style = "color: #47B1A3; font-weight: bold;")
+      }
+    )
+
+    return(list(ui = ui, has_changed = has_changed))
+
+  }
+
+
+
+  output$intervention_review_display <- renderUI({
+
+    result <- create_review_comparison_box_ui(predicted_labels(), selected_study(), "intervention")
+    result$ui
+  })
+
+  output$discipline_review_display <- renderUI({
+    result <- create_review_comparison_box_ui(predicted_labels(), selected_study(), "discipline")
+    result$ui
+  })
+
+  output$outcome_review_display <- renderUI({
+    result <- create_review_comparison_box_ui(predicted_labels(), selected_study(), "outcome")
+    result$ui
+  })
+
+  output$provider_review_display <- renderUI({
+    result <- create_review_comparison_box_ui(predicted_labels(), selected_study(), "provider")
+    result$ui
+  })
+
+  output$target_population_review_display <- renderUI({
+    result <- create_review_comparison_box_ui(predicted_labels(), selected_study(), "target_population")
+    result$ui
+  })
+
+  output$research_stage_review_display <- renderUI({
+    result <- create_review_comparison_box_ui(predicted_labels(), selected_study(), "research_stage")
+    result$ui
+  })
+
+  output$target_pop_location_review_display <- renderUI({
+
+    result <- create_review_comparison_box_ui(predicted_labels(), selected_study(), "target_pop_location")
+    result$ui
+  })
+
+  observeEvent(input$review_submit_edit_btn, {
+
+
+    withProgress(message = "Submitting annotation review...", value = 0, {
+
+      incProgress(0.2)
+      date <- format(Sys.Date(), "%d%m%Y")
+      name <- reviewer_name$name
+
+      suggested_changes <- selected_study()
+
+      review_update <- function(element){
+
+        update_id <- suggested_changes %>%
+          filter(type == element) %>%
+          pull(id)
+
+        feedback_review <- dbReadTable(con, "feedback_review") %>%
+          filter(suggestion_id == update_id) %>%
+          mutate(review_status = ifelse(input[[paste0("agree_", element)]] == TRUE, "approve", "reject"),
+                 reviewer_notes = "")
+
+        return(feedback_review)
+
+      }
+      incProgress(0.4)
+
+      # Elements to process
+      elements <- c("intervention", "discipline", "outcome", "provider", "target_population", "research_stage", "target_pop_location")
+
+      updates_list <- lapply(elements, review_update)
+      full_update <- do.call(rbind, updates_list)
+
+      update_feedback_review <- dbReadTable(con, "feedback_review") %>%
+        filter(!suggestion_id %in% full_update$suggestion_id) %>%
+        rbind(full_update)
+      incProgress(0.6)
+
+      dbWriteTable(con, "feedback_review", update_feedback_review, overwrite = T)
+
+      reviewer_session_update <- data.frame(
+        review_session_id = unique(full_update$review_session_id),
+        reviewer_email = name,
+        date_added = date
+      )
+
+      incProgress(0.8)
+
+      dbWriteTable(con, "reviewer_session", reviewer_session_update, append = T)
+
+      # Update the datatable
+      edit_study_refresh_trigger(edit_study_refresh_trigger() + 1)
+      edit_study_table_refresh_trigger(edit_study_table_refresh_trigger() + 1)
+      incProgress(1)
+
+    })
+
+    # Confirmation message
+    showModal(modalDialog(
+      title = HTML('<i class="fa fa-thumbs-up fa-beat" style="color: #1A465F; margin-right: 10px;"></i> Success!'),
+      fade = TRUE,
+      HTML('<div style="color: #1A465F;">
+          Review Complete.<br><br>
+          Changes will be made to the database and app in the next weekly update.<br><br>
+          Thank you for reviewing!
+        </div>'),
+      easyClose = TRUE
+    ))
+
+  })
+
+}
 # Run the application
 shinyApp(ui = ui, server = server)
