@@ -1,4 +1,3 @@
-#library(tidyr)
 library(dplyr)
 library(soles)
 library(sf)
@@ -27,11 +26,9 @@ library(readr)
 library(odbc)
 library(DBI)
 library(fresh)
-library(htmlwidgets)
 library(lubridate)
 library(stringr)
 library(readr)
-#library(jsonlite)
 library(blastula)
 library(glue)
 library(parallel)
@@ -186,8 +183,12 @@ workflow <- try({
   pre_institute_tag <- dbReadTable(con, "institution_tag") %>%
     distinct(doi)
 
-  try(get_openalex_metadata(con))
-
+  try(solesR::get_openalex_metadata(con, fill_table = "retraction_tag"))
+  try(solesR::get_openalex_metadata(con, fill_table = "retraction_tag"))
+  
+  try(get_ror_coords(con))
+  try(get_ror_coords(con))
+  
   post_open_access <- tbl(con, "oa_tag") %>%
     select(doi) %>%
     collect()
@@ -273,26 +274,10 @@ citations_for_dl <- tbl(con, "study_classification")  %>%
 
 dataframes_for_app[["citations_for_dl"]] <- citations_for_dl
 
+# DEAL WITH THIS
 retracted_embase <- unique_citations %>% 
   filter(str_detect(title, "^Retraction|^Retracted|^Erratum: retracted:")) %>% 
   collect()
-
-# Fix dodgy years
-# unique_years <- dbReadTable(con, "unique_citations") %>%
-#   mutate(year = ifelse(uid == "medline-28336799", "2016", year),
-#          year = ifelse(uid == "medline-28855368", "2017", year),
-#          year = ifelse(uid == "medline-30082302", "2018", year),
-#          year = ifelse(uid == "medline-28336792", "2016", year),
-#          year = ifelse(uid == "medline-28336800", "2016", year),
-#          year = ifelse(uid == "medline-27092246", "2016", year),
-#          year = ifelse(uid == "medline-27534954", "2016", year)
-#   )
-
-# fix_years <- dbReadTable(con, "unique_citations") %>% 
-#   mutate(year = ifelse(uid == "embase-51668480", 2012, year)) %>% 
-#   mutate(year = ifelse(uid == "embase-52948227", 2014, year)) %>% 
-#   mutate(year = ifelse(uid == "unknown-1026", 1981, year)) %>% 
-#   mutate(year = ifelse(uid == "unknown-1329", 2023, year))
 
 # Create included tbl
 included_with_metadata <- citations_for_dl  %>%
@@ -302,6 +287,20 @@ dataframes_for_app[["included_with_metadata"]] <- included_with_metadata
 
 included_small <- included_with_metadata %>%
   select(uid, doi, year, title)
+
+# Create retraction tag table
+retraction_tag <- included_small %>%
+  left_join(dbReadTable(con, "retraction_tag"), by = "doi", relationship == "many-to-many") %>%
+  mutate(year = as.numeric(year)) %>%
+  # mutate(is_retracted = ifelse(is_retracted == TRUE, "Retracted", "Not Retracted")) %>% 
+  mutate(is_retracted = case_when(
+    is_retracted == TRUE ~ "Retracted",
+    is_retracted == FALSE ~ "Not retracted",
+    is.na(is_retracted) ~ "Not retracted"
+  )) %>%
+  filter(!is.na(year))
+
+dataframes_for_app[["retraction_tag"]] <- retraction_tag
 
 # Gather data for included_per_year_plot
 n_included_per_year_plot_data <- unique_citations %>%
@@ -335,31 +334,71 @@ pdfs <- tbl(con, "full_texts") %>%
 dataframes_for_app[["pdfs"]] <- pdfs
 
 
-# Bring in open access data
-open_access_tag <- tbl(con, "oa_tag") %>%
-  collect()
+# # Bring in open access data
+# open_access_tag <- tbl(con, "oa_tag") %>%
+#   collect()
+# 
+# oa_tag <- included_small %>%
+#   left_join(open_access_tag, by = "doi", relationship = "many-to-many") %>%
+#   filter(!is.na(is_oa)) %>%
+#   distinct()
+# 
+# dataframes_for_app[["oa_tag"]] <- oa_tag
 
+# Create open access table
 oa_tag <- included_small %>%
-  left_join(open_access_tag, by = "doi", relationship = "many-to-many") %>%
-  filter(!is.na(is_oa)) %>%
-  distinct()
+  left_join(dbReadTable(con, "oa_tag") %>% mutate(tag_status = "Complete"), 
+            by = "doi", relationship = "many-to-many") %>%
+  mutate(year = as.numeric(year)) %>%
+  mutate(is_oa = ifelse(is.na(oa_status)|oa_status == "Unknown", "unknown", 
+                        ifelse(oa_status == "closed", "closed", "open"))) %>%
+  mutate(oa_status = ifelse(is.na(oa_status)|oa_status == "Unknown", "unknown", oa_status)) %>%
+  mutate(  tag_status = case_when(
+    is.na(doi) ~ "Missing DOI",
+    is.na(tag_status) ~ "Incomplete",
+    TRUE ~ tag_status
+  )) 
 
 dataframes_for_app[["oa_tag"]] <- oa_tag
 
-
-# Bring in transparency data
-open_data_tag <- tbl(con, "open_data_tag") %>%
-  collect()
-
+# Create transparency table with open data
 transparency <- included_small %>%
-  left_join(open_data_tag, by = "doi", relationship = "many-to-many") %>%
-  filter(!doi == ""|is.na(doi)) %>%
-  filter(!is.na(year)) %>%
-  distinct()
-
-#transparency[is.na(transparency)] <- "unknown"
+  left_join(dbReadTable(con, "open_data_tag") %>% mutate(tag_status = "Complete"), by = "doi", relationship = "many-to-many") %>%
+  mutate(year = as.numeric(year)) %>%
+  mutate(is_open_data = case_when(
+    is_open_data == TRUE ~ "available",
+    is_open_data == FALSE ~ "not available",
+    is.na(is_open_data) ~ "unknown"
+  ),
+  is_open_code = case_when(
+    is_open_code == TRUE ~ "available",
+    is_open_code == FALSE ~ "not available",
+    is.na(is_open_code) ~ "unknown"
+  )) %>%
+  # filter(!is.na(year)) %>%
+  mutate(
+    tag_status = case_when(
+      is.na(doi) ~ "Missing DOI",
+      is.na(tag_status) ~ "Incomplete",
+      TRUE ~ tag_status
+    ))
 
 dataframes_for_app[["transparency"]] <- transparency
+
+
+# # Bring in transparency data
+# open_data_tag <- tbl(con, "open_data_tag") %>%
+#   collect()
+# 
+# transparency <- included_small %>%
+#   left_join(open_data_tag, by = "doi", relationship = "many-to-many") %>%
+#   filter(!doi == ""|is.na(doi)) %>%
+#   filter(!is.na(year)) %>%
+#   distinct()
+# 
+# #transparency[is.na(transparency)] <- "unknown"
+# 
+# dataframes_for_app[["transparency"]] <- transparency
 
 #source("formatting_scripts/compile_annotations.R")
 source("update_scripts/llm_update_script.R")
@@ -440,7 +479,6 @@ pico_country <- dbReadTable(con,"pico_ontology") %>%
   dplyr::select(country = name, continent = main_category, sub_category2)
 
 ## Once ROR coords table is full use this instead of location, join by ror!
-
 ror_data <- dbReadTable(con, "ror_coords") %>%
   left_join(inst, by = "ror") %>%
   left_join(pico_country, by = c("institution_country_code" = "sub_category2")) %>%
@@ -477,9 +515,23 @@ ror_data_small <- dbReadTable(con, "ror_coords") %>%
 dataframes_for_app[["ror_data_small"]] <- ror_data_small
 
 pico <- all_annotations_small %>%
-  select(uid, intervention, discipline, outcome_measures, intervention_provider)
-
+  mutate(annotated_by = case_when(
+    method == "human" ~ "Human",
+    method == "gpt-4o-3s-v1" ~ "AI (gpt-4o)",
+    method == "Unknown" ~ "None"
+  )) %>% 
+  select(uid, intervention, discipline, outcome_measures, intervention_provider, research_stage, location = target_population_location, target_population, annotated_by) %>%
+  distinct() %>% 
+  # group_by(uid) %>%
+  # slice_head() %>% 
+  ungroup()
 dataframes_for_app[["pico"]] <- pico
+
+annotated_by_df <- pico %>% 
+  select(uid, name = annotated_by)
+
+dataframes_for_app[["annotated_by_df"]] <- annotated_by_df
+
 
 grey_lit_pico <- grey_lit %>% 
   select(uid, doi, name = ptype) %>% 
@@ -501,6 +553,13 @@ for (name in names(dataframes_for_app)) {
   fst_files_written <- fst_files_written + 1
 }
 
+# Write all of the dataframes required to fst files
+# for (name in names(dataframes_for_app)) {
+#   dataframe <- dataframes_for_app[[name]]
+#   write_fst(dataframe, paste0("dev_deploy_app/fst_files/", name, ".fst"))
+#   fst_files_written <- fst_files_written + 1
+# }
+
 
 # Redeploy the app
 app_deploy <- try({
@@ -509,6 +568,8 @@ app_deploy <- try({
     appFiles = c("app.R",
                  "irise_modules.R",
                  "fst_files/",
+                 ".Renviron",
+                 "google-analytics.html",
                  "www/",
                  "helpfiles/"),
     account = "camarades",
@@ -517,6 +578,24 @@ app_deploy <- try({
     launch.browser = F,
     forceUpdate = T)
 })
+
+# Redeploy the dev app
+# app_deploy <- try({
+#   rsconnect::deployApp(
+#     appDir = "dev_deploy_app",
+#     appFiles = c("app.R",
+#                  "irise_modules_static_filters.R",
+#                  ".Renviron",
+#                  "fst_files/",
+#                  "www/",
+#                  "google-analytics.html",
+#                  "helpfiles/"),
+#     account = "camarades",
+#     appName  = "dev-irise-soles",
+#     logLevel = "verbose",
+#     launch.browser = F,
+#     forceUpdate = T)
+# })
 
 try({
   if (inherits(app_deploy, "try-error")) {
@@ -626,5 +705,18 @@ Task Incomplete
   ) %>% add_attachment(file = "workflow.log",
                        filename = "workflow.log"
   )
+
+# Create folder if it doesn't exist
+if (!file.exists("workflow_logs")) {
+  dir.create("workflow_logs")
+}
+
+# Add current workflow to workflow_logs folder, this should overwrite each week
+file.copy(from = "workflow.log",
+          to = "workflow_logs/",
+          overwrite = TRUE)
+
+# Remove workflow log file from wd
+file.remove("workflow.log")
 
 dbDisconnect(con)

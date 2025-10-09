@@ -1,30 +1,30 @@
-#' Generate a Yearly Bar Chart
+
+#' Bar Chart by Year
 #'
-#' This Shiny module creates a bar chart displaying the count of occurrences by year for a selected column in a given table. The chart includes a legend with a color-coded representation of the column values. This module is designed to be used within a Shiny application.
+#' This shiny module generates a count bar chart by year based on a table and a selected column. The chart will display the count of occurrences of the values of the selected column for each year. The chart will also display a legend with a color-coded representation of the values of the selected column. The module is intended to be used within a Shiny application.
 #'
 #' @param id The module identifier.
 #' @param title The title of the tab.
-#' @param theme The color (status) of the tab.
-#' @param spinner_colour The color of the spinner shown during plot generation.
-#' @param table The input data table.
+#' @param theme The colour (status) of the tab.
+#' @param spinner_colour The colour of the spinner shown while the plot is generating.
 #'
 #' @export
-yearBarUI <- function(id, title = "", theme = "", spinner_colour = "#76A8C1", table) {
-  
+yearBarUI <- function(id, title = "", theme = "", spinner_colour = "#96c296", table) {
+
   ns <- NS(id)
-  
+
   tabPanel(
-    
+
     title = title,
     height = "800px",
     status = theme,
-    
+
     materialSwitch(inputId = ns("switch_to_percentage"),
-                   label = "Show percentages", 
+                   label = "Show percentages",
                    status = "info"),
-    
+
     plotlyOutput(ns("plot")) %>% withSpinner(color = spinner_colour),
-    
+
     fluidRow(
       column(width = 1),
       column(width = 9,
@@ -32,7 +32,7 @@ yearBarUI <- function(id, title = "", theme = "", spinner_colour = "#76A8C1", ta
                style = "color: #1A465F;",
                tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar, .irs--shiny .irs-bar, .irs--shiny .irs-from, .irs--shiny .irs-to
                                  {background: #1A465F; border-top:#1A465F; border-bottom: #1A465F; background-color: #1A465F;}")),
-               
+
                sliderInput(inputId =  ns("year_bar_slider"),
                            label = "Select Year Range:",
                            min = as.numeric(min(table$year, na.rm = TRUE)),
@@ -45,321 +45,8 @@ yearBarUI <- function(id, title = "", theme = "", spinner_colour = "#76A8C1", ta
       )
     )
   )
-  
-  
-}
-
-#' Server Function for Percentage Yearly Bar Chart
-#'
-#' This server function generates a percentage bar chart by year based on the input table, column name, and display option. The resulting chart displays the percentage of occurrences for each year and includes a legend with a color-coded representation of the selected column values.
-#'
-#' @param id The module identifier.
-#' @param table The data table used for chart generation.
-#' @param column The name of the column to use for chart generation.
-#' @param order The order of legend items. Default is c("reported", "not reported").
-#' @param display The value of the column to display. Default is "reported".
-#' @param text Additional annotation text for the chart.
-#' @param colours Colors for the chart elements.
-#'
-#' @export
-yearBarServer <- function(id, table, column, order = c("reported", "not reported", "unknown"), 
-                          display="reported", text="", colours = c("#76A8C1", "#FFC076", "grey")){
-  moduleServer(
-    id,
-    function(input, output, session) {
-      output$plot <- renderPlotly({
-        
-        cols <- setNames(colours, order)
-        
-        
-        if(input$switch_to_percentage){
-          
-          if(length(display)>1){
-            
-            table %>%
-              filter(!year == "unknown") %>%
-              filter(!year == "") %>%
-              filter(year >= min(input$year_bar_slider), 
-                     year <= max(input$year_bar_slider)) %>%
-              select(uid, year, data_col = .data[[column]]) %>%
-              distinct() %>%
-              select(-uid) %>%
-              group_by_all() %>%
-              count() %>%
-              group_by(year) %>%
-              mutate(percent = n/sum(n) * 100) %>%
-              filter(data_col %in% display) %>%
-              ungroup() %>%
-              mutate(data_col = factor(data_col, levels = order)) %>% 
-              plot_ly(x = ~year,
-                      type = 'bar',
-                      y = ~percent,
-                      colors = cols,
-                      color = ~data_col,
-                      marker = list(line = list(color = 'black', width = 1)),
-                      text = ~paste("<b>Info:</b> ", data_col,
-                                    "<br><b>Year:</b> ", year,
-                                    "<br><b>Percentage:</b>", round(percent, 2), "<b>%<b>"),
-                      hoverinfo = "text") %>%
-              layout(showlegend = TRUE,
-                     yaxis = list(title = paste0("% of publications (", display, ")"), range = c(0, 100)),
-                     xaxis = list(title = ""), barmode = "stack",
-                     annotations =
-                       list(x = 1, y = -0.2, text = text,
-                            showarrow = F, xref='paper', yref='paper',
-                            xanchor='right', yanchor='bottom', xshift=0, yshift=0,
-                            font=list(size=12, color="black")))
-            
-          } else {
-            
-            
-            table %>%
-              filter(!year == "unknown", !year == "") %>%
-              select(uid, year, data_col = .data[[column]]) %>%
-              filter(year >= min(input$year_bar_slider), 
-                     year <= max(input$year_bar_slider)) %>%
-              distinct() %>%
-              select(-uid) %>%
-              group_by_all() %>%
-              count() %>%
-              group_by(year) %>%
-              mutate(percent = n/sum(n) * 100) %>%
-              mutate(
-                data_col = factor(data_col, levels = c(TRUE, FALSE)) 
-              ) %>%              
-              plot_ly(x = ~year, 
-                      y = ~percent,
-                      type = "bar",
-                      color = ~data_col,
-                      colors = cols,
-                      hoverinfo = 'text',
-                      textposition = "none",
-                      marker = list(line = list(color = 'black', width = 1)),
-                      text = ~paste("<b>Year:</b> ", year,
-                                    "<br><b>Percentage:</b>", round(percent, 2), "<b>%<b>")
-              ) %>%
-              layout(showlegend = FALSE,
-                     yaxis = list(title = paste0("% of publications (", display, ")"), range = c(0, 100)),
-                     xaxis = list(title = ""), barmode = "stack",
-                     annotations = list(x = 1, y = -0.2, text = text,
-                                        showarrow = F, xref = "paper", yref = "paper",
-                                        xanchor = "right", yanchor = "bottom", xshift = 0, yshift = 0,
-                                        font = list(size = 12, color = "black")))
-            
-          }
-          
-        } else {
-          
-          
-          table %>%
-            filter(!year == "unknown", !year == "") %>%
-            filter(year >= min(input$year_bar_slider), 
-                   year <= max(input$year_bar_slider)) %>%
-            select(uid, year, data_col = .data[[column]]) %>%
-            distinct() %>%
-            group_by(year, data_col) %>%
-            count() %>%
-            mutate(data_col = factor(data_col, levels = order)) %>% 
-            plot_ly(x = ~year,
-                    type = 'bar',
-                    y = ~n,
-                    colors = cols,
-                    color = ~data_col,
-                    hoverinfo = 'text',
-                    textposition = "none",
-                    marker = list(line = list(color = 'black', width = 1)),
-                    text = ~paste("<b>Info:</b> ", data_col,
-                                  "<br><b>Number of Publications:</b>", n,
-                                  "<br><b>Year:</b>", year)) %>%
-            layout(showlegend = TRUE,
-                   yaxis = list(title = 'Number of publications'),
-                   xaxis = list(title = ""), barmode='stack',
-                   annotations =
-                     list(x = 1, y = -0.2, text = text,
-                          showarrow = F, xref='paper', yref='paper',
-                          xanchor='right', yanchor='bottom', xshift=0, yshift=0,
-                          font=list(size=12, color="black")))
-          
-          
-        }
-        
-      })
-    }
-  )}
 
 
-#' Generate a Bar Chart by Year
-#'
-#' This Shiny module creates a count bar chart by year based on a specified table and selected column. The resulting chart displays the count of occurrences of the values of the selected column for each year, along with a legend featuring a color-coded representation of those values. Intended for use within a Shiny application.
-#'
-#' @param id The module identifier.
-#' @param title The title of the tab.
-#' @param theme The color (status) of the tab.
-#' @param spinner_colour The color of the spinner shown while the plot is generating.
-#' @param table The input data table.
-#'
-#' @export
-yearBarUI_included_only <- function(id, title = "", theme = "", spinner_colour = "#96c296", table) {
-  
-  ns <- NS(id)
-  
-  tabPanel(
-    
-    title = title,
-    height = "800px",
-    status = theme,
-    
-    fluidRow(
-      column(width = 12,
-             plotlyOutput(ns("plot")) %>% withSpinner(color = spinner_colour)
-      )),
-    
-    fluidRow(
-      column(width = 1),
-      column(width = 9,
-             div(
-               style = "color: #1A465F;",
-               tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar, .irs--shiny .irs-from, .irs--shiny .irs-to
-                                 {background: #1A465F; border-top:#1A465F; border-bottom: #1A465F; background-color: #1A465F;}")),
-               
-               sliderInput(inputId =  ns("included_year_slider"),
-                           label = "Select Year Range:",
-                           min = as.numeric(min(table$year, na.rm = TRUE)),
-                           max = as.numeric(max(table$year, na.rm = TRUE)),
-                           value = c(2000,
-                                     as.numeric(max(table$year, na.rm = TRUE))),
-                           step = 1,
-                           sep = "")
-             )
-      )
-    )
-  )
-  
-  
-}
-
-#' Server Function for Percentage Yearly Bar Chart
-#'
-#' This server function generates a percentage bar chart by year based on the input table, column name, and display option. The resulting chart displays the percentage of occurrences for each year and includes a legend with a color-coded representation of the selected column values.
-#'
-#' @param id The module identifier.
-#' @param table The data table used for chart generation.
-#' @param column The name of the column to use for chart generation.
-#' @param text Additional annotation text for the chart.
-#' @param colour Color for the chart elements.
-#'
-#' @export
-yearBarServer_included_only <- function(id, table, column, 
-                                        text="", 
-                                        colour = "#73D055FF"
-){
-  moduleServer(
-    id,
-    function(input, output, session) {
-      output$plot <- renderPlotly({
-        
-        table %>%
-          filter(
-            year != "unknown",
-            year != "",
-            .data[[column]] == "included",
-            year >= min(input$included_year_slider),
-            year <= max(input$included_year_slider)
-          ) %>%
-          count(year, data_col = .data[[column]]) %>%
-          plot_ly(
-            x = ~year,
-            y = ~n,
-            type = 'bar',
-            color = ~data_col,
-            colors = colour,
-            hoverinfo = 'text',
-            textposition = "none",
-            text = ~paste(
-              "<br><b>Number of Publications:</b>", n,
-              "<br><b>Year:</b>", year
-            ),
-            marker = list(
-              line = list(color = 'black', width = 1)   # <-- thin black border
-            )
-          ) %>%
-          layout(
-            showlegend = FALSE,
-            yaxis = list(title = 'Number of publications'),
-            xaxis = list(title = "", tickangle = -45, ticklen = 4),
-            barmode = 'stack',
-            hoverlabel = list(bgcolor = "white", font = list(size = 14)),
-            annotations = list(
-              x = 1, y = -0.2, text = text,
-              showarrow = FALSE, xref = 'paper', yref = 'paper',
-              xanchor = 'right', yanchor = 'bottom', xshift = 0, yshift = 0,
-              font = list(size = 12, color = "black")
-            )
-          )
-        
-      })
-    }
-  )}
-
-#' Bar Chart by Year
-#'
-#' This shiny module generates a count bar chart by year based on a table and a selected column. The chart will display the count of occurrences of the values of the selected column for each year. The chart will also display a legend with a color-coded representation of the values of the selected column. The module is intended to be used within a Shiny application.
-#'
-#' @param id The module identifier.
-#' @param title The title of the tab.
-#' @param theme The colour (status) of the tab.
-#' @param spinner_colour The colour of the spinner shown while the plot is generating.
-#'
-#' @export
-yearBarUI_filters <- function(id, title = "", theme = "", spinner_colour = "#96c296", table) {
-  
-  ns <- NS(id)
-  # browser()
-  tagList(
-    
-    fluidRow(
-      column(width = 12,
-             div(
-               # style = "margin-top: -20px; margin-left: -45px;",
-               style = "margin-top: -20px; margin-left: -20px;;",  # adjust -40px as needed
-               
-               plotlyOutput(ns("plot"), height = "250px")
-               # %>% withSpinner(color = spinner_colour)
-             )
-      )),
-    fluidRow(
-      style = "margin-top: -40px; margin-right: -39px; margin-left: -10px;",  # nudges row left
-      column(width = 1),
-      column(width = 11,
-             div(
-               style = "color: #1A465F; width: 90%;",  # <--- narrower than full column
-               tags$head(
-                 tags$style(HTML("
-               /* Hide default grid labels */
-               .irs-grid-text { display: none; }
-               /* Hide min & max labels */
-               .irs-min, .irs-max { display: none; }
-               /* Move selected values below the slider */
-               .irs-single, .irs-from, .irs-to {
-                 top: 40px !important;
-               }
-             "))
-               ),
-               sliderInput(
-                 inputId = ns("filter_year_slider"),
-                 label = NULL,
-                 min = min(table$year),
-                 max = max(table$year),
-                 value = c(min(table$year), max(table$year)),
-                 step = 1,
-                 sep = "",
-                 ticks = FALSE
-               )
-             )
-      )
-    )
-    
-  )
 }
 
 #' Percentage Bar Chart by Year Server Function
@@ -372,133 +59,233 @@ yearBarUI_filters <- function(id, title = "", theme = "", spinner_colour = "#96c
 #' @param display The value of the column to display. Default is "reported".
 #'
 #' @export
-yearBarServer_filters <- function(id, filter_table, column,
-                                  text = "",
-                                  colour = "#73D055FF") {
+yearBarServer <- function(id, table, column, order = c("reported", "not reported"),
+                          display="reported", text="", colours = c("#73D055FF", "grey")){
   moduleServer(
     id,
     function(input, output, session) {
-      
-      observe({
-        tbl <- filter_table()
-        req(tbl, tbl$year)
-        
-        # browser()
-        if (is.null(input$reset_filters) || input$reset_filters == 0) {
-          
-          min_year <- min(tbl$year, na.rm = TRUE)
-          max_year <- max(tbl$year, na.rm = TRUE)
-          
-          # If you want to reset the slider to the full range each time:
-          updateSliderInput(
-            session,
-            "filter_year_slider",
-            min = min_year,
-            max = max_year,
-            value = c(min_year, max_year)
-          )
-        }
-      })
-      
-      filtered_tbl <- reactive({
-        # browser()
-        req(input$filter_year_slider)
-        req(length(input$filter_year_slider) == 2)
-        
-        tbl <- filter_table()
-        
-        # Add highlight column instead of filtering out
-        tbl <- tbl %>%
-          mutate(
-            highlight = ifelse(
-              year >= min(input$filter_year_slider) &
-                year <= max(input$filter_year_slider),
-              "in_range", "out_range"
-            )
-          )
-        tbl
-      })
-      
-      # -------------------------------
-      # Plotly output (cached)
-      # -------------------------------
-      output$plot <- 
-        
-        bindCache(
-          renderPlotly({
-            
-            # browser()
-            # tbl <- debounced_tbl()  # now this actually waits for 1 second of inactivity
-            
-            tbl <- filtered_tbl()
-            cat("renderPlotly executing (cached), nrows:", nrow(tbl), "\n")
-            # browser()
-            tbl %>%
-              plot_ly(
-                x = ~year,
-                type = 'bar', 
-                y = ~is_included,
-                # colors = colour,
-                color = ~highlight,
-                colors = c("out_range" = "grey80", "in_range" = colour),
-                hoverinfo = 'text',
-                textposition = "none",
-                text = ~paste("<br><b>Number of Publications:</b>", is_included,
-                              "<br><b>Year:</b>", year)
+      output$plot <- renderPlotly({
+
+        if(input$switch_to_percentage){
+
+          if(length(display)>1){
+
+            x <- ggplot2::enquo(column)
+            cols <- setNames(colours, order)
+
+            table <- table %>%
+              mutate(x = factor(!!rlang::sym(column), levels = order))
+
+            table %>%
+              filter(!year == "unknown") %>%
+              filter(!year == "") %>%
+              filter(year >= min(input$year_bar_slider),
+                     year <= max(input$year_bar_slider)) %>%
+              select(uid, year, x) %>%
+              distinct() %>%
+              select(-uid) %>%
+              group_by_all() %>%
+              count() %>%
+              group_by(year) %>%
+              mutate(percent = n/sum(n) * 100) %>%
+              filter(x %in% display) %>%
+              ungroup() %>%
+              plot_ly(x = ~year,
+                      type = 'bar',
+                      y = ~percent,
+                      colors = cols,
+                      color = ~x) %>%
+              layout(showlegend = TRUE,
+                     yaxis = list(title = paste0("% of publications (", display, ")"), range = c(0, 100)),
+                     xaxis = list(title = ""), barmode = "stack",
+                     annotations =
+                       list(x = 1, y = -0.2, text = text,
+                            showarrow = F, xref='paper', yref='paper',
+                            xanchor='right', yanchor='bottom', xshift=0, yshift=0,
+                            font=list(size=12, color="black")))
+
+          } else {
+
+            x <- ggplot2::enquo(column)
+
+            table %>%
+              filter(!year == "unknown") %>%
+              filter(!year == "") %>%
+              select(uid, year, !!x) %>%
+              filter(year >= min(input$year_bar_slider),
+                     year <= max(input$year_bar_slider)) %>%
+              distinct() %>%
+              select(-uid) %>%
+              group_by_all() %>%
+              count() %>%
+              group_by(year) %>%
+              mutate(percent = n/sum(n) * 100) %>%
+              filter(!!rlang::sym(column) %in% display) %>%
+              plot_ly(x = ~year,
+                      y = ~percent,
+                      mode = "markers",
+                      marker = list(color = first(colours)),
+                      hoverinfo = 'text',
+                      textposition = "none",
+                      text = ~paste("<b>Year:</b> ", year,
+                                    "<br><b>Percentage:</b>", round(percent, 2), "<b>%<b>")
               ) %>%
-              layout(
-                showlegend = FALSE,
-                title = list(
-                  text = "Publications by Year", 
-                  x = 0.05,
-                  y = 0.95,
-                  xanchor = "left",
-                  font = list(size = 14, color = "#1A465F") 
-                ),
-                yaxis = list(
-                  title = "",
-                  tickfont = list(
-                    size = 10,          
-                    color = "black"   
-                  )
-                ),
-                
-                xaxis = list(
-                  title = "",
-                  ticks = "",
-                  ticklen = 0,
-                  showticklabels = FALSE
-                ),
-                barmode = 'group',   # <- change this
-                annotations = list(
-                  x = 1, y = -0.2, text = text,
-                  showarrow = FALSE, xref = 'paper', yref = 'paper',
-                  xanchor = 'right', yanchor = 'bottom',
-                  font = list(size = 12, color = "black")
-                )
-              )
-          })
-          ,
-          digest::digest(filter_table()),  # cache key
-          input$filter_year_slider
-        )
-      
-      outputOptions(output, "plot", suspendWhenHidden = FALSE)
-      
-      # -------------------------------
-      # Return slider reactive
-      # -------------------------------
-      return(
-        reactive({
-          req(input$filter_year_slider)
-          input$filter_year_slider
-          
-        })
-      )
+              layout(showlegend = FALSE,
+                     yaxis = list(title = paste0("% of publications (", display, ")"), range = c(0, 100)),
+                     xaxis = list(title = ""), barmode = "stack",
+                     annotations = list(x = 1, y = -0.2, text = text,
+                                        showarrow = F, xref = "paper", yref = "paper",
+                                        xanchor = "right", yanchor = "bottom", xshift = 0, yshift = 0,
+                                        font = list(size = 12, color = "black")))
+
+          }
+
+        } else {
+
+          x <- ggplot2::enquo(column)
+          cols <- setNames(colours, order)
+
+          table <- table %>%
+            mutate(x = factor(!!rlang::sym(column), levels = order))
+
+          table %>%
+            filter(!year == "unknown") %>%
+            filter(!year == "") %>%
+            filter(year >= min(input$year_bar_slider),
+                   year <= max(input$year_bar_slider)) %>%
+            select(uid, year, x) %>%
+            distinct() %>%
+            group_by(year, x) %>%
+            count() %>%
+            plot_ly(x = ~year,
+                    type = 'bar',
+                    y = ~n,
+                    colors = cols,
+                    color = ~x,
+                    hoverinfo = 'text',
+                    textposition = "none",
+                    text = ~paste("<b>Info:</b> ", x,
+                                  "<br><b>Number of Publications:</b>", n,
+                                  "<br><b>Year:</b>", year)) %>%
+            layout(showlegend = TRUE,
+                   yaxis = list(title = 'Number of publications'),
+                   xaxis = list(title = ""), barmode='stack',
+                   annotations =
+                     list(x = 1, y = -0.2, text = text,
+                          showarrow = F, xref='paper', yref='paper',
+                          xanchor='right', yanchor='bottom', xshift=0, yshift=0,
+                          font=list(size=12, color="black")))
+
+
+        }
+
+      })
     }
+  )}
+
+
+#' Bar Chart by Year
+#'
+#' This shiny module generates a count bar chart by year based on a table and a selected column. The chart will display the count of occurrences of the values of the selected column for each year. The chart will also display a legend with a color-coded representation of the values of the selected column. The module is intended to be used within a Shiny application.
+#'
+#' @param id The module identifier.
+#' @param title The title of the tab.
+#' @param theme The colour (status) of the tab.
+#' @param spinner_colour The colour of the spinner shown while the plot is generating.
+#'
+#' @export
+yearBarUI_included_only <- function(id, title = "", theme = "", spinner_colour = "#96c296", table) {
+
+  ns <- NS(id)
+
+  tabPanel(
+
+    title = title,
+    height = "800px",
+    status = theme,
+
+    fluidRow(
+      column(width = 12,
+             plotlyOutput(ns("plot")) %>% withSpinner(color = spinner_colour)
+      )),
+
+    fluidRow(
+      column(width = 1),
+      column(width = 9,
+             div(
+               style = "color: #1A465F;",
+               tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar, .irs--shiny .irs-from, .irs--shiny .irs-to
+                                 {background: #1A465F; border-top:#1A465F; border-bottom: #1A465F; background-color: #1A465F;}")),
+
+               sliderInput(inputId =  ns("included_year_slider"),
+                           label = "Select Year Range:",
+                           min = as.numeric(min(table$year, na.rm = TRUE)),
+                           max = as.numeric(max(table$year, na.rm = TRUE)),
+                           value = c(2000,
+                                     as.numeric(max(table$year, na.rm = TRUE))),
+                           step = 1,
+                           sep = "")
+             )
+      )
+    )
   )
+
+
 }
 
+#' Percentage Bar Chart by Year Server Function
+#'
+#' This is the server function for the percentbarYear module. It takes a table, a column name, and a display option as inputs. It generates a percentage bar chart by year based on the inputs. The chart will display the percentage of occurrences of the values of the selected column for each year. The chart will also display a legend with a color-coded representation of the values of the selected column.
+#'
+#' @param id The module identifier.
+#' @param table The data table to use for generating the chart.
+#' @param column The name of the column to use for generating the chart.
+#' @param display The value of the column to display. Default is "reported".
+#'
+#' @export
+yearBarServer_included_only <- function(id, table, column,
+                                        text="",
+                                        colour = "#73D055FF"
+){
+  moduleServer(
+    id,
+    function(input, output, session) {
+      output$plot <- renderPlotly({
+
+        x <- ggplot2::enquo(column)
+
+        table <- table %>%
+          mutate(x = factor(!!rlang::sym(column)))
+
+        table %>%
+          filter(!year == "unknown") %>%
+          filter(!year == "") %>%
+          filter(x == "included") %>%
+          filter(year >= min(input$included_year_slider),
+                 year <= max(input$included_year_slider)) %>%
+          group_by(year, x) %>%
+          count() %>%
+          plot_ly(x = ~year,
+                  type = 'bar',
+                  y = ~n,
+                  colors = colour,
+                  color = ~x,
+                  hoverinfo = 'text',
+                  textposition = "none",
+                  text = ~paste("<b>Info:</b> ", x,
+                                "<br><b>Number of Publications:</b>", n,
+                                "<br><b>Year:</b>", year)) %>%
+          layout(showlegend = FALSE,
+                 yaxis = list(title = 'Number of publications'),
+                 xaxis = list(title = "", tickangle = -45, ticklen = 4), barmode='stack',
+                 annotations =
+                   list(x = 1, y = -0.2, text = text,
+                        showarrow = F, xref='paper', yref='paper',
+                        xanchor='right', yanchor='bottom', xshift=0, yshift=0,
+                        font=list(size=12, color="black")))
+      })
+    }
+  )}
 
 #' Pie chart indicating completion
 #'
@@ -1322,7 +1109,9 @@ search_UI <- function(id, table) {
         ),
 
 
-        DT::dataTableOutput(ns("search_results_studies")) %>% withSpinner(color="#96c296")
+        DT::dataTableOutput(ns("search_results_studies")) %>% withSpinner(color="#96c296"),
+        verbatimTextOutput(ns("debug_info")) # For debugging, can be removed
+        
 
     )
 
@@ -1810,7 +1599,7 @@ search_Server <- function(id,
         selected_studies <- as.data.frame(selected_studies) %>%
           ungroup() %>%
           arrange(Intervention == "Unknown") %>% 
-          rename("uid" = "Uid", "Outcome Measures" = "Outcome_measures", "Intervention Provider" = "Intervention_provider")
+          rename("uid" = "Uid", "Outcome Measures" = "Outcome_measures")
         
           } else {
             
@@ -1932,12 +1721,119 @@ search_Server <- function(id,
 
       # Reactive datatable showing studies and search results
       output$search_results_studies <- DT::renderDataTable({
-    
         
-        DT::datatable(
-          filter_results()[,2:ncol(filter_results())],
+        # js <- c(
+        #   "$('[id^=checkb]').on('click', function(){",
+        #   "  var id = this.getAttribute('id');",
+        #   "  var i = parseInt(/checkb(\\d+)/.exec(id)[1]);",
+        #   "  var value = $(this).prop('checked');",
+        #   "  var info = [{row: i, col: 3, value: value}];",
+        #   "  Shiny.setInputValue('dtable_cell_edit:DT.cellInfo', info);",
+        #   "})"
+        # )
+        
+        # js <- c(
+        #   "$('[id^=textb]').on('input', function(){",
+        #   "  var id = this.getAttribute('id');",
+        #   "  var i = parseInt(/textb(\\d+)/.exec(id)[1]);",
+        #   "  var value = $(this).val();",
+        #   "  var info = [{row: i, col: 3, value: value}];",
+        #   "  Shiny.setInputValue('dtable_cell_edit:DT.cellInfo', info);",
+        #   "})"
+        # )
+        
+        js <- c(
+          "$('[id^=dropdownb]').on('change', function(){",
+          "  var id = this.getAttribute('id');",
+          "  var i = parseInt(/dropdownb(\\d+)/.exec(id)[1]);",
+          "  var value = $(this).val();",
+          "  var info = [{row: i, col: 3, value: value}];",
+          "  Shiny.setInputValue('dtable_cell_edit:DT.cellInfo', info);",
+          "})"
+        )
+
+        shinyInput <- function(FUN, len, id, ...) {
+          inputs <- character(len)
+          for (i in seq_len(len)) {
+            inputs[i] <- as.character(
+              div(
+                style = "width: 100%; text-align: center;",
+                tags$div(
+                  style = "display: flex; justify-content: center; align-items: center; margin-top: 10px;", 
+                  FUN(paste0(id, i), label = NULL, choices = c("intervention", "outcome", "discipline"), ...)
+                )
+              )
+            )
+          }
+          inputs
+        }
+        
+      
+        data <- filter_results() %>% 
+          sample_n(20)
+        
+        # Replace checkbox with selectInput (dropdown)
+        data$flag <- shinyInput(selectInput, nrow(data), "dropdownb")
+        
+        
+        # shinyInput <- function(FUN, len, id, ...) {
+        #   inputs <- character(len)
+        #   for (i in seq_len(len)) {
+        #     inputs[i] <- as.character(
+        #       div(
+        #         style = "width: 100%; text-align: center;",
+        #         tags$div(
+        #           style = "display: flex; justify-content: center; align-items: center; margin-top: 10px;", 
+        #           FUN(paste0(id, i), label = NULL, width = "100%", ...)
+        #         )
+        #       )
+        #     )
+        #   }
+        #   inputs
+        # }
+        # 
+        # browser()
+        # data <- filter_results() %>% 
+        #   sample_n(20)
+        # 
+        # # Replace checkbox with textInput
+        # data$flag <- shinyInput(textInput, nrow(data), "textb", value = "", placeholder = "Enter text")
+        
+
+        
+        # shinyInput <- function(FUN, len, id, ...) {
+        #   inputs <- character(len)
+        #   for (i in seq_len(len)) {
+        #     inputs[i] <- as.character(
+        #       div(
+        #         style = "width: 100%; text-align: center;",
+        #         tags$div(
+        #           style = "transform: scale(2.5); display: flex; justify-content: center; align-items: center; margin-top: 50px;", 
+        #           FUN(paste0(id, i), label = NULL, ...)
+        #         )
+        #       )
+        #     )
+        #   }
+        #   inputs
+        # }
+        # browser()
+        # data <- filter_results() %>% 
+        #   sample_n(20)
+        #   #mutate(flag = shinyInput(checkboxInput, nrow(filter_results()), "checkb"))
+        # data$flag <- shinyInput(checkboxInput, nrow(data), "checkb")  # Add checkboxes
+       
+        # # Add action buttons
+        # data$Action <- sapply(data$flag, function(id) {
+        #   as.character(actionButton(inputId = paste0("btn_", id), label = "View", onclick = paste0("Shiny.setInputValue('show_modal', ", id, ", {priority: 'event'})")))
+        # })
+
+        
+        DT::datatable(data = data,
           rownames = FALSE,
           escape = FALSE,
+          selection = "none",
+          callback = JS(js),
+          
           # extensions = c('Buttons'),
           options = list(
             language = list(
@@ -1947,48 +1843,38 @@ search_Server <- function(id,
             scrollY = 600,
             scrollX = 100,
             scroller = TRUE,
+            
             columnDefs = list(
-              list(
-                targets = c(1), #target for JS code
-                render = JS(
-                  "function(data, type, row, meta) {",
-                  "return type === 'display' && data.length > 15 ?",
-                  "'<span title=\"' + data + '\">' + data.substr(0, 30) + '...</span>' : data;",
-                  "}"),
-
-                width = "10%"
-              ),
-              list(
-                # targets = c(1), #target for JS code
-                # render = JS(
-                #   "function(data, type, row, meta) {",
-                #   "return type === 'display' && data.length > 15 ?",
-                #   "'<span title=\"' + data + '\">' + data.substr(0, 15) + '...</span>' : data;",
-                #   "}")
-                # width = "200px"
-              )
               # list(
-              #   targets = c(3:7), # columns 4, 5, and 6
+              #   targets = c(1), #target for JS code
               #   render = JS(
               #     "function(data, type, row, meta) {",
-              #     "  if (type === 'display' && data) {",
-              #     "  var words = data.split(';');",
-              #     " var formattedText = words.map(function(word) {",
-              #     "  var color =  '#' + ('000000' + Math.floor(Math.random()*16777215).toString(16)).slice(-6);",
-              #     "      var textColor = (parseInt(color.substring(1), 16) > 0xffffff / 2) ? 'black' : 'white';",
-              #     "      return '<span style=\"background-color:' + color + '; color:' + textColor + '; padding: 3px; border-radius: 5px; margin-right: 5px;\">' + word + '</span>';",
-              #     # "      return '<span style=\"background-color:' + color + '; padding: 3px; border-radius: 5px; margin-right: 5px;\">' + word + '</span>';",
-              #     "    }).join('; ');",
-              #     "    return formattedText;",
-              #     "  }",
-              #     "  return data;",
-              #     "}")
-              # ),
-              #list(width = '10%', targets = "_all")
+              #     "return type === 'display' && data.length > 15 ?",
+              #     "'<span title=\"' + data + '\">' + data.substr(0, 30) + '...</span>' : data;",
+              #     "}"),
+              # 
+              #   width = "10%"
+              # )
             )
           )
 
         )
+        
+        # # Observe button clicks and show modal
+        # observeEvent(input$show_modal, {
+        #   selected_id <- input$show_modal
+        #   selected_row <- filter_results()[filter_results()$ID == selected_id, ]
+        #   
+        #   showModal(modalDialog(
+        #     title = paste("Details for", selected_row$Name),
+        #     paste("Description:", selected_row$Description),
+        #     easyClose = TRUE,
+        #     footer = modalButton("Close")
+        #   ))
+        # })
+        # 
+        # # Debugging Output (Optional)
+        # output$debug_info <- renderPrint({ input$show_modal })
       })
 
 

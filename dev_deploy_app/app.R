@@ -36,8 +36,8 @@ library(dplyr)
 library(DT)
 library(reactlog)
 
-# source("irise_modules_static_filters.R")
-source("irise_modules.R")
+source("irise_modules_static_filters.R")
+# source("irise_modules.R")
 
 # Connect to db
 con <- dbConnect(RPostgres::Postgres(),
@@ -1776,8 +1776,8 @@ server <- function(input, output, session) {
                 table = included_with_metadata,
                 combined_pico_table = pico,
                 citations_for_download = citations_for_dl,
-                project_name = "iRISE-SOLES"
-                # current_tab = reactive(input$sidebarmenu)
+                project_name = "iRISE-SOLES",
+                current_tab = reactive(input$sidebarmenu)
                 )  # pass reactive here
   
   
