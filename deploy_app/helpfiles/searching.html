@@ -352,33 +352,80 @@ display: none;
 </div>
 
 
-<p class="myclass" style="color:black !important;">
-
-## Why search?
-
-The SPRINT-SOLES workflow uses the full text of publications to tag them for mentions of pesticides and animal species. Outcome measures are not currenly tagged by the platform. To identify research of relevance to a specific outcome of interest, we recommend searching for these. Furthermore, if you want to identify research in a particular in vitro model, in an ecosystem, or a particular patient population, we recommend using search terms to identify these.
-
-## How does searching work?
-
-The search functionality within the SOLES app allows users to search the title, abstract, and keywords of indexed articles. Users enter search terms which are translated in the background into a specialised search patterns called [regular expressions](https://cs.lmu.edu/~ray/notes/regex/) which are used to search through the title, abstract, and keyword text fields and return studies with matches.
-
-## How to search
-
-Enter terms separated by commas into the box on this page and decide whether to combine with a boolean AND or OR operator. Then click &quot;search database&quot; to run the search. The results will appear in the table at the bottom of this page.
-
-An example search: mortality, death, survival
-
-## Wildcards and search syntax
-
-To search for Parkinson&#39;s, Parkinsons, Parkinsonian gait, or Parkinsonism, we can use wildcards (\*) in a similar way to other search engines. In regular expression notation, the character &quot;.&quot; matches any character and the character &quot;\*&quot; matches the previous character 1 or more times.
-
-The example search: Parkinson.\* Will search for articles that mention Parkinson&#39;s, Parkinsons, Parkinsonian, or Parkinsonism in the title, abstract, or keywords
-
-## How to use filters
-
-Before or after you run a search, you can press the filter button (left hand side of the table of studies) to filter studies of interest. When you have selected your filters, press the apply button to obtain the relevant articles that match your filter(s).
-
-How to start again If you want to run a new search, it is advisable to press the Reset search query button to remove any filters and clear your search box. You can then run another search and apply different filters.
+<style>
+body {
+color: black !important;
+}
+</style>
+<div id="why-search" class="section level2">
+<h2>Why search?</h2>
+<p>The iRISE-SOLES workflow uses the full text of publications to
+annotate articles by intervention evaluated and outcomes measured, among
+other tags. If you want to identify research in a particular population
+or by another measure which isn’t covered by our tagging functionality,
+we recommend using search terms to identify these.</p>
+</div>
+<div id="how-does-searching-work" class="section level2">
+<h2>How does searching work?</h2>
+<p>The search functionality within the SOLES app allows users to search
+the title, abstract, and keywords of indexed articles. Users enter
+search terms which are translated in the background into a specialised
+search patterns called
+<a href="https://cs.lmu.edu/~ray/notes/regex/" target="_blank">regular
+expressions</a> which are used to search through the title, abstract,
+and keyword text fields and return studies with matches.</p>
+</div>
+<div id="how-to-search" class="section level2">
+<h2>How to search</h2>
+<p>Enter terms separated by commas into the box on this page and decide
+whether to combine with a boolean AND or OR operator.</p>
+<p>For example, searching with the <strong>AND</strong> button pressed
+<code>scientific, manuscript, feedback</code> will search for
+“scientific” AND “manuscript” AND “feedback”. If you would like to
+combine boolean operators then you can use the
+<i class="fa fa-magnifying-glass-plus"></i> <strong>Advanced</strong>
+search tab.</p>
+<p>Then click <i class="fa fa-magnifying-glass"></i>
+<strong>Search</strong> to run the search. The results will appear in
+the table at the bottom of this page.</p>
+</div>
+<div id="wildcards-and-search-syntax" class="section level2">
+<h2>Wildcards and search syntax</h2>
+<p>To search for <strong>reproducible</strong>,
+<strong>reproducibility</strong>, or <strong>reproducibly</strong>, we
+can use regular expressions in R in a similar way to wildcards in other
+search engines.</p>
+<p>In regular expression notation:<br />
+- The character <code>.</code> matches any single character.<br />
+- The character <code>*</code> matches the previous element <strong>zero
+or more times</strong>.<br />
+- To match <strong>one or more times</strong>, you would use
+<code>+</code> instead.</p>
+<p>The pattern <code>reproducib.*</code> will match any string starting
+with <code>reproducib</code> and followed by zero or more characters,
+which includes:<br />
+- reproducible - reproducibility<br />
+- reproducibly</p>
+</div>
+<div id="how-to-use-filters" class="section level2">
+<h2>How to use filters</h2>
+<p>Before or after you run a search, you can press the
+<i class="fa fa-sliders"></i> <strong>Filter</strong> button to filter
+studies of interest.</p>
+</div>
+<div id="download-study-metadata" class="section level2">
+<h2>Download study metadata</h2>
+<p>You can download study metadata in various formats, using the
+<i class="fa fa-download"></i> <strong>Download</strong> button located
+on the table below.</p>
+</div>
+<div id="how-to-start-again" class="section level2">
+<h2>How to start again</h2>
+<p>If you want to run a new search, it is advisable to press the
+<i class="fa fa-times-circle"></i><strong>Clear</strong> button to
+remove any filters and clear your search box. You can then run another
+search and apply different filters.</p>
+</div>
 
 
 
