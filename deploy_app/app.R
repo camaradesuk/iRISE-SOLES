@@ -34,7 +34,9 @@ library(tidyr)
 library(pool)
 library(dplyr)
 library(DT)
+library(reactlog)
 
+# source("irise_modules_static_filters.R")
 source("irise_modules.R")
 
 # Connect to db
@@ -52,7 +54,6 @@ irise_colours <- list(
     gradient_arrow = "#89CB93",
     turquoise = "#47B1A3",
     dark_turquoise = "#266080"
-
   ))
 
 
@@ -102,49 +103,79 @@ for (file in all_files) {
 
 # Create list for pico elements in search filter dropdown menu
 pico_elements_list <- list(
-  pico_element_1 = list(id = "dropdown_interventions",
-                        table = interventions_df,
-                        label1 = "Intervention:",
-                        column1 = "name",
-                        filter_no = 1),
-  pico_element_2 = list(id = "dropdown_provider",
-                        table = intervention_provider_df,
-                        label1 = "Intervention Provider:",
-                        column1 = "name",
-                        filter_no = 1),
-  pico_element_3 = list(id = "dropdown_discipline",
-                        table = discipline_df,
-                        label1 = "Discipline:",
-                        column1 = "name",
-                        filter_no = 1),
-  pico_element_4 = list(id = "dropdown_outcomes",
-                        table = outcome_measures_df,
-                        label1 = "Outcome:",
-                        column1 = "name",
-                        filter_no = 1),
-  pico_element_5 = list(id = "dropdown_target_population",
-                        table = target_population_df,
-                        label1 = "Target Population:",
-                        column1 = "name",
-                        filter_no = 1),
-  pico_element_6 = list(id = "dropdown_research_stage",
-                        table = research_stage_df,
-                        label1 = "Research Stage:",
-                        column1 = "name",
-                        filter_no = 1),
-  pico_element_7 = list(id = "dropdown_target_pop_location",
-                        table = target_pop_location_df,
-                        label1 = "Target Population Location:",
-                        column1 = "name",
-                        filter_no = 1)
+  pico_element_1 = list(
+    id = "dropdown_interventions",
+    table = interventions_df,
+    label1 = HTML("<i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human (green) or AI (blue) — see \"Data Transparency\" tab for more info'></i> Intervention:"),
+    column1 = "name",
+    filter_no = 1
+  ),
+  pico_element_2 = list(
+    id = "dropdown_provider",
+    table = intervention_provider_df,
+    label1 = HTML("<i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human (green) or AI (blue) — see \"Data Transparency\" tab for more info'></i> Intervention Provider:"),
+    column1 = "name",
+    filter_no = 1
+  ),
+  pico_element_3 = list(
+    id = "dropdown_discipline",
+    table = discipline_df,
+    label1 = HTML("<i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human (green) or AI (blue) — see \"Data Transparency\" tab for more info'></i> Discipline:"),
+    column1 = "name",
+    filter_no = 1
+  ),
+  pico_element_4 = list(
+    id = "dropdown_outcomes",
+    table = outcome_measures_df,
+    label1 = HTML("<i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human (green) or AI (blue) — see \"Data Transparency\" tab for more info'></i> Outcome:"),
+    column1 = "name",
+    filter_no = 1
+  ),
+  pico_element_5 = list(
+    id = "dropdown_target_population",
+    table = target_population_df,
+    label1 = HTML("<i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human (green) or AI (blue) — see \"Data Transparency\" tab for more info'></i> Target Population:"),
+    column1 = "name",
+    filter_no = 1
+  ),
+  pico_element_6 = list(
+    id = "dropdown_research_stage",
+    table = research_stage_df,
+    label1 = HTML("<i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human (green) or AI (blue) — see \"Data Transparency\" tab for more info'></i> Research Stage:"),
+    column1 = "name",
+    filter_no = 1
+  ),
+  pico_element_7 = list(
+    id = "dropdown_target_pop_location",
+    table = target_pop_location_df,
+    label1 = HTML("<i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human (green) or AI (blue) — see \"Data Transparency\" tab for more info'></i> Target Population Location:"),
+    column1 = "name",
+    filter_no = 1
+  ),
+  pico_element_8 = list(
+    id = "dropdown_retraction",
+    table = retraction_tag %>% rename(name = is_retracted),
+    label1 = HTML("<img src='openalex.png' data-toggle='tooltip' data-placement='top' style='height: 1em; vertical-align: middle;' title='Data Source: OpenAlex'> Show/Hide Retractions:"),
+    column1 = "name",
+    filter_no = 1
+  ),
+  pico_element_9 = list(
+    id = "dropdown_annotated_by",
+    table = annotated_by_df,
+    label1 = HTML("<i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='See \"Data Transparency\" tab for more info'></i> Annotated by:"),
+    column1 = "name",
+    filter_no = 1
+  )
 )
 
 grey_pico_elements_list <- list(
-  pico_element_1 = list(id = "dropdown_ptype",
-                        table = grey_lit_pico,
-                        label1 = "Filter by Publication Type:",
-                        column1 = "name",
-                        filter_no = 1)
+  pico_element_1 = list(
+    id = "dropdown_ptype",
+    table = grey_lit_pico,
+    label1 = HTML("<i class='fa fa-database' data-toggle='tooltip' data-placement='top' title='Data Source: Original Publication Record — see \"Data Transparency\" tab for more info'></i> Publication Type:"),
+    column1 = "name",
+    filter_no = 1
+  )
 )
 
 ui <- bs4DashPage(freshTheme = mytheme,
@@ -155,27 +186,19 @@ ui <- bs4DashPage(freshTheme = mytheme,
                     title = tags$h5("iRISE-SOLES", style = "color: white; text-align: center;padding-top: 10px;"),
 
                     tags$a(href= 'https://irise-project.eu/',
+                           target = "_blank",
                            tags$img(src= "iRISE-lightlogo.png",
                                     height = "50px"))
                   ),
-                  dashboardSidebar(skin = "dark",
+                  bs4DashSidebar(id = "dashboardside", 
+                    skin = "dark",
                                    # collapsed = TRUE,
                                    sidebarMenu(
                                      id = "sidebarmenu",
                                      bs4SidebarMenuItem(tags$p("Homepage", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "home", icon = icon("home")),
                                      bs4SidebarMenuItem(tags$p("Data Collection", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "dc-main", icon = icon("database", verify_fa = FALSE)),
                                      bs4SidebarMenuItem(tags$p("Methodology", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "workflow-accordion-dc", icon = icon("question", verify_fa = FALSE)),
-                                     bs4SidebarMenuItem(tags$p("Search Database", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "search_database", icon = icon("search"),
-                                                        bs4SidebarMenuSubItem(tabName = "module_search_database",
-                                                                              tagList(
-                                                                                tags$span("Published literature", style = "font-family: KohinoorBangla, sans-serif !important;"),
-                                                                                tags$span(icon("file-lines"), style = "margin-left: 8px;")
-                                                                              )),
-                                                        bs4SidebarMenuSubItem(tabName = "grey_lit_database",
-                                                                              tagList(
-                                                                                tags$span("Grey literature", style = "font-family: KohinoorBangla, sans-serif !important;"),
-                                                                                tags$span(icon("book"), style = "margin-left: 8px;")
-                                                                              ))),
+                                     bs4SidebarMenuItem(tags$p("Data Transparency", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "data-transparency", icon = icon("tag", verify_fa = FALSE)),
                                      bs4SidebarMenuItem(tags$p("Evidence Map", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "evidence_map_bubble", icon = icon("diagram-project", verify_fa = FALSE)),
                                      bs4SidebarMenuItem(
                                        tags$p("Visual Summaries", style = "font-family: KohinoorBangla, sans-serif !important"),
@@ -234,6 +257,17 @@ ui <- bs4DashPage(freshTheme = mytheme,
                                                           tags$span(icon("user-check"), style = "margin-left: 8px;")
                                                         ),
                                                         tabName = "review-study-tab")),
+                                     bs4SidebarMenuItem(tags$p("Search Database", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "search_database", icon = icon("search"),
+                                                        bs4SidebarMenuSubItem(tabName = "module_search_database",
+                                                                              tagList(
+                                                                                tags$span("Published literature", style = "font-family: KohinoorBangla, sans-serif !important;"),
+                                                                                tags$span(icon("file-lines"), style = "margin-left: 8px;")
+                                                                              )),
+                                                        bs4SidebarMenuSubItem(tabName = "grey_lit_database",
+                                                                              tagList(
+                                                                                tags$span("Grey literature", style = "font-family: KohinoorBangla, sans-serif !important;"),
+                                                                                tags$span(icon("book"), style = "margin-left: 8px;")
+                                                                              ))),
                                      bs4SidebarMenuItem(tags$p("About", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "about", icon = icon("info"))
                                    )
                   ),
@@ -243,7 +277,7 @@ ui <- bs4DashPage(freshTheme = mytheme,
                     use_theme(mytheme),
 
                     useShinyjs(),
-
+                  
 
                   tags$head(
                       if (file.exists("google-analytics.html")) {
@@ -353,6 +387,7 @@ fluidRow(
 <li><i class='fas fa-arrow-trend-up'></i> Explore trends in the literature </li>
 <li><i class='fas fa-globe'></i> See the geographic spread of researchers working in this space</li>
 
+
           </ul>")
          )
   )
@@ -363,6 +398,7 @@ fluidRow(
   column(4,
        div(class = "custom-card-primary",
            tags$a(href = 'https://osf.io/9hzcv/?view_only=d74ff8089864468cb43daa06733e0be6',
+                  target = "_blank",
                   tags$img(src = "osf_logo.png", height = "140px")),
            div(class = "custom-card-text",
                "Read our protocol for the iRISE-SOLES project on the Open Science Framework")
@@ -371,6 +407,7 @@ fluidRow(
 column(4,
        div(class = "custom-card-warning",
            tags$a(href = 'https://portlandpress.com/clinsci/article/137/10/773/233083/Systematic-online-living-evidence-summaries',
+                  target = "_blank",
                   tags$img(src = "paper_screenshot.PNG", height = "140px")),
            div(class = "custom-card-text",
                "Read our SOLES paper")
@@ -379,6 +416,7 @@ column(4,
 column(4,
        div(class = "custom-card-info",
            tags$a(href = 'https://irise-project.eu/',
+                  target = "_blank",
                   tags$img(src = "irise_website.png", height = "140px")),
            div(class = "custom-card-text",
                "Visit the iRISE project website")
@@ -386,132 +424,30 @@ column(4,
 )
                     )),
 
-
-
-                    #   tabItem(tabName = "home",
-                    #
-                    #           box(
-                    #             div(
-                    #               style = "text-align: center;",
-                    #               tags$a(
-                    #                 href = 'https://irise-project.eu/',
-                    #                 tags$img(src = "iRISE_logo_dark_round.png", height = "300px")
-                    #               )
-                    #             ),
-                    #
-                    #             tags$br(),
-                    #             div(
-                    #
-                    #               style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
-                    #               "Taking an integrated approach to understanding, investigating and guiding strategies to address irreproducibility"
-                    #             ),
-                    #
-                    #
-                    #             background = "primary",
-                    #             width = 12,
-                    #             solidHeader = TRUE,
-                    #             title = "",
-                    #             status = "primary"),
-                    #
-                    #           plot_interpret_UI(id = "home_info",
-                    #                             title = "",
-                    #                             theme = "danger",
-                    #                             div(
-                    #                               style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
-                    #                               p("The overall aim for iRISE-SOLES is to systematically identify, synthesise and evaluate information on existing candidate interventions and tools to improve reproducibility. To do this, we have
-                    #                               developed an integrated workflow of automated tools to collect and tag published research articles and visualise the evidence in this interactive web application.
-                    #                               We tag studies by discipline, intervention, intervention provider, institution location, and reproducibility relevant outcomes. We also assess the transparency metrics of studies witin iRISE-SOLES e.g. their open access status and presence of data/code sharing."),
-                    #                               p("To search for peer-reviewed studies in the iRISE database, go to the iRISE Database tab. If you would like to search our grey literature database for pre-prints and conference abstracts etc, go to the iRISE Grey Literature tab.")
-                    #
-                    #                             )),
-                    #
-                    #           fluidRow(
-                    #
-                    #             column(4,
-                    #
-                    #                    box(height = 350,
-                    #                        div(
-                    #                          style = "text-align: center;",
-                    #                          tags$a(
-                    #                            href = 'https://osf.io/9hzcv/?view_only=d74ff8089864468cb43daa06733e0be6',
-                    #                            tags$img(src = "osf_logo.png", height = "200px")
-                    #                          )
-                    #                        ),
-                    #
-                    #                        tags$br(),
-                    #                        div(
-                    #                          style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
-                    #                          "Read our iRISE-SOLES protocol on the Open Science Framework"),
-                    #                        background = "warning",
-                    #                        width = NULL,
-                    #                        solidHeader = TRUE,
-                    #                        title = "",
-                    #                        status = "warning")),
-                    #
-                    #             column(4,
-                    #                    box(height = 350,
-                    #                        div(
-                    #                          style = "text-align: center;",
-                    #                          tags$a(
-                    #                            href = 'https://portlandpress.com/clinsci/article/137/10/773/233083/Systematic-online-living-evidence-summaries',
-                    #                            tags$img(src = "paper_screenshot.PNG", height = "200px")
-                    #                          )
-                    #                        ),
-                    #
-                    #                        tags$br(),
-                    #                        div(
-                    #                          style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
-                    #                          "Read our SOLES paper to learn more about our workflow"),
-                    #                        background = "secondary",
-                    #                        width = NULL,
-                    #                        solidHeader = TRUE,
-                    #                        title = "",
-                    #                        status = "secondary")),
-                    #
-                    #             column(4,
-                    #                    box(height = 350,
-                    #                        div(
-                    #                          style = "text-align: center;",
-                    #                          tags$a(
-                    #                            href = 'https://irise-project.eu/',
-                    #                            tags$img(src = "irise_website.png", height = "200px")
-                    #                          )
-                    #                        ),
-                    #
-                    #                        tags$br(),
-                    #                        div(
-                    #                          style = "text-align: center;font-family: KohinoorBangla, sans-serif;font-size: 20px !important;",
-                    #                          "Go to the iRISE website to learn more about the other work packages and wider project"),
-                    #                        background = "info",
-                    #                        width = NULL,
-                    #                        solidHeader = TRUE,
-                    #                        title = "",
-                    #                        status = "info")
-                    #
-                    #             ))),
-
                       # Data collection - ui -----
                       tabItem(tabName = "dc-main",
                               fluidRow(
+                                
                                 valueBox(
                                   width=3,
-                                  subtitle = tags$p("new citations this week", style = "font-size: 120%; color: white;font-family: KohinoorBangla, sans-serif !important"),
+                                  subtitle = tags$p("Publications this week", style = "font-size: 120%; color: white;font-family: KohinoorBangla, sans-serif !important"),
                                   color = "success",
                                   value = tags$p(sum(as.numeric(include_by_date$n)[which(include_by_date$date >= Sys.Date()-7)]),
                                                  style = "font-size: 300%; color: white; font-family: KohinoorBangla, sans-serif !important"),
-                                  icon = icon("clock", verify_fa = FALSE)),
+                                  icon = icon("clock", verify_fa = FALSE)
+                                  ),
+
+                                # valueBox(
+                                #   width=3,
+                                #   subtitle = tags$p("new citations this month", style = "font-size: 120%; color: white;font-family: KohinoorBangla, sans-serif !important"),
+                                #   color = "warning",
+                                #   value = tags$p(sum(as.numeric(include_by_date$n)[which(include_by_date$date >= Sys.Date()-30)]),
+                                #                  style = "font-size: 300%; color: white;font-family: KohinoorBangla, sans-serif !important"),
+                                #   icon = icon("calendar")),
 
                                 valueBox(
                                   width=3,
-                                  subtitle = tags$p("new citations this month", style = "font-size: 120%; color: white;font-family: KohinoorBangla, sans-serif !important"),
-                                  color = "warning",
-                                  value = tags$p(sum(as.numeric(include_by_date$n)[which(include_by_date$date >= Sys.Date()-30)]),
-                                                 style = "font-size: 300%; color: white;font-family: KohinoorBangla, sans-serif !important"),
-                                  icon = icon("calendar")),
-
-                                valueBox(
-                                  width=3,
-                                  subtitle = tags$p("new citations in the last year", style = "font-size: 120%; color: white;font-family: KohinoorBangla, sans-serif !important"),
+                                  subtitle = tags$p("Publications in the last year", style = "font-size: 120%; color: white;font-family: KohinoorBangla, sans-serif !important"),
                                   color = "info",
                                   value = tags$p(sum(as.numeric(include_by_date$n)[which(include_by_date$date >= Sys.Date()-365)]),
                                                  style = "font-size: 300%; color: white;font-family: KohinoorBangla, sans-serif !important"),
@@ -519,11 +455,20 @@ column(4,
 
                                 valueBox(
                                   width=3,
-                                  subtitle = tags$p("citations in database", style = "font-size: 120%; color: white;font-family: KohinoorBangla, sans-serif !important"),
+                                  subtitle = tags$p("Total publications", style = "font-size: 120%; color: white;font-family: KohinoorBangla, sans-serif !important"),
                                   color = "secondary",
                                   value = tags$p(sum(as.numeric(include_by_date$n)),
                                                  style = "font-size: 300%; color: white;font-family: KohinoorBangla, sans-serif !important"),
-                                  icon = icon("database"))
+                                  icon = icon("database")),
+                                  valueBox(
+                                    width=3,
+                                    subtitle = tags$p("Retracted publications", style = "font-size: 120%; color: white;font-family: KohinoorBangla, sans-serif !important"),
+                                    color = "danger",
+                                    value = tags$p(nrow(filter(retraction_tag, is_retracted == "Retracted")),
+                                                 style = "font-size: 300%; color: white; font-family: KohinoorBangla, sans-serif !important"),
+                                    icon = icon("circle-xmark", verify_fa = FALSE)
+                                  )
+                                  
                               ),
 
                               fluidRow(
@@ -552,6 +497,12 @@ column(4,
                               uiOutput("workflow")
                       ),
 
+ 
+                      tabItem(tabName = "data-transparency",
+
+                                      includeMarkdown("helpfiles/data_transparency.md")
+                      ),
+
 
                       # Transparency info - ui -----
                       tabItem(tabName = "data-summary-transparency",
@@ -565,36 +516,63 @@ column(4,
                                 btnName = NULL
                               ),
 
+                              # initialize tooltips once (put in dashboardBody / UI)
+                              tags$script(HTML("$(function () { $('[data-toggle=\"tooltip\"]').tooltip(); })")),
+                              
                               fluidRow(
-
                                 valueBox(
-                                  width=4,
-                                  subtitle = tags$h2("Open Access", style = "color: white;font-family: KohinoorBangla, sans-serif !important;"),
+                                  width = 4,
+                                  subtitle = tags$h2("Open Access", style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
                                   color = "success",
-                                  value = tags$p(round(length(oa_tag$uid[which(oa_tag$is_oa==TRUE)])/length(oa_tag$uid)*100,1), "%",
-                                                 style = "font-size: 300%; color: white;"),
-                                  icon = icon("lock")
-                                ),
-
+                                  value = tags$p(
+                                    paste0(round(length(oa_tag$uid[which(oa_tag$is_oa=="open")])/nrow(included_with_metadata)*100,1), "%"),
+                                    style = "font-size: 300%; color: white;"
+                                  )
+                                ) %>% 
+                                  tagAppendChildren(
+                                    tags$div(
+                                      tags$img(
+                                        src = "openalex.png",
+                                        `data-toggle` = "tooltip",
+                                        `data-placement` = "left",
+                                        title = "Data source: OpenAlex — see \"Data Transparency\" tab for more info",
+                                        style = "height: 60px; filter: brightness(0) invert(1); position: absolute; top: 20px; right: 20px;"
+                                      )
+                                    )
+                                  ),
+                                
                                 valueBox(
-                                  width=4,
-                                  subtitle = tags$h2("Open Data", style = "color: white;font-family: KohinoorBangla, sans-serif !important;"),
+                                  width = 4,
+                                  subtitle = tags$h2("Open Data", style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
                                   color = "info",
-                                  value = tags$p(round(length(transparency$uid[which(transparency$is_open_data==TRUE)])/length(transparency$uid)*100,1), "%",
-                                                 style = "font-size: 300%; color: white;"),
-                                  icon = icon("bar-chart", verify_fa = FALSE)
+                                  value = tags$p(
+                                    paste0(round(length(transparency$uid[which(transparency$is_open_data=="available")])/nrow(included_with_metadata)*100,1), "%"),
+                                    style = "font-size: 300%; color: white;"
+                                  ),
+                                  icon = tags$i(
+                                    class = "fa fa-code fa-2x",                 
+                                    `data-toggle` = "tooltip",
+                                    `data-placement` = "left",
+                                    title = "Data source: ODDPub — see \"Data Transparency\" tab for more info"
+                                  )
                                 ),
-
+                                
                                 valueBox(
-                                  width=4,
-                                  subtitle = tags$h2("Open Code", style = "color: white;font-family: KohinoorBangla, sans-serif !important;"),
+                                  width = 4,
+                                  subtitle = tags$h2("Open Code", style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
                                   color = "secondary",
-                                  value = tags$p(round(length(transparency$uid[which(transparency$is_open_code==TRUE)])/length(transparency$uid)*100,1), "%",
-                                                 style = "font-size: 300%; color: white;"),
-                                  icon = icon("code")
+                                  value = tags$p(
+                                    paste0(round(length(transparency$uid[which(transparency$is_open_code=="available")])/nrow(included_with_metadata)*100,1), "%"),
+                                    style = "font-size: 300%; color: white;"
+                                  ),
+                                  icon = tags$i(
+                                    class = "fa fa-code fa-2x",
+                                    `data-toggle` = "tooltip",
+                                    `data-placement` = "left",
+                                    title = "Data source: ODDPub — see \"Data Transparency\" tab for more info"
+                                  )
                                 )
                               ),
-
 
                               tabBox(
 
@@ -604,30 +582,129 @@ column(4,
                                 status = "secondary",
                                 solidHeader = FALSE,
                                 type = "tabs",
+                                
+                                # --- Open Access Type (OpenAlex) ---
+                                yearBarUI(
+                                  "oa_pub_type_per_year",
+                                  title = tagList(
+                                    tags$div(
+                                      style = "display: flex; align-items: center; gap: 10px;",
+                                      tags$p(
+                                        "Open access type over time",
+                                        style = "color: #1A465F; font-family: KohinoorBangla, sans-serif !important; font-size: 1.2em; margin: 0;"
+                                      ),
+                                      tags$img(
+                                        src = "openalex.png",
+                                        `data-toggle` = "tooltip",
+                                        `data-placement` = "right",
+                                        title = "Data source: OpenAlex — see \"Data Transparency\" tab for more info",
+                                        style = "height: 20px; filter: brightness(0) saturate(100%) invert(6%) sepia(97%) saturate(6423%) hue-rotate(184deg) brightness(91%) contrast(92%);"
+                                      )
+                                    )
+                                  ),
+                                  theme = "danger",
+                                  spinner_colour = "#89CB93",
+                                  table = oa_tag
+                                ),
+                                
+                                # --- Open Access Over Time (OpenAlex) ---
+                                yearBarUI(
+                                  "oa_pubs_per_year",
+                                  title = tagList(
+                                    tags$div(
+                                      style = "display: flex; align-items: center; gap: 10px;",
+                                      tags$p(
+                                        "Open access over time",
+                                        style = "color: #1A465F; font-family: KohinoorBangla, sans-serif !important; font-size: 1.2em; margin: 0;"
+                                      ),
+                                      tags$img(
+                                        src = "openalex.png",
+                                        `data-toggle` = "tooltip",
+                                        `data-placement` = "right",
+                                        title = "Data source: OpenAlex — see \"Data Transparency\" tab for more info",
+                                        style = "height: 20px; filter: brightness(0) saturate(100%) invert(6%) sepia(97%) saturate(6423%) hue-rotate(184deg) brightness(91%) contrast(92%);"
+                                      )
+                                    )
+                                  ),
+                                  theme = "secondary",
+                                  spinner_colour = "#89CB93",
+                                  table = oa_tag
+                                ),
+                                
+                                
+                                # --- Open Data Availability (ODDPub) ---
+                                yearBarUI(
+                                  "open_data_pubs_per_year",
+                                  title = tagList(
+                                    tags$div(
+                                      style = "display: flex; align-items: center; gap: 10px;",
+                                      tags$p(
+                                        "Open data availability over time",
+                                        style = "color: #1A465F; font-family: KohinoorBangla, sans-serif !important; font-size: 1.2em; margin: 0;"
+                                      ),
+                                      tags$i(
+                                        class = "fa fa-code fa-lg",
+                                        `data-toggle` = "tooltip",
+                                        `data-placement` = "right",
+                                        title = "Data source: ODDPub — see \"Data Transparency\" tab for more info",
+                                        style = "color: #1A465F;"
+                                      )
+                                    )
+                                  ),
+                                  theme = "danger",
+                                  spinner_colour = "#89CB93",
+                                  table = transparency
+                                ),
+                                
+                                # --- Open Code Availability (ODDPub) ---
+                                yearBarUI(
+                                  "open_code_pubs_per_year",
+                                  title = tagList(
+                                    tags$div(
+                                      style = "display: flex; align-items: center; gap: 10px;",
+                                      tags$p(
+                                        "Open code availability over time",
+                                        style = "color: #1A465F; font-family: KohinoorBangla, sans-serif !important; font-size: 1.2em; margin: 0;"
+                                      ),
+                                      tags$i(
+                                        class = "fa fa-code fa-lg",
+                                        `data-toggle` = "tooltip",
+                                        `data-placement` = "right",
+                                        title = "Data source: ODDPub — see \"Data Transparency\" tab for more info",
+                                        style = "color: #1A465F;"
+                                      )
+                                    )
+                                  ),
+                                  theme = "danger",
+                                  spinner_colour = "#89CB93",
+                                  table = transparency
+                                )
+                                
 
-                                yearBarUI("oa_pubs_per_year",
-                                          title = tags$p("Open access over time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
-                                          theme = "secondary",
-                                          spinner_colour = "#89CB93",
-                                          table = oa_tag),
-
-                                yearBarUI("oa_pub_type_per_year",
-                                          title = tags$p("Open access type over time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
-                                          theme = "danger",
-                                          spinner_colour = "#89CB93",
-                                          table = oa_tag),
-
-                                yearBarUI("open_data_pubs_per_year",
-                                          title = tags$p("Open data availability over time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
-                                          theme = "danger",
-                                          spinner_colour = "#89CB93",
-                                          table = transparency),
-
-                                yearBarUI("open_code_pubs_per_year",
-                                          title = tags$p("Open code availability over time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
-                                          theme = "danger",
-                                          spinner_colour = "#89CB93",
-                                          table = transparency)
+                                
+                                # yearBarUI("oa_pubs_per_year",
+                                #           title = tags$p("Open access over time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
+                                #           theme = "secondary",
+                                #           spinner_colour = "#89CB93",
+                                #           table = oa_tag),
+                                
+                                # yearBarUI("oa_pub_type_per_year",
+                                #           title = tags$p("Open access type over time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
+                                #           theme = "danger",
+                                #           spinner_colour = "#89CB93",
+                                #           table = oa_tag),
+                                # 
+                                # yearBarUI("open_data_pubs_per_year",
+                                #           title = tags$p("Open data availability over time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
+                                #           theme = "danger",
+                                #           spinner_colour = "#89CB93",
+                                #           table = transparency),
+                                # 
+                                # yearBarUI("open_code_pubs_per_year",
+                                #           title = tags$p("Open code availability over time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
+                                #           theme = "danger",
+                                #           spinner_colour = "#89CB93",
+                                #           table = transparency)
 
 
                               ),
@@ -648,6 +725,7 @@ column(4,
 
                                                   tags$a(
                                                     href = 'https://research.library.gsu.edu/c.php?g=115588&p=754380',
+                                                    target = "_blank",
                                                     tags$button("Open Access Type Info", class = "btn btn-primary", style = "background-color: #1A465F; border-color: #1A465F;font-family: KohinoorBangla, sans-serif !important;")
                                                   )),
                                                 theme = "primary")
@@ -658,6 +736,7 @@ column(4,
 
                       # Evidence map - ui ----
                       tabItem(tabName = "evidence_map_bubble",
+                              
 
                               box(
                                 title="Evidence map of controlled studies evaluating interventions",
@@ -692,7 +771,19 @@ column(4,
                                 fluidRow(column(width = 6,
                                                 pickerInput(
                                                   inputId = "select_outcome",
-                                                  label = tags$p("Select Reproducibility Measure(s)", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                                  label = tags$p(
+                                                    tags$i(
+                                                      class = "fa fa-tag",
+                                                      `data-toggle` = "tooltip",
+                                                      `data-placement` = "top",
+                                                      title = "Data Source: Annotation by Human or AI — see 'Data Transparency' tab for more info",
+                                                      style = "margin-right: 5px;"
+                                                    ),
+                                                    "Select Reproducibility Measure(s):",
+                                                    style = "color: #1A465F; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"
+                                                  ),
+                                                  
+                                                  # label = tags$p("Select Reproducibility Measure(s)", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
                                                   choices = sort(unique(all_annotations$outcome_measures[!all_annotations$outcome_measures %in% c("Unknown", "Unspecified")])),
                                                   selected = c("Computational reproducibility"),
                                                   multiple = TRUE,
@@ -707,7 +798,18 @@ column(4,
                                 column(width = 6,
                                        pickerInput(
                                          inputId = "legend_bubble_select",
-                                         label = tags$p("Select a Subgroup", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                         # label = tags$p("Select a Subgroup", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                         label = tags$p(
+                                           tags$i(
+                                             class = "fa fa-tag",
+                                             `data-toggle` = "tooltip",
+                                             `data-placement` = "top",
+                                             title = "Data Source: Annotation by Human or AI — see 'Data Transparency' tab for more info",
+                                             style = "margin-right: 5px;"
+                                           ),
+                                           "Select a Subgroup:",
+                                           style = "color: #1A465F; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"
+                                         ),
                                          choices = c("Discipline"="discipline", "Intervention provider"="intervention_provider", "Target population"="target_population"),
                                          selected = c("discipline"),
                                          multiple = FALSE,
@@ -723,7 +825,18 @@ column(4,
                                 fluidRow(column(width = 6,
                                                 pickerInput(
                                                   inputId = "select_intervention",
-                                                  label = tags$p("Select Intervention(s) (20 Selections Max)", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                                  label = tags$p(
+                                                    tags$i(
+                                                      class = "fa fa-tag",
+                                                      `data-toggle` = "tooltip",
+                                                      `data-placement` = "top",
+                                                      title = "Data Source: Annotation by Human or AI — see 'Data Transparency' tab for more info",
+                                                      style = "margin-right: 5px;"
+                                                    ),
+                                                    "Select Intervention(s) (20 Selections Max):",
+                                                    style = "color: #1A465F; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"
+                                                  ),
+                                                  # label = tags$p("Select Intervention(s) (20 Selections Max)", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
                                                   choices = sort(unique(all_annotations$intervention[!all_annotations$intervention %in% c("Unknown", "Unspecified")])),
                                                   selected = sort(unique(all_annotations$intervention[!all_annotations$intervention %in% c("Unknown", "Unspecified")])),
                                                   multiple = TRUE,
@@ -738,7 +851,18 @@ column(4,
                                 column(width = 6,
                                        pickerInput(
                                          inputId = "legend_bubble_specific",
-                                         label = tags$p("Filter Subgroup", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                         label = tags$p(
+                                           tags$i(
+                                             class = "fa fa-tag",
+                                             `data-toggle` = "tooltip",
+                                             `data-placement` = "top",
+                                             title = "Data Source: Annotation by Human or AI — see 'Data Transparency' tab for more info",
+                                             style = "margin-right: 5px;"
+                                           ),
+                                           "Filter Subgroup",
+                                           style = "color: #1A465F; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"
+                                         ),
+                                         # label = tags$p("Filter Subgroup", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
                                          choices = list(),
                                          selected = ,
                                          multiple = TRUE,
@@ -789,7 +913,7 @@ column(4,
                                     tags$div(
                                       style = "padding: 10px;",
                                       tags$h4("Guidance for Funder Data"),
-                                      tags$p("For each article indexed, we have obtained funding information from Open Alex where possible."),
+                                      tags$p("For each article indexed, we have obtained funding information from OpenAlex where possible."),
                                       tags$p("This dashboard summarises the number of research studies funded over time by different funders and
                                              indicates the top reproducibility interventions funders have invested in.
                                              We also provide the % of funded studies that are open access, and provide open code or data, stratified
@@ -798,8 +922,17 @@ column(4,
 
                                   fluidRow(column(6,
                                                   pickerInput(inputId = "funder_select",
-
-                                                              label = tags$p("Select a funder", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                                              label = tags$p(
+                                                                tags$img(
+                                                                  src = "openalex.png",
+                                                                  style = "height: 1em; vertical-align: middle; margin-right: 5px; filter: brightness(0) saturate(100%) invert(6%) sepia(97%) saturate(6423%) hue-rotate(184deg) brightness(91%) contrast(92%);",
+                                                                  `data-toggle` = "tooltip",
+                                                                  `data-placement` = "top",
+                                                                  title = "Data Source: OpenAlex"
+                                                                ),
+                                                                "Select a Funder", 
+                                                                style = "color: #1A465F; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"
+                                                              ),
                                                               choices = unique(sort(funder_overall_count$funder_name)),
                                                               selected = c("National Institutes of Health"),
                                                               multiple = FALSE,
@@ -836,7 +969,17 @@ column(4,
                                   fluidRow(
                                     column(6,
                                            pickerInput(inputId = "funder_intervention_select",
-                                                       label = tags$p("Select an intervention", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                                       label = tags$p(
+                                                         tags$i(
+                                                           class = "fa fa-tag",
+                                                           `data-toggle` = "tooltip",
+                                                           `data-placement` = "top",
+                                                           title = "Data Source: Annotation by Human or AI — see Data Transparency tab for more info",
+                                                           style = "margin-right: 5px;"
+                                                         ),
+                                                         "Select an Intervention", 
+                                                         style = "color: #1A465F;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"
+                                                       ),
                                                        choices = NULL,
                                                        selected = NULL,
                                                        multiple = TRUE,
@@ -881,7 +1024,17 @@ column(4,
                                   column(2,
                                          pickerInput(
                                            inputId = "provider_select",
-                                           label = tags$p("Intervention Provider", style = "color: #47B1A3; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                           label = tags$p(
+                                             tags$i(
+                                               class = "fa fa-tag",
+                                               `data-toggle` = "tooltip",
+                                               `data-placement` = "top",
+                                               title = "Data Source: Annotation by Human or AI — see 'Data Transparency' tab for more info",
+                                               style = "margin-right: 5px;"
+                                             ),
+                                             "Intervention Provider",
+                                             style = "color: #1A465F; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"
+                                           ),
                                            choices = sort(unique(all_annotations$intervention_provider[!all_annotations$intervention_provider %in% c("Unknown", "Unspecified")])),
                                            selected = c("Researchers / Researcher Collaboration"),
                                            multiple = FALSE,
@@ -896,7 +1049,17 @@ column(4,
                                   column(2,
                                          pickerInput(
                                            inputId = "outcome_select",
-                                           label = tags$p("Outcome measure", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                           label = tags$p(
+                                             tags$i(
+                                               class = "fa fa-tag",
+                                               `data-toggle` = "tooltip",
+                                               `data-placement` = "top",
+                                               title = "Data Source: Annotation by Human or AI — see 'Data Transparency' tab for more info",
+                                               style = "margin-right: 5px;"
+                                             ),
+                                             "Outcome Measure",
+                                             style = "color: #1A465F; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"
+                                           ),
                                            choices = NULL,
                                            selected = NULL,
                                            multiple = FALSE,
@@ -911,7 +1074,17 @@ column(4,
                                   column(3,
                                          pickerInput(
                                            inputId = "outcome_comparison_select",
-                                           label = tags$p("Outcome(s) for comparison", style = "color: #47B1A3;font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"),
+                                           label = tags$p(
+                                             tags$i(
+                                               class = "fa fa-tag",
+                                               `data-toggle` = "tooltip",
+                                               `data-placement` = "top",
+                                               title = "Data Source: Annotation by Human or AI — see 'Data Transparency' tab for more info",
+                                               style = "margin-right: 5px;"
+                                             ),
+                                             "Outcome(s) for comparison",
+                                             style = "color: #1A465F; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"
+                                           ),
                                            choices = NULL,
                                            selected = NULL,
                                            multiple = TRUE,
@@ -924,8 +1097,7 @@ column(4,
 
                                   column(5,
                                          valueBoxOutput("top_int_five_years", width=NULL)
-                                         # valueBoxOutput("top_int_five_no"),
-                                         # valueBoxOutput("top_disc")
+                                      
                                   )),
                                 fluidRow(column(12,
                                                 plotlyOutput("outcome_year_plot", width = "100%", height="450px") %>% withSpinner(color="#96c296")))),
@@ -953,7 +1125,13 @@ column(4,
                                     width = 50,
                                     background = "#64C296",
                                     id = "inst_loc_sidebar",
-                                    icon = icon("info"),
+                                    icon = tags$i(
+                                      class = "fa fa-sliders fa-2x",
+                                      `data-toggle` = "tooltip",
+                                      `data-placement` = "right",
+                                      title = "Filter Data",
+                                      style = "cursor: pointer;"
+                                    ),
                                     fluidRow(
                                       column(width = 11,
                                              p("This map contains data on the location of first authors from across acticles represented in the iRISE database (including both controlled evaluations of interventions and other studies evaluating interventions). We were only able to obtain data
@@ -961,7 +1139,18 @@ column(4,
                                              tags$div(
                                                style = "padding: 0px;",
                                                selectizeInput(inputId = "country_select",
-                                                              label = tags$p("Select a Country", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
+                                                              label = tags$p(
+                                                                tags$img(
+                                                                  src = "openalex.png",
+                                                                  `data-toggle` = "tooltip",
+                                                                  `data-placement` = "top",
+                                                                  title = "Data Source: OpenAlex",
+                                                                  style = "height: 1em; vertical-align: middle; margin-right: 5px; filter: brightness(0) invert(1);"
+                                                                ),
+                                                                "Select a Country",
+                                                                style = "color: #ffffff; font-family: KohinoorBangla, sans-serif; margin: 0; padding: 0;"
+                                                              ),
+                                                              
                                                               choices = sort(unique(ror_data$country)),
                                                               selected = NULL,
                                                               multiple = TRUE,
@@ -971,7 +1160,18 @@ column(4,
                                                ),
                                                pickerInput(
                                                  inputId = "continent_select",
-                                                 label = tags$p("Select a Continent", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
+                                                 label = tags$p(
+                                                   tags$img(
+                                                     src = "openalex.png",
+                                                     `data-toggle` = "tooltip",
+                                                     `data-placement` = "top",
+                                                     title = "Data Source: OpenAlex",
+                                                     style = "height: 1em; vertical-align: middle; margin-right: 5px; filter: brightness(0) invert(1);"
+                                                   ),
+                                                   "Select a Continent",
+                                                   style = "color: #ffffff; font-family: KohinoorBangla, sans-serif; margin: 0; padding: 0;"
+                                                 ),
+                                                 
                                                  choices = sort(unique(ror_data$continent)),
                                                  selected = sort(unique(ror_data$continent)),
                                                  multiple = TRUE,
@@ -984,7 +1184,17 @@ column(4,
                                                ),
                                                pickerInput(
                                                  inputId = "name_select",
-                                                 label = tags$p("Select an Institution", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
+                                                 label = tags$p(
+                                                   tags$img(
+                                                     src = "openalex.png",
+                                                     `data-toggle` = "tooltip",
+                                                     `data-placement` = "top",
+                                                     title = "Data Source: OpenAlex",
+                                                     style = "height: 1em; vertical-align: middle; margin-right: 5px; filter: brightness(0) invert(1);"
+                                                   ),
+                                                   "Select an Institution",
+                                                   style = "color: #ffffff; font-family: KohinoorBangla, sans-serif; margin: 0; padding: 0;"
+                                                 ),
                                                  choices = sort(unique(ror_data$inst_name)),
                                                  selected = sort(unique(ror_data$inst_name)),
                                                  multiple = TRUE,
@@ -996,9 +1206,20 @@ column(4,
                                                    liveSearch = TRUE
                                                  )
                                                ),
+                                            
                                                pickerInput(
                                                  inputId = "inst_outcome_select",
-                                                 label = tags$p("Select an Outcome", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
+                                                 label = tags$p(
+                                                   tags$i(
+                                                     class = "fa fa-tag",
+                                                     `data-toggle` = "tooltip",
+                                                     `data-placement` = "top",
+                                                     title = "Data Source: Annotation by Human or AI — see Data Transparency tab for more info",
+                                                     style = "margin-right: 5px;"
+                                                   ),
+                                                   "Select an Outcome",
+                                                   style = "color: #ffffff; font-family: KohinoorBangla, sans-serif; margin: 0; padding: 0;"
+                                                 ),
                                                  choices = sort(unique(ror_data$outcome_measures[!ror_data$outcome_measures %in% c("Unspecified")])),
                                                  selected = sort(unique(ror_data$outcome_measures[!ror_data$outcome_measures %in% c("Unspecified")])),
                                                  multiple = TRUE,
@@ -1011,7 +1232,17 @@ column(4,
                                                ),
                                                pickerInput(
                                                  inputId = "inst_discipline_select",
-                                                 label = tags$p("Select a Discipline", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
+                                                 label = tags$p(
+                                                   tags$i(
+                                                     class = "fa fa-tag",
+                                                     `data-toggle` = "tooltip",
+                                                     `data-placement` = "top",
+                                                     title = "Data Source: Annotation by Human or AI — see Data Transparency tab for more info",
+                                                     style = "margin-right: 5px;"
+                                                   ),
+                                                   "Select a Discipline",
+                                                   style = "color: #ffffff; font-family: KohinoorBangla, sans-serif; margin: 0; padding: 0;"
+                                                 ),
                                                  choices = sort(unique(ror_data$discipline)),
                                                  selected = sort(unique(ror_data$discipline)),
                                                  multiple = TRUE,
@@ -1024,7 +1255,17 @@ column(4,
                                                ),
                                                pickerInput(
                                                  inputId = "inst_type_select",
-                                                 label = tags$p("Select Institution Type", style = "color: #ffffff; font-family: KohinoorBangla, sans-serif;margin: 0; padding: 0;"),
+                                                 label = tags$p(
+                                                   tags$img(
+                                                     src = "openalex.png",
+                                                     `data-toggle` = "tooltip",
+                                                     `data-placement` = "top",
+                                                     title = "Data Source: OpenAlex",
+                                                     style = "height: 1em; vertical-align: middle; margin-right: 5px; filter: brightness(0) invert(1);"
+                                                   ),
+                                                   "Select Institution Type",
+                                                   style = "color: #ffffff; font-family: KohinoorBangla, sans-serif; margin: 0; padding: 0;"
+                                                 ),
                                                  choices = sort(unique(ror_data$type)),
                                                  selected = sort(unique(ror_data$type)),
                                                  multiple = TRUE,
@@ -1457,7 +1698,18 @@ column(4,
                                                     style = "color: #1A465F;")))
                                 )))
                               )
-                  )
+                  ),
+tags$script(HTML("
+  // Initialize tooltips on page load
+  $(document).ready(function() {
+    $('[data-toggle=\"tooltip\"]').tooltip();
+  });
+
+  // Re-initialize tooltips whenever a Shiny output is updated
+  $(document).on('shiny:value', function() {
+    $('[data-toggle=\"tooltip\"]').tooltip();
+  });
+"))
 ))
 
 
@@ -1473,18 +1725,24 @@ server <- function(input, output, session) {
       height = 800
     )
   })
-
-
-
-  # shinyalert(
-  #   title="Welcome!",
-  #   text="iRISE-SOLES is a living evidence summary dashboard
-  # summarising the evidence on interventions to improve reproducibility.",
-  #   type = "info",
-  #   size = "s",
-  #   animation = TRUE,
-  #   confirmButtonText = "Enter iRISE-SOLES",
-  #   confirmButtonCol = "#1A465F")
+  
+  # output$data_sources <- renderUI({
+  #   tags$iframe(
+  #     seamless = "seamless",
+  #     src = "data_transparency.html",
+  #     width = "100%",
+  #     height = 800
+  #   )
+  # })
+  
+  observeEvent(input$sidebarmenu, {
+    # browser()
+    if(input$sidebarmenu == "module_search_database" || input$sidebarmenu == "evidence_map_bubble") {
+  
+      runjs("$('body').addClass('sidebar-collapse');")
+      
+    }
+  })
 
 
   observeEvent(input$sidebarmenu, {
@@ -1498,30 +1756,31 @@ server <- function(input, output, session) {
         size = "s",
         animation = TRUE,
         confirmButtonText = "OK!",
-        confirmButtonCol = "#1A465F",)
+        confirmButtonCol = "#1A465F")
     }
   })
 
   yearBarServer_included_only("included_studies_over_time_bar",
                               table=n_included_per_year_plot_data,
                               column="is_included",
-                              colour = "#89CB93")
+                              colour = "#64C296")
 
-  # Transparency - bar plots -----
-  yearBarServer("oa_pubs_per_year", table=oa_tag, column="is_oa", display=TRUE, order=c(TRUE, FALSE), text="Source:CrossRef", colours = c("#89CB93", "grey")) %>%
-    bindCache(nrow(transparency))
-  yearBarServer("oa_pub_type_per_year", table=oa_tag, column="oa_status", display=c("closed", "hybrid", "bronze", "gold", "green"), order=c("closed", "hybrid", "bronze", "gold", "green"),
-                text="Source:CrossRef", colours = c("red", "lightblue", "orange", "gold", "green")) %>% bindCache(nrow(transparency))
-  yearBarServer("open_data_pubs_per_year", table=transparency, column="is_open_data", display=TRUE, order=c(TRUE, FALSE),  text="Tool: OddPub, Riedel, N, et al. (2020), DOI:10.5334/dsj-2020-042", colours = c("#89CB93", "grey")) %>% bindCache(nrow(transparency))
-  yearBarServer("open_code_pubs_per_year", table=transparency, column="is_open_code", display=TRUE, order=c(TRUE, FALSE),  text="Tool: OddPub, Riedel, N, et al. (2020), DOI:10.5334/dsj-2020-042", colours = c("#89CB93", "grey")) %>% bindCache(nrow(transparency))
-
-  # Search Page - server -----
+  yearBarServer("oa_pubs_per_year", table=oa_tag, column="is_oa", display=c("open", "closed", "unknown"), order=c("open", "closed", "unknown"), text="Source:OpenAlex", colours = c("#93C48B", "#fa8072", "grey")) %>% bindCache(nrow(transparency))
+  yearBarServer("oa_pub_type_per_year", table=oa_tag, column="oa_status", display=c("hybrid", "bronze", "gold", "green", "diamond", "closed", "unknown"), order=c("hybrid", "bronze", "gold", "green", "diamond", "closed", "unknown"),
+                text="Source:CrossRef", colours = c("pink", "orange", "gold", "green", "blue", "red", "grey")) %>% bindCache(nrow(transparency))
+  yearBarServer("open_data_pubs_per_year", table=transparency, column="is_open_data", display= c("available", "not available", "unknown"), order=c("available", "not available", "unknown"),  text="Tool: OddPub, Riedel, N, et al. (2020), DOI:10.5334/dsj-2020-042", colours = c("#93C48B", "#fa8072", "grey")) %>% bindCache(nrow(transparency))
+  yearBarServer("open_code_pubs_per_year", table=transparency, column="is_open_code", display= c("available", "not available", "unknown"), order=c("available", "not available", "unknown"),  text="Tool: OddPub, Riedel, N, et al. (2020), DOI:10.5334/dsj-2020-042", colours = c("#93C48B", "#fa8072", "grey")) %>% bindCache(nrow(transparency))
+  
   search_Server("search_results",
                 pico_data = pico_elements_list,
                 table = included_with_metadata,
                 combined_pico_table = pico,
                 citations_for_download = citations_for_dl,
-                project_name = "iRISE-SOLES")
+                project_name = "iRISE-SOLES"
+                # current_tab = reactive(input$sidebarmenu)
+                )  # pass reactive here
+  
+  
 
   observeEvent(input$sidebarmenu, {
     if (input$sidebarmenu == "grey_lit_database"){
@@ -1534,16 +1793,20 @@ server <- function(input, output, session) {
         animation = TRUE,
         confirmButtonText = "OK!",
         confirmButtonCol = "#1A465F",)
+      
+      # Search Page - server -----
+      search_Server("grey_lit_results",
+                    pico_data = grey_pico_elements_list,
+                    table = grey_lit,
+                    combined_pico_table = grey_lit_pico,
+                    citations_for_download = grey_lit,
+                    project_name = "iRISE-SOLES",
+                    current_tab = reactive(input$sidebarmenu)
+      )
     }
   })
   
-  # Search Page - server -----
-  search_Server("grey_lit_results",
-                pico_data = grey_pico_elements_list,
-                table = grey_lit,
-                combined_pico_table = grey_lit_pico,
-                citations_for_download = grey_lit,
-                project_name = "iRISE-SOLES")
+
 
   download_table_Server("dl_evidence_map", table = dl_evidence_map)
 
@@ -1895,39 +2158,68 @@ server <- function(input, output, session) {
   output$int_ac_dis_table <- DT::renderDataTable({
     dl_evidence_map <<- table_react()
 
-    DT::datatable(
-      table_react()[,2:ncol(table_react())],
-      rownames = FALSE,
-      escape = FALSE,
-      # extensions = c('Buttons'),
-      options = list(
-        language = list(
-          zeroRecords = "Click on a point to show data",
-          emptyTable = "Click on a point to show data"),
-        deferRender = FALSE,
-        scrollY = 600,
-        scrollX = 100,
-        scroller = TRUE,
-        columnDefs = list(
-          list(
-            targets = c(2), #target for JS code
-            render = JS(
-              "function(data, type, row, meta) {",
-              "return type === 'display' && data.length > 100 ?",
-              "'<span title=\"' + data + '\">' + data.substr(0, 100) + '...</span>' : data;",
-              "}")),
-          list(
-            targets = c(1,2), #target for JS code
-            render = JS(
-              "function(data, type, row, meta) {",
-              "return type === 'display' && data.length > 15 ?",
-              "'<span title=\"' + data + '\">' + data.substr(0, 15) + '...</span>' : data;",
-              "}")),
-
-          list(width = '10%', targets = "_all")
+    tryCatch({
+      # Build display names with appropriate icons
+      display_colnames <- c(
+        "<span style='white-space: nowrap;'>Year <i class='fa fa-database' data-toggle='tooltip' data-placement='top' title='Data Source: Original Publication Record'></i></span>",
+        "<span style='white-space: nowrap;'>Author <i class='fa fa-database' data-toggle='tooltip' data-placement='top' title='Data Source: Original Publication Record'></i></span>",
+        "<span style='white-space: nowrap;'>Title <i class='fa fa-database' data-toggle='tooltip' data-placement='top' title='Data Source: Original Publication Record'></i></span>",
+        "<span style='white-space: nowrap;'>Intervention <i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human or AI — see Data Transparency tab for more info'></i></span>",
+        "<span style='white-space: nowrap;'>Outcome <i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human or AI — see Data Transparency tab for more info'></i></span>",
+        "<span style='white-space: nowrap;'>Discipline <i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human or AI — see Data Transparency tab for more info'></i></span>",
+        "<span style='white-space: nowrap;'>Research Stage <i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human or AI — see Data Transparency tab for more info'></i></span>"
+      )
+      
+      
+      # Render the datatable
+      DT::datatable(
+        table_react()[, 2:ncol(table_react())],
+        rownames = FALSE,
+        escape = FALSE,
+        colnames = display_colnames,
+        options = list(
+          language = list(
+            zeroRecords = "Click on a point to show data",
+            emptyTable = "Click on a point to show data"
+          ),
+          deferRender = FALSE,
+          scrollY = 600,
+          scrollX = 100,
+          scroller = TRUE,
+          columnDefs = list(
+            list(
+              width = '5%', targets = 0
+            ),
+            list(
+              targets = c(1),
+              render = JS(
+                "function(data, type, row, meta) {",
+                "return type === 'display' && data.length > 50 ?",
+                "'<span title=\"' + data + '\">' + data.substr(0, 50) + '...</span>' : data;",
+                "}"
+              )
+            ),
+            # Applies to columns 3 and beyond, returns unchanged for targets 0,1 & 2
+            list(
+              targets = "_all", 
+              render = JS(
+                "function(data, type, row, meta) {",
+                "if (meta.col >= 3) {", 
+                "  return type === 'display' && data && data.length > 200 ?",
+                "    '<span title=\"' + data + '\">' + data.substr(0, 200) + '...</span>' : data;",
+                "}",
+                "return data;",
+                "}"
+              )
+            )
+          )
         )
       )
-
+    }, error = function(e) {
+      
+      # Return an empty datatable to avoid further errors
+      DT::datatable(data.frame(), rownames = FALSE)
+    }
     )
 
   })
@@ -1997,17 +2289,22 @@ server <- function(input, output, session) {
   calculate_transparency_percent <- function(column) {
 
     if (length(column) > 0) {
-
-      true_values <- na.omit(column)
-      num_true = sum(true_values)
-
-      total_non_na = length(true_values)
-      percentage_true = round((num_true / total_non_na) * 100, 1)
-
-      paste0(percentage_true, " %")
+      # Remove NAs and "unknown" values
+      valid_values <- column[!is.na(column) & column != "unknown"]
+      
+      if (length(valid_values) > 0) {
+        num_open <- sum(valid_values %in% c("available", "open"))
+        total_valid <- length(valid_values)
+        
+        percentage_open <- round((num_open / total_valid) * 100, 1)
+        paste0(percentage_open, "%")
+      } else {
+        "0%"
+      }
     } else {
       "0%"
     }
+    
   }
 
   oa_percentage <- reactive({
@@ -2018,14 +2315,28 @@ server <- function(input, output, session) {
 
 
   output$oa_box <- renderValueBox({
+    
     valueBox(
       width = 4,
       subtitle = tags$h2("Open Access", style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
       color = "success",
-      value = tags$p(oa_percentage(), style = "font-size: 300%; color: white;"),
-      icon = icon("lock"),
+      value = tags$div(
+        tags$p(
+          oa_percentage(),
+          style = "font-size: 300%; color: white; margin: 0;"
+        ),
+        tags$img(
+          src = "openalex.png",
+          `data-toggle` = "tooltip",
+          `data-placement` = "left",
+          title = "Data source: OpenAlex",
+          style = "height: 60px; filter: brightness(0) invert(1); position: absolute; top: 20px; right: 20px;"
+        )
+      ),
       elevation = 2
     )
+   
+ 
   })
 
 
@@ -2036,15 +2347,21 @@ server <- function(input, output, session) {
 
 
   output$od_box <- renderValueBox({
+
+    
     valueBox(
       width = 4,
       subtitle = tags$h2("Open Data", style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
       color = "info",
       value = tags$p(od_percentage(), style = "font-size: 300%; color: white;"),
-      icon = icon("bar-chart"),
-      elevation = 2
-
+      icon = tags$i(
+        class = "fa fa-code fa-2x",                 
+        `data-toggle` = "tooltip",
+        `data-placement` = "left",
+        title = "Data source: ODDPub — see \"Data Transparency\" tab for more info"
+      )
     )
+    
   })
 
   oc_percentage <- reactive({
@@ -2055,13 +2372,18 @@ server <- function(input, output, session) {
 
 
   output$oc_box <- renderValueBox({
+    
     valueBox(
       width = 4,
       subtitle = tags$h2("Open Code", style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
       color = "secondary",
       value = tags$p(oc_percentage(), style = "font-size: 300%; color: white;"),
-      icon = icon("code"),       elevation = 2
-
+      icon = tags$i(
+        class = "fa fa-code fa-2x",
+        `data-toggle` = "tooltip",
+        `data-placement` = "left",
+        title = "Data source: ODDPub — see \"Data Transparency\" tab for more info"
+      )
     )
   })
 
@@ -2143,9 +2465,6 @@ server <- function(input, output, session) {
                     marker = list(color = '#B1E0CB', line = list(color = 'black', width = 1)),
                     hoverinfo = 'text',
                     textposition = "none",
-                    # text = ~paste(
-                    #   "<br><b>Number of Publications:</b>", n,
-                    #   "<br><b>Year:</b>", year)
                     text = ~paste0("<br><b>Funder: </b>", input$funder_select,
                                    "<br><b>Intervention: </b>", intervention,
                                    "<br><b>Number of Publications: </b>", n
@@ -2201,41 +2520,68 @@ server <- function(input, output, session) {
       arrange(Intervention == "Unknown")
 
     dl_funder <<- selected_studies
+    
+    tryCatch({
+      display_colnames <- c(
+        "<span style='white-space: nowrap;'>Year <i class='fa fa-database' data-toggle='tooltip' data-placement='top' title='Data Source: Original Publication Record'></i></span>",
+        "<span style='white-space: nowrap;'>Author <i class='fa fa-database' data-toggle='tooltip' data-placement='top' title='Data Source: Original Publication Record'></i></span>",
+        "<span style='white-space: nowrap;'>Title <i class='fa fa-database' data-toggle='tooltip' data-placement='top' title='Data Source: Original Publication Record'></i></span>",
+        "<span style='white-space: nowrap;'>Intervention <i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human or AI — see Data Transparency tab for more info'></i></span>",
+        "<span style='white-space: nowrap;'>Outcome Measures <i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human or AI — see Data Transparency tab for more info'></i></span>",
+        "<span style='white-space: nowrap;'>Discipline <i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human or AI — see Data Transparency tab for more info'></i></span>"
+      )
+      
 
+    # Render the datatable
     DT::datatable(
-      selected_studies[,2:ncol(selected_studies)],
+      selected_studies[, 2:ncol(selected_studies)],
       rownames = FALSE,
       escape = FALSE,
+      colnames = display_colnames,
       options = list(
         language = list(
           zeroRecords = "Click on a point to show data",
-          emptyTable = "Click on a point to show data"),
+          emptyTable = "Click on a point to show data"
+        ),
         deferRender = FALSE,
         scrollY = 600,
         scrollX = 100,
         scroller = TRUE,
         columnDefs = list(
           list(
-            targets = c(2), #target for JS code
-            render = JS(
-              "function(data, type, row, meta) {",
-              "return type === 'display' && data.length > 100 ?",
-              "'<span title=\"' + data + '\">' + data.substr(0, 100) + '...</span>' : data;",
-              "}")),
+            width = '5%', targets = 0
+          ),
           list(
-            targets = c(1,2), #target for JS code
+            targets = c(1),
             render = JS(
               "function(data, type, row, meta) {",
-              "return type === 'display' && data.length > 15 ?",
-              "'<span title=\"' + data + '\">' + data.substr(0, 15) + '...</span>' : data;",
-              "}")),
-
-          list(width = '10%', targets = "_all")
+              "return type === 'display' && data.length > 50 ?",
+              "'<span title=\"' + data + '\">' + data.substr(0, 50) + '...</span>' : data;",
+              "}"
+            )
+          ),
+          # Applies to columns 3 and beyond, returns unchanged for targets 0,1 & 2
+          list(
+            targets = "_all", 
+            render = JS(
+              "function(data, type, row, meta) {",
+              "if (meta.col >= 3) {", 
+              "  return type === 'display' && data && data.length > 200 ?",
+              "    '<span title=\"' + data + '\">' + data.substr(0, 200) + '...</span>' : data;",
+              "}",
+              "return data;",
+              "}"
+            )
+          )
         )
       )
-
     )
-
+  }, error = function(e) {
+    
+    # Return an empty datatable to avoid further errors
+    DT::datatable(data.frame(), rownames = FALSE)
+  })
+  
   })
 
   # Outcome overview - renderUI -----
@@ -2266,7 +2612,18 @@ server <- function(input, output, session) {
         column(6,
                pickerInput(
                  inputId = "intervention_select",
-                 label = "Choose an Intervention (Top 10 Selected):",
+                 label = tags$p(
+                   tags$i(
+                     class = "fa fa-tag",
+                     `data-toggle` = "tooltip",
+                     `data-placement` = "top",
+                     title = "Data Source: Annotation by Human or AI — see 'Data Transparency' tab for more info",
+                     style = "margin-right: 5px;"
+                   ),
+                   "Choose an Intervention (Top 10 Selected):",
+                   style = "color: #1A465F; font-family: KohinoorBangla, Sans-serif; margin: 0; padding: 0;"
+                 ),
+                 # label = "Choose an Intervention (Top 10 Selected):",
                  choices = sort(unique(intervention_picker()$intervention)),
                  selected = head(intervention_picker()$intervention, 10),
                  multiple = TRUE,
@@ -2381,45 +2738,74 @@ server <- function(input, output, session) {
 
     dl_outcome_overview <<- selected_studies
 
-    DT::datatable(
-      selected_studies[,2:ncol(selected_studies)],
-      rownames = FALSE,
-      escape = FALSE,
-      options = list(
-        language = list(
-          zeroRecords = "Click on a point to show data",
-          emptyTable = "Click on a point to show data"),
-        deferRender = FALSE,
-        scrollY = 600,
-        scrollX = 100,
-        scroller = TRUE,
-        columnDefs = list(
-          list(
-            targets = c(2), #target for JS code
-            render = JS(
-              "function(data, type, row, meta) {",
-              "return type === 'display' && data.length > 100 ?",
-              "'<span title=\"' + data + '\">' + data.substr(0, 100) + '...</span>' : data;",
-              "}")),
-          list(
-            targets = c(1,2), #target for JS code
-            render = JS(
-              "function(data, type, row, meta) {",
-              "return type === 'display' && data.length > 15 ?",
-              "'<span title=\"' + data + '\">' + data.substr(0, 15) + '...</span>' : data;",
-              "}")),
-
-          list(width = '10%', targets = "_all")
-        )
+    tryCatch({
+      # Build display names with appropriate icons
+      display_colnames <- c(
+        "<span style='white-space: nowrap;'>Year <i class='fa fa-database' data-toggle='tooltip' data-placement='top' title='Data Source: Original Publication Record'></i></span>",
+        "<span style='white-space: nowrap;'>Author <i class='fa fa-database' data-toggle='tooltip' data-placement='top' title='Data Source: Original Publication Record'></i></span>",
+        "<span style='white-space: nowrap;'>Title <i class='fa fa-database' data-toggle='tooltip' data-placement='top' title='Data Source: Original Publication Record'></i></span>",
+        "<span style='white-space: nowrap;'>Intervention <i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human or AI — see Data Transparency tab for more info'></i></span>",
+        "<span style='white-space: nowrap;'>Outcome <i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human or AI — see Data Transparency tab for more info'></i></span>",
+        "<span style='white-space: nowrap;'>Discipline <i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human or AI — see Data Transparency tab for more info'></i></span>"
       )
 
+
+      # Render the datatable
+      DT::datatable(
+        selected_studies[, 2:ncol(selected_studies)],
+        rownames = FALSE,
+        escape = FALSE,
+        colnames = display_colnames,
+        options = list(
+          language = list(
+            zeroRecords = "Click on a point to show data",
+            emptyTable = "Click on a point to show data"
+          ),
+          deferRender = FALSE,
+          scrollY = 600,
+          scrollX = 100,
+          scroller = TRUE,
+          columnDefs = list(
+            list(
+              width = '5%', targets = 0
+            ),
+            list(
+              targets = c(1),
+              render = JS(
+                "function(data, type, row, meta) {",
+                "return type === 'display' && data.length > 50 ?",
+                "'<span title=\"' + data + '\">' + data.substr(0, 50) + '...</span>' : data;",
+                "}"
+              )
+            ),
+            # Applies to columns 3 and beyond, returns unchanged for targets 0,1 & 2
+            list(
+              targets = "_all",
+              render = JS(
+                "function(data, type, row, meta) {",
+                "if (meta.col >= 3) {",
+                "  return type === 'display' && data && data.length > 200 ?",
+                "    '<span title=\"' + data + '\">' + data.substr(0, 200) + '...</span>' : data;",
+                "}",
+                "return data;",
+                "}"
+              )
+            )
+          )
+        )
+      )
+    }, error = function(e) {
+
+      # Return an empty datatable to avoid further errors
+      DT::datatable(data.frame(), rownames = FALSE)
+    }
     )
+    
 
   })
 
   # Outcome overview - intervention provider plot -----
   output$outcome_year_plot <- renderPlotly({
-
 
     data <- all_annotations %>%
       filter(outcome_measures %in% c(input$outcome_select, input$outcome_comparison_select)) %>%
@@ -2429,7 +2815,8 @@ server <- function(input, output, session) {
       distinct() %>%
       group_by(year, outcome_measures, intervention_provider) %>%
       count() %>%
-      ungroup()
+      ungroup() %>% 
+      filter(!is.na(year))
 
     if (nrow(data) == 0) {
       # If no data, create an empty plot with text indicating no data available
@@ -2524,9 +2911,12 @@ server <- function(input, output, session) {
       pull(intervention)
 
     interventions_html <- paste(int_out_table, collapse="<br>")
+    
+    selected_outcome <- input$outcome_select
+    selected_provider <- input$provider_select
 
     valueBox(
-      subtitle = tags$p(HTML(paste0("Intervention with the most evidence in the last 5 years")), style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
+      subtitle = tags$p(HTML(paste0("is the intervention with the most evidence in the last 5 years from <strong>", selected_provider, "</strong> to improve <strong>", selected_outcome, "</strong>")), style = "color: white; font-family: KohinoorBangla, sans-serif !important;"),
       color = "secondary",
       value = tags$p(HTML(interventions_html), style = "font-size: 150%; color: white;"),
       icon = icon("code"),
@@ -2789,40 +3179,59 @@ server <- function(input, output, session) {
       arrange(Discipline == "Unknown")
 
     dl_location <<- table_select
+    
+    tryCatch({
+      
+      display_colnames <- c(
+        "<span style='white-space: nowrap;'>Institution <img src='openalex.png' data-toggle='tooltip' data-placement='top' title='Data Source: OpenAlex' style='height: 1em; vertical-align: middle;'></span>",
+        "<span style='white-space: nowrap;'>Title <i class='fa fa-database' data-toggle='tooltip' data-placement='top' title='Data Source: Original Publication Record'></i></span>",
+        "<span style='white-space: nowrap;'>Country <img src='openalex.png' data-toggle='tooltip' data-placement='top' title='Data Source: OpenAlex' style='height: 1em; vertical-align: middle;'></span>",
+        "<span style='white-space: nowrap;'>Institution Type <img src='openalex.png' data-toggle='tooltip' data-placement='top' title='Data Source: OpenAlex' style='height: 1em; vertical-align: middle;'></span>",
+        "<span style='white-space: nowrap;'>Discipline <i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human or AI — see Data Transparency tab for more info'></i></span>",
+        "<span style='white-space: nowrap;'>Outcome <i class='fa fa-tag' data-toggle='tooltip' data-placement='top' title='Data Source: Annotation by Human or AI — see Data Transparency tab for more info'></i></span>"
+      )
+      
 
-    DT::datatable(
-      table_select[,2:ncol(table_select)],
-      rownames = FALSE,
-      escape = FALSE,
-      options = list(
-        language = list(
-          zeroRecords = "Click on a point to show data",
-          emptyTable = "Click on a point to show data"),
-        deferRender = FALSE,
-        scrollY = 600,
-        scrollX = 100,
-        scroller = TRUE,
-        columnDefs = list(
-          list(
-            targets = c(2, 3), #target for JS code
-            render = JS(
-              "function(data, type, row, meta) {",
-              "return type === 'display' && data.length > 100 ?",
-              "'<span title=\"' + data + '\">' + data.substr(0, 100) + '...</span>' : data;",
-              "}")),
-          list(
-            targets = c(2, 3), #target for JS code
-            render = JS(
-              "function(data, type, row, meta) {",
-              "return type === 'display' && data.length > 15 ?",
-              "'<span title=\"' + data + '\">' + data.substr(0, 15) + '...</span>' : data;",
-              "}")),
-
-          list(width = '10%', targets = "_all")
+      # Render the datatable
+      DT::datatable(
+        table_select[, 2:ncol(table_select)],
+        rownames = FALSE,
+        escape = FALSE,
+        colnames = display_colnames,
+        options = list(
+          language = list(
+            zeroRecords = "Click on a point to show data",
+            emptyTable = "Click on a point to show data"
+          ),
+          deferRender = FALSE,
+          scrollY = 600,
+          scrollX = 100,
+          scroller = TRUE,
+          columnDefs = list(
+            list(
+              width = '10%', targets = 0
+            ),
+            # Applies to columns 3 and beyond, returns unchanged for targets 0,1 & 2
+            list(
+              targets = "_all", 
+              render = JS(
+                "function(data, type, row, meta) {",
+                "if (meta.col >= 3) {", 
+                "  return type === 'display' && data && data.length > 200 ?",
+                "    '<span title=\"' + data + '\">' + data.substr(0, 200) + '...</span>' : data;",
+                "}",
+                "return data;",
+                "}"
+              )
+            )
+          )
         )
       )
-
-    )
+    }, error = function(e) {
+      
+      # Return an empty datatable to avoid further errors
+      DT::datatable(data.frame(), rownames = FALSE)
+    })
 
   })
 
@@ -2837,9 +3246,6 @@ server <- function(input, output, session) {
       mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
       select(year, title, journal, author, uid, link, doi) %>%
       left_join(pico, by = "uid") %>%
-      # mutate(title = ifelse(!is.na(doi) & doi != "",
-      #                       paste0("<a href='", link, "' target='_blank'>", title, "</a>"),
-      #                       title)) %>%
       select(uid, link, doi, year, title, journal, author, intervention, outcome = outcome_measures, discipline, provider = intervention_provider) %>%
       distinct() %>%
       filter(uid %in% filter_studies_remove()$uid)
@@ -2851,9 +3257,6 @@ server <- function(input, output, session) {
     included_with_metadata %>%
       mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
       select(year, title, journal, author, uid, link, doi) %>%
-      # mutate(title = ifelse(!is.na(doi) & doi != "",
-      #                       paste0("<a href='", link, "' target='_blank'>", title, "</a>"),
-      #                       title)) %>%
       left_join(pico, by = "uid") %>%
       select(uid, link, doi, year, title, journal, author, intervention, outcome = outcome_measures, discipline, provider = intervention_provider, research_stage, target_population, target_pop_location = location) %>%
       distinct() %>%
@@ -2862,12 +3265,6 @@ server <- function(input, output, session) {
   })
 
   output$study_remove_table <- renderDT({
-
-    # remove_table_final <- remove_table() %>%
-    #   mutate(title = ifelse(!is.na(doi) & doi != "",
-    #                         paste0("<a href='", link, "' target='_blank'>", title, "</a>"),
-    #                         title)) %>%
-    #   select(Year = year, Title = title, Journal = journal, Author = author)
     
     remove_table_final <- remove_table() %>%
       mutate(title = ifelse(!is.na(doi) & doi != "",
@@ -3246,12 +3643,6 @@ server <- function(input, output, session) {
   #### Edit Study Server
   # Render edit study DataTable
   output$study_edit_table <- renderDT({
-
-    # edit_final <- edit_table() %>%
-    #   mutate(title = ifelse(!is.na(doi) & doi != "",
-    #                         paste0("<a href='", link, "' target='_blank'>", title, "</a>"),
-    #                         title)) %>%
-    #   select(-uid, -link, -doi)
     
     edit_final <- edit_table() %>%
       mutate(title = ifelse(!is.na(doi) & doi != "",
@@ -3751,13 +4142,6 @@ server <- function(input, output, session) {
         pull(suggestion_id) %>%
         max()
 
-      # suggestions_long <- suggestions_table %>%
-      #   pivot_longer(cols = c("intervention", "discipline", "outcome", "provider", "target_population", "research_stage", "target_pop_location"), names_to = "type", values_to = "suggestion" ) %>%
-      #   mutate(reason = "") %>%
-      #   mutate(id = latest_suggestion_id + row_number()) %>%
-      #   mutate(reason = "",
-      #          uid = study$uid)
-
 
       # Reshape the table from wide to long format
       suggestions_long <- suggestions_table %>%
@@ -3794,7 +4178,6 @@ server <- function(input, output, session) {
 
       incProgress(1)
 
-
     })
     # Confirmation message
     showModal(modalDialog(
@@ -3807,7 +4190,6 @@ server <- function(input, output, session) {
         </div>'),
       easyClose = TRUE
     ))
-
   })
 
   # Creates list for dropdown menus
