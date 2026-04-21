@@ -314,7 +314,7 @@ yearBarServer_included_only <- function(id, table, column,
 yearBarUI_filters <- function(id, title = "", theme = "", spinner_colour = "#96c296", table) {
   
   ns <- NS(id)
-  # browser()
+  
   tagList(
     
     fluidRow(
@@ -383,7 +383,7 @@ yearBarServer_filters <- function(id, filter_table, column,
         tbl <- filter_table()
         req(tbl, tbl$year)
         
-        # browser()
+        
         if (is.null(input$reset_filters) || input$reset_filters == 0) {
           
           min_year <- min(tbl$year, na.rm = TRUE)
@@ -401,7 +401,7 @@ yearBarServer_filters <- function(id, filter_table, column,
       })
       
       filtered_tbl <- reactive({
-        # browser()
+        
         req(input$filter_year_slider)
         req(length(input$filter_year_slider) == 2)
         
@@ -427,12 +427,12 @@ yearBarServer_filters <- function(id, filter_table, column,
         bindCache(
           renderPlotly({
             
-            # browser()
+            
             # tbl <- debounced_tbl()  # now this actually waits for 1 second of inactivity
             
             tbl <- filtered_tbl()
             cat("renderPlotly executing (cached), nrows:", nrow(tbl), "\n")
-            # browser()
+          
             tbl %>%
               plot_ly(
                 x = ~year,
@@ -1095,75 +1095,1191 @@ plot_interpret_Server  <- function(id){
 #' @param id The module identifier.
 #'
 #' @export
+# search_UI <- function(id, table) {
+#   ns <- NS(id)
+# 
+# 
+#   tagList(
+# 
+#     tabBox(width= 12,
+#            status = "primary",
+#            id = ns("search_tabs"),
+#            side = "left",
+# 
+#            tabPanel(
+#              value="basic_search_tab",
+#              title = "Basic search",
+# 
+# 
+#              fluidRow(
+#                column(3,
+#                       tags$p("Conduct a search for relevant articles", style = "color: black !important;font-family: KohinoorBangla, Sans-serif;")
+#                       %>% shinyhelper::helper(type = "markdown", content = "searching", size="l", inline=T),
+#                )),
+# 
+# 
+#              textAreaInput(
+#                inputId = ns("topic1"),
+#                label = "add keywords separated by commas:",
+#                value = ""),
+# 
+#              radioGroupButtons(
+#                inputId = ns("search1_type"),
+#                label = "Combine keywords with",
+#                choices = c("AND", "OR"),
+#                status = "primary",
+#                individual = TRUE,
+#                checkIcon = list(
+#                  yes = tags$i(class = "fa fa-circle",
+#                               style = "color: green"),
+#                  no = tags$i(class = "fa fa-circle-o",
+#                              style = "color: green"))
+#              ),
+# 
+# 
+#              actionBttn(
+#                inputId = ns("search_button"),
+#                label = "Search database",
+#                style = "unite",
+#                color = "primary"
+#              ),
+# 
+#              actionBttn(
+#                inputId = ns("reset_search"),
+#                label = "Reset search query",
+#                style = "unite",
+#                color = "success"
+#              )),
+# 
+#            tabPanel(
+#              title = "Advanced search",
+#              value="adv_search_tab",
+# 
+# 
+#              textAreaInput(
+#                inputId = ns("topic1_adv"),
+#                label = "Search #1: add keywords separated by commas:",
+#                value = ""),
+# 
+#              radioGroupButtons(
+#                inputId = ns("search1_type_adv"),
+#                label = "Combine keywords with",
+#                choices = c("AND", "OR"),
+#                status = "primary",
+#                individual = TRUE,
+#                checkIcon = list(
+#                  yes = tags$i(class = "fa fa-circle",
+#                               style = "color: green"),
+#                  no = tags$i(class = "fa fa-circle-o",
+#                              style = "color: green"))
+#              ),
+# 
+#              textAreaInput(
+#                inputId = ns("topic2_adv"),
+#                label = "Search #2: add keywords separated by commas:",
+#                value = ""
+#              ),
+# 
+#              radioGroupButtons(
+#                inputId = ns("search2_type_adv"),
+#                label = "Combine keywords with",
+#                choices = c("AND", "OR"),
+#                status = "primary",
+#                individual = TRUE,
+#                checkIcon = list(
+#                  yes = tags$i(class = "fa fa-circle",
+#                               style = "color: green"),
+#                  no = tags$i(class = "fa fa-circle-o",
+#                              style = "color: green"))
+#              ),
+# 
+#              radioGroupButtons(
+#                inputId = ns("comb_1_2"),
+#                label = "Combine searches with...",
+#                choices = c("AND", "OR"),
+#                status = "primary"),
+# 
+#              actionBttn(
+#                inputId = ns("adv_search_button"),
+#                label = "Search database",
+#                style = "unite",
+#                color = "danger"
+#              ),
+# 
+#              actionBttn(
+#                inputId = ns("adv_reset_search"),
+#                label = "Reset search query",
+#                style = "unite",
+#                color = "success"
+#              )
+#            )
+#     ),
+# 
+# 
+#     box(width= 12,
+#         maximizable = TRUE,
+#         solidHeader = TRUE,
+#         status = "secondary",
+#         title = "Selected studies in database",
+# 
+#         textOutput(ns("search_results_text")),
+#         tags$head(tags$style("#search_results_text{color: green;
+#                                        font-size: 20px;
+#                                        font-style: italic;
+#                                        }"
+#         )),
+# 
+#         div(style="display: inline-block;vertical-align:top; width: 50px;",
+# 
+# 
+#             dropdown(inputId = ns("dropdown_menu"),
+# 
+#                      tags$h3("Filter studies"),
+# 
+#                      shinyjs::useShinyjs(),
+# 
+#                      #tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: green}")),
+#                      sliderInput(ns("year_slider"),
+#                                  "Year Published",
+#                                  as.numeric(min(table$year, na.rm=TRUE)),
+#                                  as.numeric(max(table$year, na.rm=TRUE)),
+#                                  value = c(min(table$year, na.rm=TRUE), max(table$year, na.rm=TRUE)), sep=""),
+# 
+# 
+# 
+#                      uiOutput(ns("dynamic_dropdowns")),
+# 
+#                      style = "unite",
+#                      icon = icon("filter"),
+#                      inline =TRUE,
+#                      status = "danger", width = "600px",
+#                      animate = animateOptions(
+#                        enter = animations$fading_entrances$fadeInLeftBig,
+#                        exit = animations$fading_exits$fadeOutRightBig),
+#                      tooltip = tooltipOptions(title = "Click to filter studies"),
+# 
+#                      actionBttn(inputId = ns("submit_filters"),
+#                                 label = "Apply filters"),
+# 
+#                      # prettySwitch(inputId = ns("highly_sensitive"),
+#                      #              label = "High sensitivity")
+#             )
+#         ),
+# 
+#         div(style="display: inline-block;vertical-align:top; width: 50px;",
+# 
+#             dropdown(
+#               downloadBttn(
+#                 ns("download_csv"),
+#                 label = "Download citations in CSV format",
+#                 style = "unite",
+#                 color = "primary",
+#                 size = "sm",
+#                 block = FALSE,
+#                 no_outline = TRUE
+#               ),
+#               downloadBttn(
+#                 ns("download_endnote"),
+#                 label = "Download citations in Endnote tab delimited format",
+#                 style = "unite",
+#                 color = "primary",
+#                 size = "sm",
+#                 block = FALSE,
+#                 no_outline = TRUE
+#               ),
+#               downloadBttn(
+#                 ns("download_syrf"),
+#                 label = "Download citations in SyRF upload format",
+#                 style = "unite",
+#                 color = "primary",
+#                 size = "sm",
+#                 block = FALSE,
+#                 no_outline = TRUE
+#               ),
+# 
+#               br(),
+#               p("Note for Rayyan export option below: download file and open in MS Excel first on your computer. Save as .csv in excel, then import saved file into Rayyan"),
+#               downloadBttn(
+#                 ns("download_rayyan"),
+#                 label = "Download citations in Rayyan upload format",
+#                 style = "unite",
+#                 color = "primary",
+#                 size = "sm",
+#                 block = FALSE,
+#                 no_outline = TRUE
+#               ),
+# 
+#               style = "unite", icon = icon("download"),
+#               inline = TRUE,
+#               status = "success", width = "600px",
+#               animate = animateOptions(
+#                 enter = animations$fading_entrances$fadeInLeftBig,
+#                 exit = animations$fading_exits$fadeOutRightBig),
+#               tooltip = tooltipOptions(title = "Click to download relevant studies")
+# 
+#             ),
+# 
+#         ),
+# 
+# 
+#         DT::dataTableOutput(ns("search_results_studies")) %>% withSpinner(color="#96c296")
+# 
+#     )
+# 
+# 
+#   )
+# 
+# 
+# }
+
+
+#' Search Page Module
+#'
+#' This Shiny module generates the search page for the app, allowing users to search and filter studies.
+#'
+#' @param id The module identifier.
+#' @param table A dataframe of included studies with metadata.
+#' @param combined_pico_table A combined dataframe of PICO tags.
+#' @param pico_data A list of dynamic search updates based on the PICO dropdown filters.
+#' @param citations_for_download A dataframe containing citations for download.
+#' @param project_name The name of the project.
+#'
+#' @export
+# search_Server <- function(id,
+#                           table,
+#                           combined_pico_table,
+#                           pico_data = list(),
+#                           citations_for_download,
+  #                         project_name = "") {
+  # moduleServer(
+  #   id,
+  #   function(input, output, session) {
+  # 
+  #     ns <- NS(id)
+  # 
+  # 
+  #     # Creates list for dropdown menus
+  #     dynamic_dropdowns <- list()
+  #     output$dynamic_dropdowns <- renderUI({
+  #       dynamic_dropdowns <- lapply(pico_data, function(item) {
+  #         pico_dropdown_UI(
+  #           id = ns(item$id),
+  #           label1 = item$label1,
+  #           label2 = item$label2,
+  #           label3 = item$label3,
+  #           label4 = item$ilabel4,
+  #           column1 = item$table[[item$column1]],
+  #           column2 = item$table[[item$column2]],
+  #           column3 = item$table[[item$column3]],
+  #           column4 = item$table[[item$column4]],
+  #           filter_no = item$filter_no
+  #         )
+  #       })
+  #       do.call(tagList, dynamic_dropdowns)
+  #     })
+  # 
+  #     # Creates list for dropdown menus reactivity
+  #     pico_element_list <- list()
+  #     pico_element_list <- lapply(pico_data, function(pico_item) {
+  #       pico_dropdown_Server(
+  #         id = pico_item$id,
+  #         table = pico_item$table,
+  #         column1 = pico_item$column1,
+  #         column2 = pico_item$column2,
+  #         column3 = pico_item$column3,
+  #         column4 = pico_item$column4,
+  #         filter_no = pico_item$filter_no
+  # 
+  #       )
+  #     })
+  # 
+  #     # Creates table list for filtering data
+  #     pico_table_list <- list()
+  #     pico_table_list <- lapply(pico_data, function(element) element$table)
+  # 
+  # 
+  #     # Create reactive values as triggers
+  #     values <- reactiveValues()
+  #     values$search_query <- ""
+  #     values$reset_button <- ""
+  #     values$submit_filters <- ""
+  # 
+  # 
+  #     observeEvent(input$reset_search, {
+  # 
+  # 
+  #       updateTextAreaInput(session, "topic1",
+  #                           value = "")
+  # 
+  #       values$search_query <- ""
+  #       values$reset_button <- "reset"
+  #       values$submit_filters <- ""
+  # 
+  #       dynamic_dropdowns <- list()
+  #       output$dynamic_dropdowns <- renderUI({
+  #         dynamic_dropdowns <- lapply(pico_data, function(item) {
+  #           pico_dropdown_UI(
+  #             id = ns(item$id),
+  #             label1 = item$label1,
+  #             label2 = item$label2,
+  #             label3 = item$label3,
+  #             label4 = item$ilabel4,
+  #             column1 = item$table[[item$column1]],
+  #             column2 = item$table[[item$column2]],
+  #             column3 = item$table[[item$column3]],
+  #             column4 = item$table[[item$column4]],
+  #             filter_no = item$filter_no
+  #           )
+  #         })
+  #         do.call(tagList, dynamic_dropdowns)
+  # 
+  #       })
+  # 
+  #       updateSliderInput(session = session,
+  #                         inputId = "year_slider",
+  #                         label = "Year Published",
+  #                         min = as.numeric(min(table$year, na.rm=TRUE)),
+  #                         max = as.numeric(max(table$year, na.rm=TRUE)),
+  #                         value = c(min(table$year, na.rm=TRUE), max(table$year, na.rm=TRUE)))
+  # 
+  #       shinyjs::click("dropdown_menu")
+  # 
+  #       observe({
+  #         # Introduce a delay of 1 second
+  #         shinyjs::delay(250, {
+  #           # Run the click function after the delay
+  #           shinyjs::click("dropdown_menu")
+  #         })
+  #       })
+  #     })
+  # 
+  #     observeEvent(input$adv_reset_search, {
+  # 
+  # 
+  #       updateTextAreaInput(session, "topic1_adv",
+  #                           value = "")
+  # 
+  #       updateTextAreaInput(session, "topic2_adv",
+  #                           value = "")
+  # 
+  #       values$search_query <- ""
+  #       values$reset_button <- "reset"
+  #       values$submit_filters <- ""
+  # 
+  #       dynamic_dropdowns <- list()
+  #       output$dynamic_dropdowns <- renderUI({
+  #         dynamic_dropdowns <- lapply(pico_data, function(item) {
+  #           pico_dropdown_UI(
+  #             id = ns(item$id),
+  #             label1 = item$label1,
+  #             label2 = item$label2,
+  #             label3 = item$label3,
+  #             label4 = item$ilabel4,
+  #             column1 = item$table[[item$column1]],
+  #             column2 = item$table[[item$column2]],
+  #             column3 = item$table[[item$column3]],
+  #             column4 = item$table[[item$column4]],
+  #             filter_no = item$filter_no
+  #           )
+  #         })
+  #         do.call(tagList, dynamic_dropdowns)
+  # 
+  #       })
+  # 
+  #       updateSliderInput(session = session,
+  #                         inputId = "year_slider",
+  #                         label = "Year Published",
+  #                         min = as.numeric(min(table$year, na.rm=TRUE)),
+  #                         max = as.numeric(max(table$year, na.rm=TRUE)),
+  #                         value = c(min(table$year, na.rm=TRUE), max(table$year, na.rm=TRUE)))
+  # 
+  #       shinyjs::click("dropdown_menu")
+  # 
+  #       observe({
+  #         # Introduce a delay of 1 second
+  #         shinyjs::delay(250, {
+  #           # Run the click function after the delay
+  #           shinyjs::click("dropdown_menu")
+  #         })
+  #       })
+  #     })
+  # 
+  # 
+  #     observeEvent(c(input$search_button, input$adv_search_button),  {
+  # 
+  #       values$search_query <- "NOT BLANK"
+  #       values$reset_button <- ""
+  # 
+  #     },  ignoreInit = TRUE)
+  # 
+  #     observeEvent(c(input$submit_filters),  {
+  # 
+  #       values$reset_button <- ""
+  #       values$submit_filters <- "clicked"
+  #     },  ignoreInit = TRUE)
+  # 
+  # 
+  #     # getting your search results - reactive object search_results runs query on data and returns datatable
+  #     search_query <- eventReactive(c(input$search_button, input$adv_search_button), {
+  # 
+  #       if(input$search_tabs == "basic_search_tab"){
+  # 
+  #         query1 <- input$topic1 %>%
+  #           str_trim() %>%
+  #           str_replace_all(pattern = ", ", repl = ",") %>%
+  #           str_replace_all(pattern = " ,", repl = ",") %>%
+  #           str_split("\\,") %>%
+  #           unlist() %>%
+  #           as.list() %>%
+  #           lapply(function(x) gsub(".*", paste0("[[:<:]]", x, "[[:>:]]"),
+  #                                   x, ignore.case = TRUE))
+  # 
+  #         query1 <- ifelse(input$search1_type == "OR",
+  #                          paste(query1,collapse="|"),
+  #                          paste0("^(?=.*", paste0(query1, collapse=")(?=.*"),
+  #                                 ").*$"))
+  # 
+  #         query1 <- query1 %>%
+  #           str_trim()
+  # 
+  #         return(query1)
+  # 
+  #       }
+  # 
+  #       else{
+  # 
+  #         query1_adv <- input$topic1_adv %>%
+  #           str_trim() %>%
+  #           str_replace_all(pattern = ", ", repl = ",") %>%
+  #           str_replace_all(pattern = " ,", repl = ",") %>%
+  #           str_split("\\,") %>%
+  #           unlist() %>%
+  #           as.list() %>%
+  #           lapply(function(x) gsub(".*", paste0("[[:<:]]", x, "[[:>:]]"),
+  #                                   x, ignore.case = TRUE))
+  # 
+  #         query1_adv <- ifelse(input$search1_type_adv == "OR",
+  #                              paste(query1_adv,collapse="|"),
+  #                              paste0("^(?=.*", paste0(query1_adv, collapse=")(?=.*"),
+  #                                     ").*$"))
+  # 
+  # 
+  #         query1_adv <- query1_adv %>%
+  #           str_trim()
+  # 
+  # 
+  #         query2_adv <- input$topic2_adv %>%
+  #           str_trim() %>%
+  #           str_replace_all(pattern = ", ", repl = ",") %>%
+  #           str_replace_all(pattern = " ,", repl = ",") %>%
+  #           str_split("\\,") %>%
+  #           unlist() %>%
+  #           as.list() %>%
+  #           lapply(function(x) gsub(".*", paste0("[[:<:]]", x, "[[:>:]]"),
+  #                                   x, ignore.case = TRUE))
+  # 
+  #         query2_adv <- ifelse(input$search2_type_adv == "OR",
+  #                              paste(query2_adv,collapse="|"),
+  #                              paste0("^(?=.*", paste0(query2_adv, collapse=")(?=.*"),
+  #                                     ").*$"))
+  # 
+  # 
+  #         query2_adv <- query2_adv %>%
+  #           str_trim()
+  # 
+  #         #try(query_final <- query1)
+  #         try(query_final <- c(query1_adv, query2_adv))
+  #         return(query_final)
+  #       }
+  #     })
+  # 
+  # 
+  #     search_results <- reactive({
+  # 
+  #       # If there is no search query and reset button pressed, return entire table
+  #       if(values$search_query == "" & values$reset_button == "reset"){
+  # 
+  #         selected_studies <- table
+  # 
+  #       }
+  # 
+  #       # If there is no search query and no reset then proceed with entire table
+  #       else if(values$search_query == ""){
+  # 
+  #         selected_studies <- table
+  # 
+  #       }
+  # 
+  # 
+  #       else if(search_query()[1] == ""){
+  # 
+  #         selected_studies <- table
+  # 
+  #       }
+  # 
+  #       # if there is a search query
+  #       else{
+  # 
+  #         selected_studies <- table
+  # 
+  #         if(input$search_tabs == "basic_search_tab"){
+  # 
+  #           # If search has been performed in Adv search then user goes back to basic search there is a reset.
+  #           if (length(search_query()) > 1){
+  # 
+  #             shinyjs::click("adv_reset_search")
+  # 
+  #           } else{
+  # 
+  #             selected_studies <- selected_studies[with(selected_studies,
+  #                                                       grepl(search_query(),
+  #                                                             paste(title, abstract, keywords),
+  #                                                             ignore.case=TRUE,
+  #                                                             perl=TRUE)),]
+  # 
+  #             withProgress(message = 'Performing search',
+  #                          detail = 'This may take a little while...', value = 0, {
+  #                            for (i in 1:25) {
+  #                              incProgress(1/15)
+  #                              Sys.sleep(0.5)
+  #                            }
+  #                          })
+  #           }
+  #         } else if (is.na(search_query()[1]) | is.na(search_query()[2])){
+  # 
+  # 
+  #           shinyjs::click("adv_reset_search")
+  # 
+  #           selected_studies <- table
+  # 
+  #         } else{
+  # 
+  #           selected_studies1 <- table[with(table,
+  #                                           grepl(search_query()[1],
+  #                                                 paste(title, abstract, keywords),
+  #                                                 ignore.case=TRUE,
+  #                                                 perl=TRUE)),]
+  #           selected_studies2 <- table[with(table,
+  #                                           grepl(search_query()[2],
+  #                                                 paste(title, abstract, keywords),
+  #                                                 ignore.case=TRUE,
+  #                                                 perl=TRUE)),]
+  # 
+  # 
+  #           if(input$comb_1_2 == "AND"){
+  # 
+  #             selected_studies <- table %>%
+  #               filter(uid %in% selected_studies1$uid & uid %in% selected_studies2$uid) %>%
+  #               distinct()
+  #           }
+  # 
+  #           else{
+  #             selected_studies <- table %>%
+  #               filter(uid %in% c(selected_studies1$uid, selected_studies2$uid)) %>%
+  #               distinct()
+  #           }
+  # 
+  #           withProgress(message = 'Performing search',
+  #                        detail = 'This may take a little while...', value = 0, {
+  #                          for (i in 1:25) {
+  #                            incProgress(1/15)
+  #                            Sys.sleep(0.5)
+  #                          }
+  #                        })
+  # 
+  #         }}
+  #       return(selected_studies)
+  # 
+  #     })
+  # 
+  # 
+  #     filter_results <- reactive({
+  # 
+  #       selected_studies <- search_results()
+  # 
+  #       # If reset button clicked then tidy entire table and return
+  #       if(values$reset_button == "reset"){
+  # 
+  #         selected_studies <- as.data.frame(selected_studies)
+  # 
+  #         combined_pico_table <- unique(combined_pico_table)
+  # 
+  #         selected_studies <- selected_studies %>%
+  #           mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
+  #           arrange(desc(year))
+  # 
+  #         selected_studies <- selected_studies %>%
+  #           mutate(title = ifelse(!is.na(doi) & doi != "",
+  #                                 paste0("<a href='", link, "' target='_blank'>", title, "</a>"),
+  #                                 title)) %>%
+  #           select(uid, year, author, journal, title) %>%
+  #           left_join(combined_pico_table, by="uid") %>%
+  #           distinct()
+  # 
+  #         if ("intervention" %in% colnames(selected_studies)){
+  # 
+  #         selected_studies <- selected_studies %>%
+  #           distinct()
+  # 
+  #         selected_studies <- as.data.frame(selected_studies) %>%
+  #           ungroup() %>%
+  #           select(uid, Year = year, Author = author, Journal = journal, Title = title, Intervention = intervention,
+  #                  Discipline = discipline, "Outcome Measures" = outcome_measures) %>%
+  #           arrange(is.na(Intervention))
+  # 
+  # 
+  #         } else{
+  # 
+  # 
+  #            selected_studies <- as.data.frame(selected_studies) %>%
+  #             distinct() %>%
+  #             select(uid, Year = year, Author = author, Journal = journal, Title = title, "Publication Type" = name)
+  # 
+  # 
+  # 
+  # 
+  #         }
+  # 
+  #         return(selected_studies)
+  # 
+  # 
+  #       }
+  # 
+  #       # If apply filter button pressed, proceed to filter section
+  #       if(values$submit_filters == "clicked") {
+  # 
+  # 
+  #         input$submit_filters
+  # 
+  #         # If number of pico dataframes for dropdowns is > 0 then...
+  #         if (length(pico_table_list) > 0) {
+  # 
+  #           for (i in (1:length(pico_table_list))){
+  # 
+  #              # Loop through each dataframe and filter
+  #             new_table <- pico_table_list[[i]] %>%
+  #               filter(name %in% isolate(pico_element_list[[i]]())) %>%
+  #               select(uid)
+  # 
+  #             # Only keep the rows that have a matching "uid"
+  #             selected_studies <- selected_studies %>%
+  #               semi_join(new_table, by = "uid")
+  # 
+  #           }
+  #         }
+  # 
+  #         # Use year slider to filter
+  #         selected_studies <- selected_studies %>%
+  #           mutate(year = as.numeric(as.character(year))) %>%
+  #           filter(year >= isolate(input$year_slider[[1]])) %>%
+  #           filter(year <= isolate(input$year_slider[[2]]))
+  # 
+  #       }
+  # 
+  #       # Warning if no results found
+  #       if(nrow(selected_studies) < 1){
+  #         shinyalert("Warning",
+  #                    "Search returned 0 results. Please make a new selection.", type = "info")
+  #         return(selected_studies)
+  #       }
+  # 
+  #       # Tidy section for use in the datatable
+  #       selected_studies <- as.data.frame(selected_studies)
+  # 
+  #       selected_studies <- selected_studies %>%
+  #         mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
+  #         arrange(desc(year))
+  # 
+  #       if (!is.null(combined_pico_table)){
+  # 
+  # 
+  #       combined_pico_table <- unique(combined_pico_table)
+  # 
+  #         selected_studies <- selected_studies %>%
+  #         mutate(title = ifelse(!is.na(doi) & doi != "",
+  #                               paste0("<a href='", link, "' target='_blank'>", title, "</a>"),
+  #                               title)) %>%
+  #         select(uid, year, author, journal, title) %>%
+  #         left_join(combined_pico_table, by="uid") %>%
+  #         distinct()
+  # 
+  #       colnames(selected_studies) <- toTitleCase(colnames(selected_studies))
+  # 
+  #       if ("Intervention" %in% colnames(selected_studies)){
+  # 
+  #       selected_studies <- as.data.frame(selected_studies) %>%
+  #         ungroup() %>%
+  #         arrange(Intervention == "Unknown") %>%
+  #         rename("uid" = "Uid", "Outcome Measures" = "Outcome_measures", "Intervention Provider" = "Intervention_provider")
+  # 
+  #         } else {
+  # 
+  #           selected_studies <- as.data.frame(selected_studies) %>%
+  #             ungroup() %>%
+  #             select(uid = Uid, Year, Author, Journal, Title, "Publication Type" = Name) %>%
+  #             distinct()
+  # 
+  #         }
+  #       } else {
+  # 
+  #         selected_studies <- selected_studies %>%
+  #           mutate(title = ifelse(!is.na(doi) & doi != "",
+  #                                 paste0("<a href='", link, "' target='_blank'>", title, "</a>"),
+  #                                 title)) %>%
+  #           select(uid, Year = year, Author = author, Journal = journal, Title = title) %>%
+  #           distinct()
+  # 
+  #       }
+  # 
+  #       return(selected_studies)
+  #     })
+  # 
+  # 
+  #     output$search_results_text <- renderText({
+  # 
+  #       # If there is no query and no filters
+  #       if(values$search_query == "" & values$submit_filters == ""){
+  # 
+  # 
+  #         paste0("All ", length(filter_results()$uid), " citations loaded. Use the search box above or apply filters to identify relevant studies!")
+  # 
+  #       }
+  # 
+  #       # If there is no query and only filters
+  #       else if(values$submit_filters == "clicked" & values$search_query == ""){
+  #         paste0("Your filters identified a total of ", length(filter_results()$uid), " citations")
+  #       }
+  # 
+  #       # If there is an advanced search query
+  #       else if(search_query()[1] != "" & !is.na(search_query()[2])){
+  # 
+  #         if(input$comb_1_2 == "AND"){
+  # 
+  #           translated_query <- paste0(search_query()[1],  " AND ", search_query()[2])
+  #         } else {
+  # 
+  #           translated_query <- paste0(search_query()[1],  " OR ", search_query()[2])
+  #         }
+  # 
+  #         translated_query <- gsub("\\|", " OR ", translated_query)
+  #         translated_query <- gsub("\\)\\(\\?\\=\\.\\*", " AND ", translated_query)
+  #         translated_query <- gsub("\\?\\=\\.\\*", "", translated_query)
+  #         translated_query <- gsub("\\.\\*\\$", "", translated_query)
+  #         translated_query <- gsub("\\^", "", translated_query)
+  #         translated_query <- gsub("AND", " AND ", translated_query)
+  #         translated_query <- gsub("OR", " OR ", translated_query)
+  #         translated_query <- gsub("\\[.{5}\\]", "", translated_query)
+  # 
+  #         if(values$submit_filters == "clicked" & values$search_query == "NOT BLANK"){
+  # 
+  #           paste0("Your translated search query tells the application to find ", project_name, " papers with a regex match to ", translated_query,
+  #                  " in the title, abstract, and keywords fields. This search is NOT sensitive to case.",
+  #                  " Your search and additional filters identified a total of ", length(filter_results()$uid), " studies")
+  #         }
+  # 
+  #         else{
+  # 
+  #           paste0("Your translated search query tells the application to find ", project_name, " papers with a regex match to ",
+  #                  translated_query,
+  #                  " in the title OR abstract OR keywords fields. This search is NOT sensitive to case.",
+  #                  " Your search identified a total of ", length(filter_results()$uid), " studies with no additional filters.")
+  #         }}
+  # 
+  #       # If there is a basic search query
+  #       else if(search_query()[1] != "" & is.na(search_query()[2])){
+  # 
+  #         translated_query <- search_query()[1]
+  # 
+  #         translated_query <- gsub("\\|", " OR ", translated_query)
+  #         translated_query <- gsub("\\)\\(\\?\\=\\.\\*", " AND ", translated_query)
+  #         translated_query <- gsub("\\?\\=\\.\\*", "", translated_query)
+  #         translated_query <- gsub("\\.\\*\\$", "", translated_query)
+  #         translated_query <- gsub("\\^", "", translated_query)
+  #         translated_query <- gsub("AND", " AND ", translated_query)
+  #         translated_query <- gsub("OR", " OR ", translated_query)
+  #         translated_query <- gsub("\\[.{5}\\]", "", translated_query)
+  # 
+  # 
+  #         # If there is a search query with filters added
+  #         if(values$submit_filters == "clicked" & values$search_query == "NOT BLANK"){
+  # 
+  #           paste0("Your translated search query tells the application to find ", project_name, " papers with a regex match to ", translated_query,
+  #                  " in the title, abstract, and keywords fields. This search is NOT sensitive to case.",
+  #                  " Your search and additional filters identified a total of ", length(filter_results()$uid), " studies")
+  #         }
+  # 
+  #         # If there is a search query with no filters added
+  #         else if (values$submit_filters == "" & values$search_query == "NOT BLANK") {
+  # 
+  #           paste0("Your translated search query tells the application to find ", project_name, " papers with a regex match to ",
+  #                  translated_query,
+  #                  " in the title OR abstract OR keywords fields. This search is NOT sensitive to case.",
+  #                  " Your search identified a total of ", length(filter_results()$uid), " studies with no additional filters.")
+  #         }}
+  # 
+  # 
+  # 
+  # 
+  # 
+  #       else{
+  # 
+  #         paste0("All ", length(filter_results()$uid), " citations loaded. Use the search box above or apply filters to identify relevant studies!")
+  # 
+  #       }
+  # 
+  #     })
+  # 
+  # 
+  #     # Reactive datatable showing studies and search results
+  #     output$search_results_studies <- DT::renderDataTable({
+  # 
+  # 
+  #       DT::datatable(
+  #         filter_results()[,2:ncol(filter_results())],
+  #         rownames = FALSE,
+  #         escape = FALSE,
+  #         # extensions = c('Buttons'),
+  #         options = list(
+  #           language = list(
+  #             zeroRecords = "No records found",
+  #             emptyTable = "No records found"),
+  #           deferRender = FALSE,
+  #           scrollY = 600,
+  #           scrollX = 100,
+  #           scroller = TRUE,
+  #           columnDefs = list(
+  #             list(
+  #               targets = c(1), #target for JS code
+  #               render = JS(
+  #                 "function(data, type, row, meta) {",
+  #                 "return type === 'display' && data.length > 15 ?",
+  #                 "'<span title=\"' + data + '\">' + data.substr(0, 30) + '...</span>' : data;",
+  #                 "}"),
+  # 
+  #               width = "10%"
+  #             ),
+  #             list(
+  #               # targets = c(1), #target for JS code
+  #               # render = JS(
+  #               #   "function(data, type, row, meta) {",
+  #               #   "return type === 'display' && data.length > 15 ?",
+  #               #   "'<span title=\"' + data + '\">' + data.substr(0, 15) + '...</span>' : data;",
+  #               #   "}")
+  #               # width = "200px"
+  #             )
+  #             # list(
+  #             #   targets = c(3:7), # columns 4, 5, and 6
+  #             #   render = JS(
+  #             #     "function(data, type, row, meta) {",
+  #             #     "  if (type === 'display' && data) {",
+  #             #     "  var words = data.split(';');",
+  #             #     " var formattedText = words.map(function(word) {",
+  #             #     "  var color =  '#' + ('000000' + Math.floor(Math.random()*16777215).toString(16)).slice(-6);",
+  #             #     "      var textColor = (parseInt(color.substring(1), 16) > 0xffffff / 2) ? 'black' : 'white';",
+  #             #     "      return '<span style=\"background-color:' + color + '; color:' + textColor + '; padding: 3px; border-radius: 5px; margin-right: 5px;\">' + word + '</span>';",
+  #             #     # "      return '<span style=\"background-color:' + color + '; padding: 3px; border-radius: 5px; margin-right: 5px;\">' + word + '</span>';",
+  #             #     "    }).join('; ');",
+  #             #     "    return formattedText;",
+  #             #     "  }",
+  #             #     "  return data;",
+  #             #     "}")
+  #             # ),
+  #             #list(width = '10%', targets = "_all")
+  #           )
+  #         )
+  # 
+  #       )
+  #     })
+  # 
+  # 
+  # 
+  # 
+  # 
+  #     # Download citations sever side --------
+  #     # download refs button server side -csv
+  #     output$download_csv <- downloadHandler(
+  #       filename = function() {
+  #         paste0("citations-", Sys.Date(),
+  #                ".csv", sep="")
+  #       },
+  #       content = function(file) {
+  #         write.csv(search_results_download(), file, row.names = FALSE)
+  #       }
+  #     )
+  # 
+  #     search_results_download <- reactive({t
+  # 
+  #       results <- citations_for_download %>%
+  #         filter(uid %in% !!filter_results()$uid)
+  # 
+  # 
+  # 
+  #     })
+  # 
+  #     search_results_download_syrf <- reactive({
+  # 
+  #       # tbl(con, "unique_citations"), filter, collect
+  #       results <- citations_for_download %>%
+  #         filter(uid %in% !!filter_results()$uid)
+  # 
+  #       results <- results %>%
+  #         rename(Authors = author,
+  #                Title = title,
+  #                Abstract = abstract,
+  #                Url = url,
+  #                Year = year,
+  #                DOI= doi,
+  #                PublicationName = journal) %>%
+  #         mutate(AlternateName = "",
+  #                AuthorAddress = "",
+  #                ReferenceType = "",
+  #                Keywords = keywords,
+  #                CustomId = uid,
+  #                PdfRelativePath = paste0(uid, ".pdf")) %>%
+  #         select(Title,
+  #                Authors,
+  #                PublicationName,
+  #                AlternateName,
+  #                Abstract,
+  #                Url,
+  #                AuthorAddress,
+  #                Year,
+  #                DOI,
+  #                ReferenceType,
+  #                Keywords,
+  #                CustomId,
+  #                PdfRelativePath)
+  # 
+  # 
+  #     })
+  # 
+  #     # download refs button server side - endnote
+  #     output$download_syrf <- downloadHandler(
+  #       filename = function() {
+  #         paste0("citations-srf-", Sys.Date(),
+  #                ".csv", sep="")
+  #       },
+  #       content = function(file) {
+  #         write.csv(search_results_download_syrf(), file,
+  #                   #col.names=TRUE,
+  #                   row.names = F, na="")
+  #       })
+  # 
+  #     search_results_download_endnote <- reactive({
+  # 
+  #       # tbl(con, "unique_citations"), filter, collect
+  #       results <- citations_for_download %>%
+  #         filter(uid %in% !!filter_results()$uid)
+  # 
+  #       results <- results %>%
+  #         filter(uid %in% search_results()$uid) %>%
+  #         mutate("Reference Type" = "Journal Article") %>%
+  #         mutate(isbn = gsub("\\r\\n|\\r|\\n", "", isbn)) %>%
+  #         rename("Custom 1" = uid,
+  #                "Secondary Title" = journal,
+  #                "ISBN/ISSN" = isbn) %>%
+  #         select("Reference Type", "author", "year",
+  #                "Secondary Title", "doi", "title",
+  #                "pages", "volume", "number", "abstract",
+  #                "Custom 1", "ISBN/ISSN") %>%
+  #         mutate(abstract = gsub("\\r\\n|\\r|\\n", "", abstract))
+  # 
+  #       names(results) <- toTitleCase(names(results))
+  # 
+  #       results <- results %>%
+  #         rename("DOI"= Doi)
+  # 
+  #       return(results)
+  # 
+  #     })
+  # 
+  #     # download refs button server side -endnote
+  #     output$download_endnote <- downloadHandler(
+  #       filename = function() {
+  #         paste0("citations-", Sys.Date(),
+  #                ".txt", sep="")
+  #       },
+  #       content = function(file) {
+  #         write.table(search_results_download_endnote(), file, sep="\t",
+  #                     col.names=TRUE, row.names = F, quote=FALSE, na="")
+  #       })
+  # 
+  # 
+  #   }
+  # )
+# }
+
+## Search UI ----
+#' Search Database
+#'
+#' This shiny module creates the search page for the app
+#'
+#' @param id The module identifier.
+#'
+#' @export
 search_UI <- function(id, table) {
   ns <- NS(id)
-
-
+  
+  
   tagList(
-
+    
     tabBox(width= 12,
            status = "primary",
            id = ns("search_tabs"),
            side = "left",
-
+           
            tabPanel(
              value="basic_search_tab",
-             title = "Basic search",
-
-
+             title = tagList(
+               icon("magnifying-glass", style = "font-size: 24px;"),
+               span("Basic", style = "font-family: KohinoorBangla, Sans-serif;")
+             ),
+             h5("Search iRISE Database using keywords (comma-separated):"),
              fluidRow(
-               column(3,
-                      tags$p("Conduct a search for relevant articles", style = "color: black !important;font-family: KohinoorBangla, Sans-serif;")
-                      %>% shinyhelper::helper(type = "markdown", content = "searching", size="l", inline=T),
+               column(width = 4,
+                      
+                      
+                      radioGroupButtons(
+                        inputId = ns("search1_type"),
+                        label = "Combine keywords with",
+                        choices = c("AND", "OR"),
+                        status = "primary",
+                        individual = TRUE,
+                        checkIcon = list(
+                          yes = tags$i(class = "fa fa-circle",
+                                       style = "color: green"),
+                          no = tags$i(class = "fa fa-circle-o",
+                                      style = "color: green"))
+                      )
                )),
-
-
-             textAreaInput(
-               inputId = ns("topic1"),
-               label = "add keywords separated by commas:",
-               value = ""),
-
-             radioGroupButtons(
-               inputId = ns("search1_type"),
-               label = "Combine keywords with",
-               choices = c("AND", "OR"),
-               status = "primary",
-               individual = TRUE,
-               checkIcon = list(
-                 yes = tags$i(class = "fa fa-circle",
-                              style = "color: green"),
-                 no = tags$i(class = "fa fa-circle-o",
-                             style = "color: green"))
+             
+             fluidRow(
+               column(
+                 width = 6,
+                 textAreaInput(
+                   inputId = ns("topic1"),
+                   placeholder = "e.g. scientific, manuscript, feedback",
+                   label = NULL,
+                   value = "",
+                   width = "100%"
+                 )
+                 
+               ),
+               column(
+                 width = 6,
+                 # Search button (solid dark)
+                 actionBttn(
+                   inputId = ns("search_button"),
+                   label = "Search",
+                   icon = icon("search"),
+                   style = "material-flat",
+                   styleclass = NULL
+                 ) %>% 
+                   tagAppendAttributes(
+                     style = "background-color: #1A465F; 
+             border-radius: 12px;
+             color: white; 
+             border: 2px solid #1A465F; 
+             text-transform: none; 
+             padding: 10px 20px;"
+                   ),
+                 
+                 # Clear button (inverse colors)
+                 actionBttn(
+                   inputId = ns("clear_search"),
+                   label = "Clear",
+                   icon = icon("times-circle"),
+                   style = "material-flat",
+                   styleclass = NULL
+                 ) %>%
+                   tagAppendAttributes(
+                     style = "background-color: white;
+             border-radius: 12px;
+             color: #1A465F;
+             border: 2px solid #1A465F;
+             text-transform: none;
+             padding: 10px 20px;"
+                   )
+                 
+                 
+                 
+                 
+                 
+               )
+               
              ),
-
-
-             actionBttn(
-               inputId = ns("search_button"),
-               label = "Search database",
-               style = "unite",
-               color = "primary"
-             ),
-
-             actionBttn(
-               inputId = ns("reset_search"),
-               label = "Reset search query",
-               style = "unite",
-               color = "success"
-             )),
-
+             
+             br(),
+             
+             fluidRow(
+               dropdown(
+                 downloadBttn(
+                   ns("download_csv"),
+                   label = "Download citations in CSV format",
+                   style = "unite",
+                   color = "primary",
+                   size = "sm",
+                   block = FALSE,
+                   no_outline = TRUE
+                 ),
+                 downloadBttn(
+                   ns("download_endnote"),
+                   label = "Download citations in Endnote tab delimited format",
+                   style = "unite",
+                   color = "primary",
+                   size = "sm",
+                   block = FALSE,
+                   no_outline = TRUE
+                 ),
+                 downloadBttn(
+                   ns("download_syrf"),
+                   label = "Download citations in SyRF upload format",
+                   style = "unite",
+                   color = "primary",
+                   size = "sm",
+                   block = FALSE,
+                   no_outline = TRUE
+                 ),
+                 
+                 br(),
+                 # p("Note for Rayyan export option below: download file and open in MS Excel first on your computer. Save as .csv in excel, then import saved file into Rayyan"),
+                 # downloadBttn(
+                 #   ns("download_rayyan"),
+                 #   label = "Download citations in Rayyan upload format",
+                 #   style = "unite",
+                 #   color = "primary",
+                 #   size = "sm",
+                 #   block = FALSE,
+                 #   no_outline = TRUE
+                 # ),
+                 
+                 label = "Download",
+                 style = "stretch", 
+                 icon = icon("download"),
+                 inline = TRUE,
+                 status = "success", width = "600px",
+                 animate = animateOptions(
+                   enter = animations$fading_entrances$fadeInLeftBig,
+                   exit = animations$fading_exits$fadeOutRightBig)
+                 # tooltip = tooltipOptions(title = "Click to download relevant studies")
+                 
+               )
+             )
+           ),
+           
            tabPanel(
-             title = "Advanced search",
+             title = tagList(
+               icon("magnifying-glass-plus", style = "font-size: 24px;"),
+               span("Advanced", style = "font-family: KohinoorBangla, Sans-serif;")
+             ),
+             h5("Build a more complex query using two keyword groups.", style = "color: black !important; font-family: KohinoorBangla, Sans-serif;"),
+             
              value="adv_search_tab",
-
-
-             textAreaInput(
-               inputId = ns("topic1_adv"),
-               label = "Search #1: add keywords separated by commas:",
-               value = ""),
-
+             h6("Search Group 1", style = "color: black !important; font-family: KohinoorBangla, Sans-serif;"),
+             
              radioGroupButtons(
                inputId = ns("search1_type_adv"),
-               label = "Combine keywords with",
+               label = "Combine keywords in Group 1 using:",
                choices = c("AND", "OR"),
                status = "primary",
                individual = TRUE,
@@ -1173,16 +2289,22 @@ search_UI <- function(id, table) {
                  no = tags$i(class = "fa fa-circle-o",
                              style = "color: green"))
              ),
-
-             textAreaInput(
-               inputId = ns("topic2_adv"),
-               label = "Search #2: add keywords separated by commas:",
-               value = ""
-             ),
-
+             fluidRow(
+               column(6,
+                      textAreaInput(
+                        inputId = ns("topic1_adv"),
+                        placeholder = "e.g. scientific, manuscript, feedback",
+                        label = NULL,
+                        value = "",
+                        width = "100%"
+                      ))),
+             
+             
+             
+             h6("Search Group 2", style = "color: black !important; font-family: KohinoorBangla, Sans-serif;"),
              radioGroupButtons(
                inputId = ns("search2_type_adv"),
-               label = "Combine keywords with",
+               label = "Combine keywords in Group 2 using:",
                choices = c("AND", "OR"),
                status = "primary",
                individual = TRUE,
@@ -1192,144 +2314,170 @@ search_UI <- function(id, table) {
                  no = tags$i(class = "fa fa-circle-o",
                              style = "color: green"))
              ),
-
+             fluidRow(
+               column(6, 
+                      textAreaInput(
+                        inputId = ns("topic2_adv"),
+                        placeholder = "e.g. scientific, manuscript, feedback",
+                        label = NULL,
+                        value = "",
+                        width = "100%"
+                      ))),
+             
+             hr(),
+             
              radioGroupButtons(
                inputId = ns("comb_1_2"),
-               label = "Combine searches with...",
+               label = "Combine Group 1 and Group 2 with:",
                choices = c("AND", "OR"),
                status = "primary"),
-
+             
              actionBttn(
-               inputId = ns("adv_search_button"),
-               label = "Search database",
-               style = "unite",
-               color = "danger"
+               inputId = ns("search_button"),
+               label = "Search",
+               icon = icon("search"),
+               style = "material-flat",
+               styleclass = NULL
+             ) %>% 
+               tagAppendAttributes(
+                 style = "background-color: #1A465F; 
+             border-radius: 12px;
+             color: white; 
+             border: 2px solid #1A465F; 
+             text-transform: none; 
+             padding: 10px 20px;"
+               ),
+             
+             actionBttn(
+               inputId = ns("clear_search"),
+               label = "Clear",
+               icon = icon("times-circle"),
+               style = "material-flat",
+               styleclass = NULL
+             ) %>%
+               tagAppendAttributes(
+                 style = "background-color: white;
+             border-radius: 12px;
+             color: #1A465F;
+             border: 2px solid #1A465F;
+             text-transform: none;
+             padding: 10px 20px;"
+               )
+           ),
+           
+           tabPanel(
+             value = "help_tab",
+             title = tagList(
+               icon("info-circle", style = "font-size: 24px;"),
+               span("How to Search", style = "font-family: KohinoorBangla, Sans-serif;")
              ),
-
-             actionBttn(
-               inputId = ns("adv_reset_search"),
-               label = "Reset search query",
-               style = "unite",
-               color = "success"
+             div(
+               style = "padding: 15px; max-height: 600px; overflow-y: auto;",
+               includeMarkdown("helpfiles/searching.md")
              )
            )
+           
+           
     ),
+    fluidRow(
+      column(
+        width = 3,
+        box(
+          width = 12,
+          title = tagList(icon("sliders")),
+          status = "primary",
+          solidHeader = TRUE,
+          
+          yearBarUI_filters(ns("included_studies_over_time_bar"),
+                            title = tags$p("Included Studies Over Time", style = " color: #1A465F;font-family: KohinoorBangla, sans-serif !important;"),
+                            theme = "danger",
+                            spinner_colour = "#89CB93",
+                            table = n_included_per_year_plot_data),
+          tags$style(HTML("
+    /* Change background & text color of selected tags */
+    .vscomp-value-tag {
+      background-color: #ff6666 !important; /* tag background */
+      color: white !important;              /* tag text */
+    }
+    /* Optional: change the 'x' (remove) icon color */
+    .vscomp-value-tag .vscomp-value-tag-clear {
+      color: white !important;
+    }
 
-
-    box(width= 12,
-        maximizable = TRUE,
-        solidHeader = TRUE,
-        status = "secondary",
-        title = "Selected studies in database",
-
-        textOutput(ns("search_results_text")),
-        tags$head(tags$style("#search_results_text{color: green;
-                                       font-size: 20px;
-                                       font-style: italic;
-                                       }"
-        )),
-
-        div(style="display: inline-block;vertical-align:top; width: 50px;",
-
-
-            dropdown(inputId = ns("dropdown_menu"),
-
-                     tags$h3("Filter studies"),
-
-                     shinyjs::useShinyjs(),
-
-                     #tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: green}")),
-                     sliderInput(ns("year_slider"),
-                                 "Year Published",
-                                 as.numeric(min(table$year, na.rm=TRUE)),
-                                 as.numeric(max(table$year, na.rm=TRUE)),
-                                 value = c(min(table$year, na.rm=TRUE), max(table$year, na.rm=TRUE)), sep=""),
-
-
-
-                     uiOutput(ns("dynamic_dropdowns")),
-
-                     style = "unite",
-                     icon = icon("filter"),
-                     inline =TRUE,
-                     status = "danger", width = "600px",
-                     animate = animateOptions(
-                       enter = animations$fading_entrances$fadeInLeftBig,
-                       exit = animations$fading_exits$fadeOutRightBig),
-                     tooltip = tooltipOptions(title = "Click to filter studies"),
-
-                     actionBttn(inputId = ns("submit_filters"),
-                                label = "Apply filters"),
-
-                     # prettySwitch(inputId = ns("highly_sensitive"),
-                     #              label = "High sensitivity")
-            )
-        ),
-
-        div(style="display: inline-block;vertical-align:top; width: 50px;",
-
-            dropdown(
-              downloadBttn(
-                ns("download_csv"),
-                label = "Download citations in CSV format",
-                style = "unite",
-                color = "primary",
-                size = "sm",
-                block = FALSE,
-                no_outline = TRUE
-              ),
-              downloadBttn(
-                ns("download_endnote"),
-                label = "Download citations in Endnote tab delimited format",
-                style = "unite",
-                color = "primary",
-                size = "sm",
-                block = FALSE,
-                no_outline = TRUE
-              ),
-              downloadBttn(
-                ns("download_syrf"),
-                label = "Download citations in SyRF upload format",
-                style = "unite",
-                color = "primary",
-                size = "sm",
-                block = FALSE,
-                no_outline = TRUE
-              ),
-
-              br(),
-              p("Note for Rayyan export option below: download file and open in MS Excel first on your computer. Save as .csv in excel, then import saved file into Rayyan"),
-              downloadBttn(
-                ns("download_rayyan"),
-                label = "Download citations in Rayyan upload format",
-                style = "unite",
-                color = "primary",
-                size = "sm",
-                block = FALSE,
-                no_outline = TRUE
-              ),
-
-              style = "unite", icon = icon("download"),
-              inline = TRUE,
-              status = "success", width = "600px",
-              animate = animateOptions(
-                enter = animations$fading_entrances$fadeInLeftBig,
-                exit = animations$fading_exits$fadeOutRightBig),
-              tooltip = tooltipOptions(title = "Click to download relevant studies")
-
+  ")),
+          br(),
+          actionBttn(
+            inputId = ns("reset_filters"),
+            label = "Clear Filters",
+            icon = icon("times-circle"),
+            style = "material-flat",
+            styleclass = NULL, size = "xs"
+          )
+          %>% 
+            tagAppendAttributes(style = "float: right; background-color:#1A465F; color: white;"), 
+          br(),
+          uiOutput(ns("dynamic_dropdowns"))
+          
+        )
+      ),
+      
+      column(
+        width = 9,
+        box(
+          width = 12,
+          solidHeader = TRUE,
+          status = "secondary",
+          title = "Selected studies in database",
+          fluidRow(
+            column(
+              width = 10,
+              textOutput(ns("search_results_text"))
             ),
-
-        ),
-
-
-        DT::dataTableOutput(ns("search_results_studies")) %>% withSpinner(color="#96c296")
-
+            column(
+              width = 2,
+              pickerInput(
+                ns("cols_to_show"),
+                label = NULL,
+                selected = c("Title", "Author", "Year", "Journal"),
+                choices = c("Title", "Author", "Year", "Journal"),
+                multiple = TRUE,
+                options = pickerOptions(
+                  actionsBox = TRUE,
+                  noneSelectedText = "Please select",
+                  selectedTextFormat = "count > 0",
+                  countSelectedText = "Add Columns",
+                  style = "btn-primary"
+                )
+                
+              )
+            )
+          ),
+          
+          br(),
+          tags$style(HTML("
+  .fa-tag, .fa-database, .fa-code, .fa-map-marker-alt {
+    transition: transform 0.2s ease-in-out;
+  }
+  .fa-tag:hover, .fa-database:hover, .fa-code:hover, .fa-map-marker-alt:hover {
+    transform: scale(1.5);
+  }
+  img[src='openalex.png'] {
+    transition: transform 0.2s ease-in-out;
+  }
+  img[src='openalex.png']:hover {
+    transform: scale(1.5);
+  }
+")),
+          
+          # Second row inside the box: datatable full width
+          DT::dataTableOutput(ns("search_results_studies") )
+          # %>% withSpinner(color="#96c296")
+          
+        )
+      )
     )
-
-
   )
-
-
+  
 }
 
 
@@ -1350,17 +2498,19 @@ search_Server <- function(id,
                           combined_pico_table,
                           pico_data = list(),
                           citations_for_download,
-                          project_name = "") {
+                          project_name = ""
+                          ,
+                          current_tab
+) {
   moduleServer(
     id,
-    function(input, output, session) {
-
+    function(input, output, session) {   # <-- only input/output/session here
+      
       ns <- NS(id)
-
-
+      
       # Creates list for dropdown menus
       dynamic_dropdowns <- list()
-      output$dynamic_dropdowns <- renderUI({
+      render_pico_dropdowns <- function(pico_data, ns) {
         dynamic_dropdowns <- lapply(pico_data, function(item) {
           pico_dropdown_UI(
             id = ns(item$id),
@@ -1376,11 +2526,23 @@ search_Server <- function(id,
           )
         })
         do.call(tagList, dynamic_dropdowns)
+      }
+      
+      output$dynamic_dropdowns <- renderUI({
+        cat("dynamic_dropdowns", Sys.time(), "\n")
+        
+        render_pico_dropdowns(pico_data, ns)
       })
-
+      
+      outputOptions(output, "dynamic_dropdowns", suspendWhenHidden = FALSE)
+      
+      
+      
+      
       # Creates list for dropdown menus reactivity
       pico_element_list <- list()
       pico_element_list <- lapply(pico_data, function(pico_item) {
+        
         pico_dropdown_Server(
           id = pico_item$id,
           table = pico_item$table,
@@ -1389,141 +2551,79 @@ search_Server <- function(id,
           column3 = pico_item$column3,
           column4 = pico_item$column4,
           filter_no = pico_item$filter_no
-
+          
         )
       })
-
+      
       # Creates table list for filtering data
       pico_table_list <- list()
       pico_table_list <- lapply(pico_data, function(element) element$table)
-
-
+      
+      
       # Create reactive values as triggers
       values <- reactiveValues()
       values$search_query <- ""
-      values$reset_button <- ""
+      values$reset_filters <- ""
       values$submit_filters <- ""
-
-
-      observeEvent(input$reset_search, {
-
-
+      values$reset_slider <- ""
+      values$submit_slider <- ""
+      
+      
+      # Reactive changes for clear search button
+      observeEvent(input$clear_search, {
+        
         updateTextAreaInput(session, "topic1",
                             value = "")
-
-        values$search_query <- ""
-        values$reset_button <- "reset"
-        values$submit_filters <- ""
-
-        dynamic_dropdowns <- list()
-        output$dynamic_dropdowns <- renderUI({
-          dynamic_dropdowns <- lapply(pico_data, function(item) {
-            pico_dropdown_UI(
-              id = ns(item$id),
-              label1 = item$label1,
-              label2 = item$label2,
-              label3 = item$label3,
-              label4 = item$ilabel4,
-              column1 = item$table[[item$column1]],
-              column2 = item$table[[item$column2]],
-              column3 = item$table[[item$column3]],
-              column4 = item$table[[item$column4]],
-              filter_no = item$filter_no
-            )
-          })
-          do.call(tagList, dynamic_dropdowns)
-
-        })
-
-        updateSliderInput(session = session,
-                          inputId = "year_slider",
-                          label = "Year Published",
-                          min = as.numeric(min(table$year, na.rm=TRUE)),
-                          max = as.numeric(max(table$year, na.rm=TRUE)),
-                          value = c(min(table$year, na.rm=TRUE), max(table$year, na.rm=TRUE)))
-
-        shinyjs::click("dropdown_menu")
-
-        observe({
-          # Introduce a delay of 1 second
-          shinyjs::delay(250, {
-            # Run the click function after the delay
-            shinyjs::click("dropdown_menu")
-          })
-        })
-      })
-
-      observeEvent(input$adv_reset_search, {
-
-
+        
         updateTextAreaInput(session, "topic1_adv",
                             value = "")
-
+        
         updateTextAreaInput(session, "topic2_adv",
                             value = "")
-
+        
         values$search_query <- ""
-        values$reset_button <- "reset"
+        values$reset_filters <- "reset"
         values$submit_filters <- ""
-
-        dynamic_dropdowns <- list()
+        values$reset_slider <- "reset"
+        values$submit_slider <- ""
+        
+        
         output$dynamic_dropdowns <- renderUI({
-          dynamic_dropdowns <- lapply(pico_data, function(item) {
-            pico_dropdown_UI(
-              id = ns(item$id),
-              label1 = item$label1,
-              label2 = item$label2,
-              label3 = item$label3,
-              label4 = item$ilabel4,
-              column1 = item$table[[item$column1]],
-              column2 = item$table[[item$column2]],
-              column3 = item$table[[item$column3]],
-              column4 = item$table[[item$column4]],
-              filter_no = item$filter_no
-            )
-          })
-          do.call(tagList, dynamic_dropdowns)
-
+          render_pico_dropdowns(pico_data, ns)
         })
-
-        updateSliderInput(session = session,
-                          inputId = "year_slider",
-                          label = "Year Published",
-                          min = as.numeric(min(table$year, na.rm=TRUE)),
-                          max = as.numeric(max(table$year, na.rm=TRUE)),
-                          value = c(min(table$year, na.rm=TRUE), max(table$year, na.rm=TRUE)))
-
-        shinyjs::click("dropdown_menu")
-
-        observe({
-          # Introduce a delay of 1 second
-          shinyjs::delay(250, {
-            # Run the click function after the delay
-            shinyjs::click("dropdown_menu")
-          })
-        })
+        
+        
       })
-
-
-      observeEvent(c(input$search_button, input$adv_search_button),  {
-
+      
+      # Reactive changes for resest filters button
+      observeEvent(input$reset_filters, {
+        
+        
+        values$reset_filters <- "reset"
+        values$submit_filters <- ""
+        values$reset_slider <- "reset"
+        values$submit_slider <- ""
+        
+        
+        output$dynamic_dropdowns <- renderUI({
+          render_pico_dropdowns(pico_data, ns)
+        })
+        
+      })
+      
+      observeEvent(c(input$search_button),  {
+        
         values$search_query <- "NOT BLANK"
-        values$reset_button <- ""
-
+        values$reset_filters <- ""
+        
       },  ignoreInit = TRUE)
-
-      observeEvent(c(input$submit_filters),  {
-
-        values$reset_button <- ""
-        values$submit_filters <- "clicked"
-      },  ignoreInit = TRUE)
-
-
-      # getting your search results - reactive object search_results runs query on data and returns datatable
-      search_query <- eventReactive(c(input$search_button, input$adv_search_button), {
-
-        if(input$search_tabs == "basic_search_tab"){
-
+      
+      # Run search query
+      search_query <- eventReactive(c(input$search_button), {
+        
+        # When in the basic search...
+        if (input$search_tabs == "basic_search_tab"){
+          
           query1 <- input$topic1 %>%
             str_trim() %>%
             str_replace_all(pattern = ", ", repl = ",") %>%
@@ -1533,21 +2633,22 @@ search_Server <- function(id,
             as.list() %>%
             lapply(function(x) gsub(".*", paste0("[[:<:]]", x, "[[:>:]]"),
                                     x, ignore.case = TRUE))
-
+          
           query1 <- ifelse(input$search1_type == "OR",
                            paste(query1,collapse="|"),
                            paste0("^(?=.*", paste0(query1, collapse=")(?=.*"),
                                   ").*$"))
-
+          
           query1 <- query1 %>%
             str_trim()
-
+          
           return(query1)
-
+          
         }
-
+        
+        # When using Adv Search...
         else{
-
+          
           query1_adv <- input$topic1_adv %>%
             str_trim() %>%
             str_replace_all(pattern = ", ", repl = ",") %>%
@@ -1557,17 +2658,17 @@ search_Server <- function(id,
             as.list() %>%
             lapply(function(x) gsub(".*", paste0("[[:<:]]", x, "[[:>:]]"),
                                     x, ignore.case = TRUE))
-
+          
           query1_adv <- ifelse(input$search1_type_adv == "OR",
                                paste(query1_adv,collapse="|"),
                                paste0("^(?=.*", paste0(query1_adv, collapse=")(?=.*"),
                                       ").*$"))
-
-
+          
+          
           query1_adv <- query1_adv %>%
             str_trim()
-
-
+          
+          
           query2_adv <- input$topic2_adv %>%
             str_trim() %>%
             str_replace_all(pattern = ", ", repl = ",") %>%
@@ -1577,83 +2678,90 @@ search_Server <- function(id,
             as.list() %>%
             lapply(function(x) gsub(".*", paste0("[[:<:]]", x, "[[:>:]]"),
                                     x, ignore.case = TRUE))
-
+          
           query2_adv <- ifelse(input$search2_type_adv == "OR",
                                paste(query2_adv,collapse="|"),
                                paste0("^(?=.*", paste0(query2_adv, collapse=")(?=.*"),
                                       ").*$"))
-
-
+          
+          
           query2_adv <- query2_adv %>%
             str_trim()
-
-          #try(query_final <- query1)
+          
           try(query_final <- c(query1_adv, query2_adv))
+          
           return(query_final)
         }
       })
-
-
-      search_results <- reactive({
-
+      
+      
+      search_results <- reactiveVal(table) 
+      
+      observeEvent(input$search_button, {
+        
         # If there is no search query and reset button pressed, return entire table
-        if(values$search_query == "" & values$reset_button == "reset"){
-
+        if(values$search_query == "" & values$reset_filters == "reset"){
+          
           selected_studies <- table
-
+          
         }
-
+        
         # If there is no search query and no reset then proceed with entire table
         else if(values$search_query == ""){
-
+          
           selected_studies <- table
-
+          
         }
-
-
+        
+        
         else if(search_query()[1] == ""){
-
+          
           selected_studies <- table
-
+          
         }
-
+        
         # if there is a search query
         else{
-
+          
           selected_studies <- table
-
+          
           if(input$search_tabs == "basic_search_tab"){
-
+            
             # If search has been performed in Adv search then user goes back to basic search there is a reset.
             if (length(search_query()) > 1){
-
-              shinyjs::click("adv_reset_search")
-
+              
+              # shinyjs::click("adv_reset_search")
+              
             } else{
-
-              selected_studies <- selected_studies[with(selected_studies,
-                                                        grepl(search_query(),
-                                                              paste(title, abstract, keywords),
-                                                              ignore.case=TRUE,
-                                                              perl=TRUE)),]
-
-              withProgress(message = 'Performing search',
-                           detail = 'This may take a little while...', value = 0, {
-                             for (i in 1:25) {
-                               incProgress(1/15)
-                               Sys.sleep(0.5)
-                             }
-                           })
-            }
+              
+              if (str_trim(input$topic1) == ""){
+                
+                search_results(selected_studies)  
+                
+                return() 
+                
+              } else {
+                selected_studies <- selected_studies[with(selected_studies,
+                                                          grepl(search_query(),
+                                                                paste(title, abstract, keywords),
+                                                                ignore.case=TRUE,
+                                                                perl=TRUE)),]
+                
+                withProgress(message = 'Performing search',
+                             detail = 'Please wait...', value = 0, {
+                               for (i in 1:25) {
+                                 incProgress(1/15)
+                                 Sys.sleep(0.5)
+                               }
+                             })
+              }}
           } else if (is.na(search_query()[1]) | is.na(search_query()[2])){
-
-
-            shinyjs::click("adv_reset_search")
-
+            
+            
             selected_studies <- table
-
+            
           } else{
-
+            
             selected_studies1 <- table[with(table,
                                             grepl(search_query()[1],
                                                   paste(title, abstract, keywords),
@@ -1664,46 +2772,68 @@ search_Server <- function(id,
                                                   paste(title, abstract, keywords),
                                                   ignore.case=TRUE,
                                                   perl=TRUE)),]
-
-
+            
+            
             if(input$comb_1_2 == "AND"){
-
+              
               selected_studies <- table %>%
                 filter(uid %in% selected_studies1$uid & uid %in% selected_studies2$uid) %>%
                 distinct()
             }
-
+            
             else{
               selected_studies <- table %>%
                 filter(uid %in% c(selected_studies1$uid, selected_studies2$uid)) %>%
                 distinct()
             }
-
+            
             withProgress(message = 'Performing search',
-                         detail = 'This may take a little while...', value = 0, {
+                         detail = 'Please wait...', value = 0, {
                            for (i in 1:25) {
                              incProgress(1/15)
                              Sys.sleep(0.5)
                            }
                          })
-
+            
           }}
-        return(selected_studies)
-
+        
+        
+        search_results(selected_studies)   
+        
       })
-
-
+      
+      
+      observe({
+        cat("Sidebar menu is:", current_tab(), "\n")
+      })
+      
+      
       filter_results <- reactive({
         
-        selected_studies <- search_results()
-
+        req(current_tab())
+        req(current_tab() %in% c("module_search_database", "grey_lit_database"))
+        
+        reset_state <- values$reset_filters
+        
+        if(values$search_query == ""){
+          
+          
+          # No search query - start with full table, don't trigger search_results()
+          selected_studies <- table  # Use your base table directly
+          
+        } else {
+          
+          # There is a search query or reset - use search_results()
+          selected_studies <- search_results()
+        }
+        
         # If reset button clicked then tidy entire table and return
-        if(values$reset_button == "reset"){
-
+        if(reset_state == "reset"){
+          
           selected_studies <- as.data.frame(selected_studies)
           
           combined_pico_table <- unique(combined_pico_table)
-
+          
           selected_studies <- selected_studies %>%
             mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
             arrange(desc(year))
@@ -1715,286 +2845,518 @@ search_Server <- function(id,
             select(uid, year, author, journal, title) %>%
             left_join(combined_pico_table, by="uid") %>%
             distinct()
-
+          
           if ("intervention" %in% colnames(selected_studies)){
-          
-          selected_studies <- selected_studies %>%
-            distinct() 
-
-          selected_studies <- as.data.frame(selected_studies) %>%
-            ungroup() %>% 
-            select(uid, Year = year, Author = author, Journal = journal, Title = title, Intervention = intervention,
-                   Discipline = discipline, "Outcome Measures" = outcome_measures) %>% 
-            arrange(is.na(Intervention))
-          
-          
+            
+            selected_studies <- selected_studies %>%
+              distinct()
+            
+            selected_studies <- as.data.frame(selected_studies) %>%
+              ungroup() %>%
+              select(uid, Title = title, Author = author, Journal = journal, Year = year, Intervention = intervention,
+                     "Outcome Measures" = outcome_measures, Discipline = discipline, "Intervention Provider" = "intervention_provider",
+                     "Research Stage" = "research_stage", "Target Population" = "target_population", "Target Pop Location" = "location", "Annotated by" = annotated_by) %>%
+              arrange(is.na(Intervention))
+            
+            
           } else{
             
             
-             selected_studies <- as.data.frame(selected_studies) %>%
-              distinct() %>% 
-              select(uid, Year = year, Author = author, Journal = journal, Title = title, "Publication Type" = name)
+            selected_studies <- as.data.frame(selected_studies) %>%
+              distinct() %>%
+              select(uid, Title = title, Author = author, Journal = journal, "Publication Type" = name,  Year = year)
             
-
-              
             
           }
-
+          
+          
           return(selected_studies)
-
-
+          
+          
         }
-
-        # If apply filter button pressed, proceed to filter section
-        if(values$submit_filters == "clicked") {
         
-
-          input$submit_filters
-
-          # If number of pico dataframes for dropdowns is > 0 then...
-          if (length(pico_table_list) > 0) {
-
-            for (i in (1:length(pico_table_list))){
-         
-               # Loop through each dataframe and filter
-              new_table <- pico_table_list[[i]] %>%
-                filter(name %in% isolate(pico_element_list[[i]]())) %>%
+        # If number of pico dataframes for dropdowns is > 0 then...
+        if (length(pico_element_list) > 0) {
+          
+          for (i in (1:length(pico_element_list))){
+            
+            # Get current selections from the reactive
+            selected_values <- pico_element_list[[i]]()
+            
+            table <- pico_data$pico_element_1$table
+            # Get all possible values for this dropdown
+            all_possible_values <- unique(pico_data[[i]]$table[[pico_data[[i]]$column1]])
+            
+            
+            # Only filter if user made actual selections (not all selected)
+            if (!is.null(selected_values) &&
+                length(selected_values) > 0 &&
+                length(selected_values) < length(all_possible_values)) {
+              
+              new_table <- pico_data[[i]]$table %>%
+                filter(!!sym(pico_data[[i]]$column1) %in% selected_values) %>%
                 select(uid)
-
-              # Only keep the rows that have a matching "uid"
+              
               selected_studies <- selected_studies %>%
                 semi_join(new_table, by = "uid")
-   
+              
+              values$submit_filters <- "clicked"
+              
             }
           }
-
-          # Use year slider to filter
-          selected_studies <- selected_studies %>%
-            mutate(year = as.numeric(as.character(year))) %>%
-            filter(year >= isolate(input$year_slider[[1]])) %>%
-            filter(year <= isolate(input$year_slider[[2]]))
-
+          
         }
-
+        
         # Warning if no results found
         if(nrow(selected_studies) < 1){
-          shinyalert("Warning",
-                     "Search returned 0 results. Please make a new selection.", type = "info")
+          
+          selected_studies <- selected_studies %>%
+            select(Title = title, Author = author, Journal = journal, Year = year)
+          
           return(selected_studies)
         }
-
+        
         # Tidy section for use in the datatable
         selected_studies <- as.data.frame(selected_studies)
-
+        
         selected_studies <- selected_studies %>%
           mutate(link = ifelse(!is.na(doi), paste0("https://doi.org/", doi), url)) %>%
           arrange(desc(year))
-
+        
         if (!is.null(combined_pico_table)){
           
+          combined_pico_table <- unique(combined_pico_table)
+          
+          selected_studies <- selected_studies %>%
+            mutate(title = ifelse(!is.na(doi) & doi != "",
+                                  paste0("<a href='", link, "' target='_blank'>", title, "</a>"),
+                                  title)) %>%
+            select(uid, title, author, journal, year) %>%
+            left_join(combined_pico_table, by="uid") %>%
+            distinct()
+          
+          colnames(selected_studies) <- toTitleCase(colnames(selected_studies))
+          
+          if ("Intervention" %in% colnames(selected_studies)){
             
-        combined_pico_table <- unique(combined_pico_table)
-
-          selected_studies <- selected_studies %>% 
-          mutate(title = ifelse(!is.na(doi) & doi != "", 
-                                paste0("<a href='", link, "' target='_blank'>", title, "</a>"), 
-                                title)) %>%
-          select(uid, year, author, journal, title) %>%
-          left_join(combined_pico_table, by="uid") %>%
-          distinct()
-          
-        colnames(selected_studies) <- toTitleCase(colnames(selected_studies))
-        
-        if ("Intervention" %in% colnames(selected_studies)){
-          
-        selected_studies <- as.data.frame(selected_studies) %>%
-          ungroup() %>%
-          arrange(Intervention == "Unknown") %>% 
-          rename("uid" = "Uid", "Outcome Measures" = "Outcome_measures", "Intervention Provider" = "Intervention_provider")
-        
+            selected_studies <- as.data.frame(selected_studies) %>%
+              ungroup() %>%
+              arrange(Intervention == "Unknown") %>%
+              rename("uid" = "Uid", "Outcome Measures" = "Outcome_measures", "Intervention Provider" = "Intervention_provider",
+                     "Research Stage" = "Research_stage", "Target Population" = "Target_population", "Target Pop Location" = "Location", "Annotated by" = "Annotated_by")
+            
           } else {
             
             selected_studies <- as.data.frame(selected_studies) %>%
-              ungroup() %>% 
-              select(uid = Uid, Year, Author, Journal, Title, "Publication Type" = Name) %>%
+              ungroup() %>%
+              # select(uid = Uid, Year, Author, Journal, Title, "Publication Type" = Name) %>%
+              select(uid = Uid, Title, Author, Journal, "Publication Type" = Name, Year) %>%
               distinct()
-              
+            
           }
         } else {
           
-          selected_studies <- selected_studies %>% 
-            mutate(title = ifelse(!is.na(doi) & doi != "", 
-                                  paste0("<a href='", link, "' target='_blank'>", title, "</a>"), 
+          selected_studies <- selected_studies %>%
+            mutate(title = ifelse(!is.na(doi) & doi != "",
+                                  paste0("<a href='", link, "' target='_blank'>", title, "</a>"),
                                   title)) %>%
-            select(uid, Year = year, Author = author, Journal = journal, Title = title) %>%
+            select(uid, Title = title, Author = author, Journal = journal, Year = year) %>%
             distinct()
-
+          
         }
-
+        
         return(selected_studies)
       })
-
-
+      
+      
+      
+      
+      translate_query <- function(query) {
+        query %>%
+          gsub("\\|", " OR ", ., perl = TRUE) %>%
+          gsub("\\)\\(\\?\\=\\.\\*", " AND ", ., perl = TRUE) %>%
+          gsub("\\?\\=\\.\\*", "", ., perl = TRUE) %>%
+          gsub("\\.\\*\\$", "", ., perl = TRUE) %>%
+          gsub("\\^", "", ., perl = TRUE) %>%
+          gsub("AND", " AND ", ., perl = TRUE) %>%
+          gsub("OR", " OR ", ., perl = TRUE) %>%
+          gsub("\\[.{5}\\]", "", ., perl = TRUE)
+      }
+      
+      
+      
+      
       output$search_results_text <- renderText({
-
-        # If there is no query and no filters
-        if(values$search_query == "" & values$submit_filters == ""){
-
-
-          paste0("All ", length(filter_results()$uid), " citations loaded. Use the search box above or apply filters to identify relevant studies!")
-
-        }
-
-        # If there is no query and only filters
-        else if(values$submit_filters == "clicked" & values$search_query == ""){
-          paste0("Your filters identified a total of ", length(filter_results()$uid), " citations")
-        }
-
-        # If there is an advanced search query
-        else if(search_query()[1] != "" & !is.na(search_query()[2])){
-
-          if(input$comb_1_2 == "AND"){
-
-            translated_query <- paste0(search_query()[1],  " AND ", search_query()[2])
-          } else {
-
-            translated_query <- paste0(search_query()[1],  " OR ", search_query()[2])
-          }
-
-          translated_query <- gsub("\\|", " OR ", translated_query)
-          translated_query <- gsub("\\)\\(\\?\\=\\.\\*", " AND ", translated_query)
-          translated_query <- gsub("\\?\\=\\.\\*", "", translated_query)
-          translated_query <- gsub("\\.\\*\\$", "", translated_query)
-          translated_query <- gsub("\\^", "", translated_query)
-          translated_query <- gsub("AND", " AND ", translated_query)
-          translated_query <- gsub("OR", " OR ", translated_query)
-          translated_query <- gsub("\\[.{5}\\]", "", translated_query)
-
-          if(values$submit_filters == "clicked" & values$search_query == "NOT BLANK"){
-
-            paste0("Your translated search query tells the application to find ", project_name, " papers with a regex match to ", translated_query,
-                   " in the title, abstract, and keywords fields. This search is NOT sensitive to case.",
-                   " Your search and additional filters identified a total of ", length(filter_results()$uid), " studies")
-          }
-
-          else{
-
-            paste0("Your translated search query tells the application to find ", project_name, " papers with a regex match to ",
-                   translated_query,
-                   " in the title OR abstract OR keywords fields. This search is NOT sensitive to case.",
-                   " Your search identified a total of ", length(filter_results()$uid), " studies with no additional filters.")
-          }}
-
-        # If there is a basic search query
-        else if(search_query()[1] != "" & is.na(search_query()[2])){
-
-          translated_query <- search_query()[1]
-
-          translated_query <- gsub("\\|", " OR ", translated_query)
-          translated_query <- gsub("\\)\\(\\?\\=\\.\\*", " AND ", translated_query)
-          translated_query <- gsub("\\?\\=\\.\\*", "", translated_query)
-          translated_query <- gsub("\\.\\*\\$", "", translated_query)
-          translated_query <- gsub("\\^", "", translated_query)
-          translated_query <- gsub("AND", " AND ", translated_query)
-          translated_query <- gsub("OR", " OR ", translated_query)
-          translated_query <- gsub("\\[.{5}\\]", "", translated_query)
-
-
-          # If there is a search query with filters added
-          if(values$submit_filters == "clicked" & values$search_query == "NOT BLANK"){
-
-            paste0("Your translated search query tells the application to find ", project_name, " papers with a regex match to ", translated_query,
-                   " in the title, abstract, and keywords fields. This search is NOT sensitive to case.",
-                   " Your search and additional filters identified a total of ", length(filter_results()$uid), " studies")
-          }
-
-          # If there is a search query with no filters added
-          else if (values$submit_filters == "" & values$search_query == "NOT BLANK") {
-
-            paste0("Your translated search query tells the application to find ", project_name, " papers with a regex match to ",
-                   translated_query,
-                   " in the title OR abstract OR keywords fields. This search is NOT sensitive to case.",
-                   " Your search identified a total of ", length(filter_results()$uid), " studies with no additional filters.")
-          }}
-
-
-
-
-
-        else{
-
-          paste0("All ", length(filter_results()$uid), " citations loaded. Use the search box above or apply filters to identify relevant studies!")
-
-        }
-
-      })
-
-
-      # Reactive datatable showing studies and search results
-      output$search_results_studies <- DT::renderDataTable({
-    
         
-        DT::datatable(
-          filter_results()[,2:ncol(filter_results())],
+        req(debounced_state())
+        text_data <- debounced_state()
+        
+        cat("search_results_text", Sys.time(), "\n")
+        
+        # Extract all values from the debounced state
+        search_q <- text_data$search_query
+        submit_f <- text_data$submit_filters
+        reset_f <- text_data$reset_filters
+        submit_s <- text_data$submit_slider
+        reset_s <- text_data$reset_slider
+        
+        n <- text_data$n_results
+        
+        search_query <- text_data$search_query_value
+        
+        comb <- text_data$combination_type
+        
+        if ((search_q == "" && submit_f == "" && submit_s == "")
+        ) {
+          
+          return(paste0("All ", n,
+                        " citations loaded. Use the search box above or apply filters to identify relevant studies!"))
+        }
+        
+        # --- Case 1: filters only
+        if (submit_f == "clicked" && search_q == "" || submit_s == "clicked" && search_q == "") {
+          
+          return(paste0("Your filters identified a total of ", n, " citations."))
+        }
+        
+        # --- Case 2: advanced search (two terms)
+        if (!is.na(search_query[1]) && search_query[1] != "" && !is.na(search_query[2]) && search_query[2] != "") {
+          operator <- ifelse(comb == "AND", " AND ", " OR ")
+          translated_query <- translate_query(paste0(search_query[1], operator, search_query[2]))
+          
+          if (submit_f == "clicked" && search_q == "NOT BLANK") {
+            return(paste0(
+              "Your translated search query tells the application to find ", project_name,
+              " papers with a regex match to ", translated_query,
+              " in the title, abstract, and keywords fields. This search is NOT case-sensitive. ",
+              "Your search and additional filters identified a total of ", n, " studies."
+            ))
+          } else {
+            return(paste0(
+              "Your translated search query tells the application to find ", project_name,
+              " papers with a regex match to ", translated_query,
+              " in the title OR abstract OR keywords fields. This search is NOT case-sensitive. ",
+              "Your search identified a total of ", n, " studies with no additional filters."
+            ))
+          }
+        }
+        
+        # --- Case 3: basic search (single term)
+        
+        if (!is.na(search_query[1]) && search_query[1] != "" && (is.na(search_query[2]) || search_query[2] == "")) {
+          translated_query <- translate_query(search_query[1])
+          
+          if (submit_f == "clicked" && search_q == "NOT BLANK" || submit_s == "clicked" && search_q == "NOT BLANK") {
+            return(paste0(
+              "Your translated search query tells the application to find ", project_name,
+              " papers with a regex match to ", translated_query,
+              " in the title, abstract, and keywords fields. This search is NOT case-sensitive. ",
+              "Your search and additional filters identified a total of ", n, " studies."
+            ))
+          } else {
+            return(paste0(
+              "Your translated search query tells the application to find ", project_name,
+              " papers with a regex match to ", translated_query,
+              " in the title OR abstract OR keywords fields. This search is NOT case-sensitive. ",
+              "Your search identified a total of ", n, " studies with no additional filters."
+            ))
+          }
+        }
+        
+        # --- Fallback
+        paste0("All ", n, " citations loaded. Use the search box above or apply filters to identify relevant studies!")
+      })
+      
+      n_included_react <- (
+        
+        reactive({
+          cat("n_included_react", Sys.time(), "\n")
+          
+          filter_results() %>%
+            janitor::clean_names() %>%
+            mutate(year = as.numeric(year)) %>%
+            filter(!is.na(year)) %>%
+            count(year, name = "is_included") %>%
+            arrange(year)
+        })
+      ) 
+      
+      
+      year_slider_values <- yearBarServer_filters("included_studies_over_time_bar",
+                                                  filter_table = n_included_react,
+                                                  column = "is_included",
+                                                  colour = "#1A465F")
+      
+      
+      
+      # New reactive that combines your existing filters + year filter
+      final_filtered_studies <- reactive({
+        cat("final_filtered_studies", Sys.time(), "\n")
+        
+        
+        selected_studies <- filter_results()
+        
+        # Get year range from the module
+        year_range <- year_slider_values()
+        
+        req(selected_studies, year_range)
+        
+        
+        # Apply year filtering
+        selected_studies %>%
+          
+          mutate(Year = as.numeric(as.character(Year))) %>%
+          filter(!is.na(Year),
+                 Year >= min(year_range),
+                 Year <= max(year_range))
+      }) %>% bindCache(filter_results(), year_slider_values())
+      
+      
+      observeEvent(year_slider_values(), {
+        
+        year_range <- year_slider_values()
+        
+        filter_data <- filter_results() %>% 
+          filter(!is.na(Year))
+        
+        if(min(year_range) == min(filter_data$Year) && 
+           max(year_range) == max(filter_data$Year)) {
+          
+          values$reset_slider <- ""
+          
+          # ALSO reset the filters flag if it's in reset state
+          if (values$reset_filters == "reset") {
+            values$reset_filters <- ""
+          }
+          
+        } else {
+          values$submit_slider <- "clicked" 
+        }
+      }, ignoreInit = TRUE)
+      
+      
+      # Single debounced reactive that bundles both text + table state
+      debounced_state <- debounce(reactive({
+        
+        current_filtered_studies <- final_filtered_studies()
+        if (is.null(current_filtered_studies) || nrow(current_filtered_studies) == 0) {
+          n_results <- 0
+          
+          table <- current_filtered_studies
+        } else {
+          
+          n_results <- nrow(current_filtered_studies)
+          
+          table <- current_filtered_studies
+          
+          
+          if ("Annotated by" %in% colnames(current_filtered_studies)) {
+            
+            table <- current_filtered_studies %>%
+              mutate(row_colour = case_when(
+                `Annotated by` == "Human" ~ "#d4f7d4",
+                `Annotated by` == "AI (gpt-4o)"    ~ "#d4e6f7",
+                TRUE                      ~ "white"
+              )) 
+          }
+        }
+        
+        # Process table here
+        cols <- input$cols_to_show
+        
+        
+        if ("Annotated by" %in% cols) {
+          table <- table %>%
+            mutate(`Annotated by` = case_when(
+              `Annotated by` == "Human" ~ "Human <i class='fa fa-user' title='Annotated by Human'></i>",
+              `Annotated by` == "AI (gpt-4o)"    ~ "AI (gpt-4o) <i class='fa fa-laptop-code' title='Annotated by AI'></i>",
+              TRUE                      ~ "None"
+            ))
+        }
+        
+        # Get search query safely
+        search_query_value <- tryCatch({
+          search_query()
+        }, error = function(e) {
+          c("", "")
+        })
+        
+        # Return a list containing EVERYTHING both outputs need
+        list(
+          table = table,
+          cols = cols,
+          n_results = n_results,
+          search_query_value = search_query_value,
+          combination_type = input$comb_1_2,
+          search_tab = input$search_tabs,
+          
+          # pass along values if you need them
+          search_query = values$search_query,
+          submit_filters = values$submit_filters,
+          reset_filters = values$reset_filters,
+          submit_slider = values$submit_slider,
+          reset_slider = values$reset_slider
+        )
+        
+      }), 300)
+      
+      observe({
+        
+        # Determine choices based on some condition
+        if (current_tab() == "grey_lit_database") {
+          
+          choices <- c("Title", "Author", "Year", "Journal", "Publication Type")
+          
+        } else {
+          
+          choices = c("Title", "Author", "Year", "Journal", "Intervention", "Outcome Measures", "Discipline", "Intervention Provider",
+                      "Research Stage", "Target Population", "Target Pop Location", "Annotated by") 
+          
+        }
+        
+        updatePickerInput(
+          session = session,
+          inputId = "cols_to_show",
+          choices = choices,
+          selected = c("Title", "Author", "Year", "Journal")
+        )
+      })
+      
+      
+      # Simplify your renderDT to just formatting
+      output$search_results_studies <- DT::renderDT({
+        
+        
+        data_bundle <- debounced_state()
+        
+        n_results <- data_bundle$n_results
+        table <- data_bundle$table
+        cols <- data_bundle$cols
+        
+        if (n_results > 0){
+          
+          
+          if ("row_colour" %in% colnames(table)){
+            # Work only with displayed subset - KEEP row_colour for styling
+            table_to_show <- table[, c(cols, "row_colour"), drop = FALSE]
+            
+            # Get the colors before creating the datatable
+            row_colors <- table_to_show$row_colour
+            
+            # Columns that should not get any icon
+            no_icon_cols <- c("uid", "row_colour")
+            
+            # Columns that should get database icon
+            database_cols <- c("Title", "Year", "Author", "Journal")
+            
+            
+          } else {
+            
+            table_to_show <- table[, c(cols), drop = FALSE]
+            
+            # Columns that should not get any icon
+            no_icon_cols <- c("uid")
+            
+            # Add row_colour column with default value
+            table_to_show$row_colour <- "white"
+            
+            # Columns that should not get any icon
+            no_icon_cols <- c("uid", "row_colour")
+            
+            # Columns that should get database icon
+            database_cols <- c("Title", "Year", "Author", "Journal", "Publication Type")
+            
+            
+          }
+          
+        }
+        else{
+          
+          # Work only with displayed subset - KEEP row_colour for styling
+          table_to_show <- table
+          
+          # Columns that should not get any icon
+          no_icon_cols <- c("uid")
+          
+          # Columns that should get database icon (only these 4 when no results)
+          database_cols <- c("Title", "Year", "Author", "Journal")
+          
+        }
+        
+        display_colnames <- ifelse(
+          colnames(table_to_show) %in% no_icon_cols,
+          colnames(table_to_show),
+          ifelse(
+            colnames(table_to_show) %in% database_cols,
+            
+            paste0("<span style='white-space: nowrap;'>", colnames(table_to_show), " <i class='fa fa-database' title='Data Source: Original Publication Record'></i></span>"),
+            paste0("<span style='white-space: nowrap;'>", colnames(table_to_show), " <i class='fa fa-tag' title='Data Source: Annotation by Human (green) or AI (blue) — see \"Data Transparency\" tab for more info'></i></span>")
+          )
+        )
+        
+        if (nrow(table_to_show) < 1) {
+          
+          shinyalert(
+            "No Results Found",
+            "Your search returned 0 results. Please clear the search and try again. Make sure you’ve read the 'How to Search' tab for guidance.",
+            type = "info"
+          )
+        }
+        dt <- DT::datatable(
+          table_to_show,
           rownames = FALSE,
           escape = FALSE,
-          # extensions = c('Buttons'),
+          colnames = display_colnames,
           options = list(
+            dom = "rtp",
             language = list(
               zeroRecords = "No records found",
-              emptyTable = "No records found"),
-            deferRender = FALSE,
+              emptyTable = "No records found"
+            ),
+            deferRender = TRUE,
             scrollY = 600,
             scrollX = 100,
             scroller = TRUE,
             columnDefs = list(
               list(
-                targets = c(1), #target for JS code
-                render = JS(
-                  "function(data, type, row, meta) {",
-                  "return type === 'display' && data.length > 15 ?",
-                  "'<span title=\"' + data + '\">' + data.substr(0, 30) + '...</span>' : data;",
-                  "}"),
-
-                width = "10%"
+                targets = ncol(table_to_show) - 1,
+                visible = FALSE
               ),
               list(
-                # targets = c(1), #target for JS code
-                # render = JS(
-                #   "function(data, type, row, meta) {",
-                #   "return type === 'display' && data.length > 15 ?",
-                #   "'<span title=\"' + data + '\">' + data.substr(0, 15) + '...</span>' : data;",
-                #   "}")
-                # width = "200px"
+                targets = 1,
+                render = DT::JS(
+                  "function(data, type, row, meta) {",
+                  "return type === 'display' && data.length > 50 ?",
+                  "'<span title=\"' + data + '\">' + data.substr(0, 50) + '...</span>' : data;",
+                  "}"
+                ),
+                width = "10%"
               )
-              # list(
-              #   targets = c(3:7), # columns 4, 5, and 6
-              #   render = JS(
-              #     "function(data, type, row, meta) {",
-              #     "  if (type === 'display' && data) {",
-              #     "  var words = data.split(';');",
-              #     " var formattedText = words.map(function(word) {",
-              #     "  var color =  '#' + ('000000' + Math.floor(Math.random()*16777215).toString(16)).slice(-6);",
-              #     "      var textColor = (parseInt(color.substring(1), 16) > 0xffffff / 2) ? 'black' : 'white';",
-              #     "      return '<span style=\"background-color:' + color + '; color:' + textColor + '; padding: 3px; border-radius: 5px; margin-right: 5px;\">' + word + '</span>';",
-              #     # "      return '<span style=\"background-color:' + color + '; padding: 3px; border-radius: 5px; margin-right: 5px;\">' + word + '</span>';",
-              #     "    }).join('; ');",
-              #     "    return formattedText;",
-              #     "  }",
-              #     "  return data;",
-              #     "}")
-              # ),
-              #list(width = '10%', targets = "_all")
             )
           )
-
         )
-      })
-
-
-
-
-
+        
+        if ("row_colour" %in% names(table_to_show)) {
+          dt <- dt %>%
+            DT::formatStyle(
+              columns = "row_colour",
+              target = "row",
+              backgroundColor = DT::styleEqual(
+                levels = c("#d4f7d4", "#d4e6f7", "white"),
+                values = c("#d4f7d4", "#d4e6f7", "white")
+              )
+            )
+        } else {
+          dt
+        }
+        
+        
+      }, server = FALSE) %>%
+        bindCache(debounced_state())  # Cache on the debounced data
+      
+      outputOptions(output, "search_results_studies", suspendWhenHidden = FALSE)
+      
+      
       # Download citations sever side --------
       # download refs button server side -csv
       output$download_csv <- downloadHandler(
@@ -2011,8 +3373,6 @@ search_Server <- function(id,
         
         results <- citations_for_download %>%
           filter(uid %in% !!filter_results()$uid)
-        
-        
         
       })
       
@@ -2035,7 +3395,8 @@ search_Server <- function(id,
                  ReferenceType = "",
                  Keywords = keywords,
                  CustomId = uid,
-                 PdfRelativePath = paste0(uid, ".pdf")) %>%
+                 PdfRelativePath = paste0(uid, ".pdf"),
+                 Abstract = "") %>%
           select(Title,
                  Authors,
                  PublicationName,
@@ -2082,7 +3443,7 @@ search_Server <- function(id,
                  "Secondary Title", "doi", "title",
                  "pages", "volume", "number", "abstract",
                  "Custom 1", "ISBN/ISSN") %>%
-          mutate(abstract = gsub("\\r\\n|\\r|\\n", "", abstract))
+          mutate(abstract = "")
         
         names(results) <- toTitleCase(names(results))
         
@@ -2110,8 +3471,6 @@ search_Server <- function(id,
 }
 
 
-
-
 #' PICO Dropdown Module UI
 #'
 #' This Shiny module creates reactive dropdown menus for filtering based on PICO elements.
@@ -2134,18 +3493,34 @@ pico_dropdown_UI <- function(id,
                              filter_no) {
   ns <- NS(id)
 
+  # if (filter_no == 1){
+  #   pickerInput(
+  #     inputId = ns("dropdown_filter1"),
+  #     label = label1,
+  #     choices = c(sort(unique(column1))),
+  #     multiple = TRUE,
+  #     selected = c(sort(unique(column1))),
+  #     options = list(
+  #       `live-search` = TRUE,
+  #       `actions-box` = TRUE,
+  #       style = "btn-primary"))
+  # 
+  # }
   if (filter_no == 1){
-    pickerInput(
+    
+    virtualSelectInput(
       inputId = ns("dropdown_filter1"),
-      label = label1,
+      label = label1, 
       choices = c(sort(unique(column1))),
+      # selected = c(sort(unique(column1))),
+      selected = NULL,
       multiple = TRUE,
-      selected = c(sort(unique(column1))),
-      options = list(
-        `live-search` = TRUE,
-        `actions-box` = TRUE,
-        style = "btn-primary"))
-
+      showValueAsTags = TRUE, 
+      width = "100%",
+      dropboxWrapper = "body", 
+      search = TRUE
+    )
+    
   }
 
   else if (filter_no == 2){
@@ -2508,16 +3883,16 @@ div(style="display: inline-block;vertical-align:top; width: 50px;",
       ),
       
       br(),
-      p("Note for Rayyan export option below: download file and open in MS Excel first on your computer. Save as .csv in excel, then import saved file into Rayyan"),
-      downloadBttn(
-        ns("download_rayyan"),
-        label = "Download citations in Rayyan upload format",
-        style = "unite",
-        color = "primary",
-        size = "sm",
-        block = FALSE,
-        no_outline = TRUE
-      ),
+      # p("Note for Rayyan export option below: download file and open in MS Excel first on your computer. Save as .csv in excel, then import saved file into Rayyan"),
+      # downloadBttn(
+      #   ns("download_rayyan"),
+      #   label = "Download citations in Rayyan upload format",
+      #   style = "unite",
+      #   color = "primary",
+      #   size = "sm",
+      #   block = FALSE,
+      #   no_outline = TRUE
+      # ),
       
       style = "unite", icon = icon("download"),
       inline = TRUE,

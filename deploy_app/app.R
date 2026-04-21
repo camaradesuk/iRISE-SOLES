@@ -10,7 +10,6 @@ library(shinyhelper)
 library(fst)
 library(shinyWidgets)
 library(ggplot2)
-library(shiny)
 library(shinyjs)
 library(shinycssloaders)
 library(plotly)
@@ -183,8 +182,6 @@ ui <- bs4DashPage(freshTheme = mytheme,
                   dark = NULL,
                   help = NULL,
                   dbHeader <- dashboardHeader(
-                    title = tags$h5("iRISE-SOLES", style = "color: white; text-align: center;padding-top: 10px;"),
-                    
                     tags$a(href= 'https://irise-project.eu/',
                            target = "_blank",
                            tags$img(src= "iRISE-lightlogo.png",
@@ -192,7 +189,17 @@ ui <- bs4DashPage(freshTheme = mytheme,
                   ),
                   bs4DashSidebar(id = "dashboardside", 
                                  skin = "dark",
-                                 # collapsed = TRUE,
+                                 div(
+                                   style = "text-align: center; padding: 15px 10px 10px 10px;",
+                                   tags$a(
+                                     href = "https://irise-project.eu/",
+                                     target = "_blank",
+                                     tags$img(
+                                       src = "iRISE_logo_light_round.png",
+                                       style = "max-width: 30%; height: auto;"
+                                     )
+                                   ),
+                                 ),
                                  sidebarMenu(
                                    id = "sidebarmenu",
                                    bs4SidebarMenuItem(tags$p("Homepage", style = "font-family: KohinoorBangla, sans-serif !important"), tabName = "home", icon = icon("home")),
@@ -286,143 +293,391 @@ ui <- bs4DashPage(freshTheme = mytheme,
                     ),
                     
                     tabItems(
-                      tabItem(tabName = "home", class = "tab-pane home-tab",
-                              
-                              # Set full-page dark blue background and floating logo
-                              tags$head(
-                                tags$style(HTML("
+                      tabItem(
+                        tabName = "home",
+                        class = "tab-pane home-tab",
+                        
+                        tags$head(
+                          tags$style(HTML(
+                            "
 
-/* Default background for all content wrappers = white */
+/* Base wrappers */
 .content-wrapper {
   background-color: white !important;
 }
 
-/* Home tab content wrapper gets dark blue */
 .home-tab {
   background-color: #18465F !important;
-  min-height: 100vh;  /* ensure full height */
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
   width: 100%;
 }
 
-/* Make sure the inner content of home tab also inherits dark bg */
-.home-tab .content {
+.home-tab .content,
+.home-tab .content-wrapper {
   background-color: #18465F !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
-    .irise-logo {
-      top: 40px;
-      height: 385px;
-      z-index: 1000;
-    }
-    .feature-box ul {
-      list-style-type: none;
-      padding-left: 0;
-      margin-top: 20px;
-      font-size: 20px;
-      line-height: 2;
-      # height: 300px;
-      color: white;
-    }
-    .feature-box i {
-      margin-right: 10px;
-      color: #64C296;
-    }
+
+/* Hero section */
+.irise-logo {
+  top: 40px;
+  height: 385px;
+  z-index: 1000;
+}
+
+.feature-box ul {
+  list-style-type: none;
+  padding-left: 0;
+  margin-top: 20px;
+  font-size: 20px;
+  line-height: 2;
+  color: white;
+}
+
+.feature-box i {
+  margin-right: 10px;
+  color: #64C296;
+}
+
+/* Main nav cards */
+.home-nav-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 50px;
+  flex-wrap: wrap;
+  padding-top: 10px;
+}
+
+.nav-card {
+  max-width: 350px;
+  margin: 0;
+  height: 200px;
+}
+
+.custom-card-primary,
+.custom-card-warning,
+.custom-card-info {
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  padding: 20px 10px;
+}
+
+.custom-card-primary:hover,
+.custom-card-warning:hover,
+.custom-card-info:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2);
+}
 
 .custom-card-primary {
   background-color: #64C296;
-  border-radius: 12px;
-  height: 300px;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
+
 .custom-card-warning {
   background-color: #89CB93;
-  border-radius: 12px;
-  height: 300px;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
+
 .custom-card-info {
   background-color: #47B1A3;
-  border-radius: 12px;
-  height: 300px;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
+
 .custom-card-text {
   font-size: 20px;
   color: white;
+  padding: 0 12px;
+  margin-top: 10px;
+  line-height: 1.4;
 }
-  "))
+
+.home-section-space {
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.nav-btn-clean {
+  background: none !important;
+  border: none !important;
+  width: 100%;
+  height: 100%;
+  color: white !important;
+  font-size: 26px;
+}
+
+/* Footer */
+.home-footer-bar {
+  width: 100%;
+  background-color: #64C296;
+  padding: 6px 10px;
+  margin: 30px 0 0 0;
+  box-sizing: border-box;
+}
+
+.home-footer-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 70px;
+  flex-wrap: wrap;
+}
+
+.footer-link-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  text-decoration: none !important;
+  color: #1A465F !important;
+  opacity: 0.95;
+  transition: transform 0.2s ease, opacity 0.2s ease, filter 0.15s ease;
+}
+
+.footer-link-item:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+  filter: brightness(1.05);
+  text-decoration: none !important;
+}
+
+.footer-link-item img {
+  max-height: 42px;
+  object-fit: contain;
+}
+
+.footer-icon-wrapper {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.footer-paper-icon {
+  height: 34px !important;
+}
+
+.footer-link-text {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.3;
+  text-align: center;
+  color: #1A465F !important;
+}
+
+/* Tablet */
+@media (max-width: 992px) {
+  .irise-logo {
+    height: 300px;
+  }
+
+  .feature-box ul {
+    font-size: 18px;
+    line-height: 1.8;
+  }
+
+  .nav-card {
+    max-width: 300px;
+    height: 180px;
+  }
+
+  .home-nav-links {
+    gap: 30px;
+  }
+
+  .home-footer-links {
+    gap: 40px;
+  }
+
+  .custom-card-text {
+    font-size: 18px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .irise-logo {
+    height: 220px;
+    display: block;
+    margin: 0 auto 20px auto;
+  }
+
+  .feature-box {
+    text-align: center;
+    padding: 0 20px;
+  }
+
+  .feature-box ul {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .nav-card {
+    width: 90%;
+    max-width: 320px;
+    height: 170px;
+    margin: 0 auto;
+  }
+
+  .home-nav-links {
+    flex-direction: column;
+    gap: 20px;
+    padding-top: 0;
+  }
+
+  .home-footer-links {
+    gap: 25px;
+  }
+
+  .custom-card-text {
+    font-size: 17px;
+  }
+
+  .footer-link-text {
+    font-size: 13px;
+  }
+}
+
+"
+                          ))
+                        ),
+                        
+                        fluidRow(
+                          column(
+                            6,
+                            tags$img(src = "irise_soles_logo.png", class = "irise-logo")
+                          ),
+                          column(
+                            6,
+                            div(
+                              class = "feature-box",
+                              style = "color: white;",
+                              tags$br(),
+                              h2("Welcome to iRISE-SOLES", style = "color: #ffffff; font-weight: bold;"),
+                              h5(
+                                "A continuously updated, curated summary of interventions to improve reproducibility",
+                                style = "color: #ffffff; font-style: italic;"
+                              ),
+                              HTML("
+          <ul>
+            <li><i class='fas fa-file-alt'></i> Quickly summarise the evidence behind interventions</li>
+            <li><i class='fas fa-search'></i> Search and filter to find relevant published and unpublished studies</li>
+            <li><i class='fas fa-chart-pie'></i> Visualise evidence across outcomes, disciplines, and target groups</li>
+            <li><i class='fas fa-arrow-trend-up'></i> Explore trends in the literature</li>
+            <li><i class='fas fa-globe'></i> See the geographic spread of researchers working in this space</li>
+          </ul>
+        ")
+                            )
+                          )
+                        ),
+                        
+                        div(class = "home-section-space"),
+                        
+                        fluidRow(
+                          column(
+                            12,
+                            div(
+                              class = "home-nav-links",
+                              
+                              div(
+                                class = "custom-card-info nav-card",
+                                actionButton(
+                                  "go_search",
+                                  label = tagList(
+                                    tags$img(
+                                      src = "search_page.png",
+                                      height = "100px",
+                                      style = "border-radius: 12px;"
+                                    )
+                                  ),
+                                  class = "nav-btn-clean"
+                                ),
+                                div(class = "custom-card-text", "Search the Database")
                               ),
                               
-                              fluidRow(
-                                column(6,
-                                       # Floating logo
-                                       tags$img(src = "irise_soles_logo.png", class = "irise-logo")
+                              div(
+                                class = "custom-card-primary nav-card",
+                                actionButton(
+                                  "go_evidence_map",
+                                  label = tagList(
+                                    tags$img(
+                                      src = "evidence_map2.png",
+                                      height = "100px",
+                                      style = "border-radius: 12px;"
+                                    )
+                                  ),
+                                  class = "nav-btn-clean"
                                 ),
-                                
-                                column(6,
-                                       div(
-                                         class = "feature-box",
-                                         style = "color: white;",  
-                                         tags$br(),
-                                         h2("Welcome to iRISE-SOLES", style = "color: #ffffff; font-weight: bold;"),
-                                         h5("A continuously updated, curated summary of interventions to improve reproducibility",
-                                            style = "color: #ffffff; font-style: italic;"),
-                                         HTML("<ul>
-            <li><i class='fas fa-file-alt'></i> Quickly summarise the evidence behind interventions </li>
-<li><i class='fas fa-search'></i> Search and filter to find relevant published and unpublished studies </li>
-<li><i class='fas fa-chart-pie'></i> Visualise evidence across outcomes, disciplines, and target groups </li>
-<li><i class='fas fa-arrow-trend-up'></i> Explore trends in the literature </li>
-<li><i class='fas fa-globe'></i> See the geographic spread of researchers working in this space</li>
-
-
-          </ul>")
-                                       )
-                                )
+                                div(class = "custom-card-text", "Explore the Evidence Map")
                               ),
                               
-                              # Row with three link boxes
-                              fluidRow(
-                                column(4,
-                                       div(class = "custom-card-primary",
-                                           tags$a(href = 'https://osf.io/9hzcv/?view_only=d74ff8089864468cb43daa06733e0be6',
-                                                  target = "_blank",
-                                                  tags$img(src = "osf_logo.png", height = "140px")),
-                                           div(class = "custom-card-text",
-                                               "Read our protocol for the iRISE-SOLES project on the Open Science Framework")
-                                       )
+                              div(
+                                class = "custom-card-warning nav-card",
+                                actionButton(
+                                  "go_location_map",
+                                  label = tagList(
+                                    tags$img(
+                                      src = "location_map.png",
+                                      height = "100px",
+                                      style = "border-radius: 12px;"
+                                    )
+                                  ),
+                                  class = "nav-btn-clean"
                                 ),
-                                column(4,
-                                       div(class = "custom-card-warning",
-                                           tags$a(href = 'https://portlandpress.com/clinsci/article/137/10/773/233083/Systematic-online-living-evidence-summaries',
-                                                  target = "_blank",
-                                                  tags$img(src = "paper_screenshot.PNG", height = "140px")),
-                                           div(class = "custom-card-text",
-                                               "Read our SOLES paper")
-                                       )
-                                ),
-                                column(4,
-                                       div(class = "custom-card-info",
-                                           tags$a(href = 'https://irise-project.eu/',
-                                                  target = "_blank",
-                                                  tags$img(src = "irise_website.png", height = "140px")),
-                                           div(class = "custom-card-text",
-                                               "Visit the iRISE project website")
-                                       )
+                                div(class = "custom-card-text", "View Research Locations")
+                              )
+                            )
+                          )
+                        ),
+                        
+                        br(),
+                        br(),
+                        br(),
+                        
+                        div(
+                          class = "home-footer-bar",
+                          div(
+                            class = "home-footer-links",
+                            
+                            tags$a(
+                              href = "https://osf.io/9hzcv/?view_only=d74ff8089864468cb43daa06733e0be6",
+                              target = "_blank",
+                              class = "footer-link-item",
+                              tags$img(src = "osf_logo.png", height = "42px"),
+                              tags$div("Protocol on OSF", class = "footer-link-text")
+                            ),
+                            
+                            tags$a(
+                              href = "https://portlandpress.com/clinsci/article/137/10/773/233083/Systematic-online-living-evidence-summaries",
+                              target = "_blank",
+                              class = "footer-link-item",
+                              div(
+                                class = "footer-icon-wrapper",
+                                tags$img(
+                                  src = "paper_screenshot.PNG",
+                                  class = "footer-paper-icon"
                                 )
-                              )),
+                              ),
+                              tags$div("SOLES Paper", class = "footer-link-text")
+                            ),
+                            
+                            tags$a(
+                              href = "https://irise-project.eu/",
+                              target = "_blank",
+                              class = "footer-link-item",
+                              tags$img(src = "irise_website.png", height = "42px"),
+                              tags$div("iRISE Website", class = "footer-link-text")
+                            )
+                          )
+                        )
+                      ),
                       
                       # Data collection - ui -----
                       tabItem(tabName = "dc-main",
@@ -1752,7 +2007,7 @@ server <- function(input, output, session) {
   # })
   
   observeEvent(input$sidebarmenu, {
-    # browser()
+    
     if(input$sidebarmenu == "module_search_database" || input$sidebarmenu == "evidence_map_bubble") {
       
       runjs("$('body').addClass('sidebar-collapse');")
@@ -1776,6 +2031,18 @@ server <- function(input, output, session) {
     }
   })
   
+  observeEvent(input$go_evidence_map, {
+    updateTabItems(session, "sidebarmenu", selected = "evidence_map_bubble")
+  })
+  
+  observeEvent(input$go_search, {
+    updateTabItems(session, "sidebarmenu", selected = "module_search_database")
+  })
+  
+  observeEvent(input$go_location_map, {
+    updateTabItems(session, "sidebarmenu", selected = "location-tab")
+  })
+  
   yearBarServer_included_only("included_studies_over_time_bar",
                               table=n_included_per_year_plot_data,
                               column="is_included",
@@ -1792,9 +2059,9 @@ server <- function(input, output, session) {
                 table = included_with_metadata,
                 combined_pico_table = pico,
                 citations_for_download = citations_for_dl,
-                project_name = "iRISE-SOLES"
-                # current_tab = reactive(input$sidebarmenu)
-  )  # pass reactive here
+                project_name = "iRISE-SOLES",
+                current_tab = reactive(input$sidebarmenu)
+  ) 
   
   
   
@@ -1821,7 +2088,7 @@ server <- function(input, output, session) {
       )
     }
   })
-  
+
   
   
   download_table_Server("dl_evidence_map", table = dl_evidence_map)

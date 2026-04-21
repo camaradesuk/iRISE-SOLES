@@ -281,7 +281,7 @@ retracted_embase <- unique_citations %>%
 
 # Create included tbl
 included_with_metadata <- citations_for_dl  %>%
-  select(date, uid, title, journal, year, doi, uid, url, author, abstract, keywords, decision)
+  select(date, uid, title, journal, year, doi, url, author, abstract, keywords, decision)
 
 dataframes_for_app[["included_with_metadata"]] <- included_with_metadata
 
